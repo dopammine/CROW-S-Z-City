@@ -339,10 +339,11 @@ net.Receive("hg_phrase", function(len, ply)
 	local pitch = nil
 
 	-- overrides
-	local override = hook.Run("HG_ReplacePhrase", ent, phrase, muffed, pitch)
-	if override ~= nil then
-		ent, phrase, muffed, pitch = override
+	override_ent, override_phrase, override_muffed, override_pitch = hook.Run("HG_ReplacePhrase", ent, phrase, muffed, pitch)
+	if override_ent ~= nil then
+		ent, phrase, muffed, pitch = override_ent, override_phrase, override_muffed, override_pitch
 	end
+
 
 	if ply.PlayerClassName == "bloodz" or ply.PlayerClassName == "groove" then
 		phrase = table.Random(hg.ghetto_phrases)
@@ -426,9 +427,9 @@ hook.Add("PreHomigradDamage","BurnScream", function( ent, dmgInfo )
 		local phrase = "zcitysnd/"..(ThatPlyIsFemale(ply) and "fe" or "").."male/burn/death_burn"..mRandom(1,ThatPlyIsFemale(ply) and femaleCount or maleCount)..".mp3"
 
 		-- overrides
-		local override = hook.Run("HG_ReplaceBurnPhrase", ply, phrase)
-		if override ~= nil then
-			ply, phrase = override
+		override_ply, override_phrase = hook.Run("HG_ReplaceBurnPhrase", ply, phrase)
+		if override_ply ~= nil then
+			ply, phrase = override_ply, override_phrase
 		end
 
 		ply:Notify(hg.sharp_pain[math.random(#hg.sharp_pain)], 
