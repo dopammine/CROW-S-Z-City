@@ -40,6 +40,7 @@ local function DrawFirstPersonHelmet(ply, strModel, vecAdjust, fFov, setMat)
 
 	local view = render.GetViewSetup()
 	cam.Start3D(view.origin,view.angles,view.fov + fFov,nil,nil,nil,nil,1,10)
+		cam.IgnoreZ(true)
 		local viewpunching = GetViewPunchAngles()
 		local ang = view.angles + viewpunching
 		mdl:SetRenderOrigin(view.origin + ang:Forward() * vecAdjust.x + ang:Right() * vecAdjust.y + ang:Up() * vecAdjust.z)
@@ -72,6 +73,7 @@ local function DrawFirstPersonHelmet(ply, strModel, vecAdjust, fFov, setMat)
 			-- Let everything render normally again
 			render.SetStencilEnable( false )
 		render.SetColorModulation(1,1,1)
+		cam.IgnoreZ(false)
 	cam.End3D()
 end
 

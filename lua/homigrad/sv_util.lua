@@ -1449,7 +1449,6 @@ function entMeta:SDOIsDoor()
 end
 
 hook.Add( "AcceptInput", "StealthOpenDoors", function( ent, inp, act, ply, val )
-
 	if inp == "Use" and ent:SDOIsDoor() then
 		local func = ((ply:KeyDown( IN_SPEED ) and "FastOpenDoor") or ( ply:KeyDown( IN_WALK ) and "StealthOpenDoor") or "NormalOpenDoor")
 		ent[func](ent,ply)
@@ -1468,13 +1467,13 @@ hook.Add( "AcceptInput", "StealthOpenDoors", function( ent, inp, act, ply, val )
 			ent:GetInternalVariable( "m_hMaster" )[func](ent:GetInternalVariable( "m_hMaster" ),ply)
 		end
 	end
-
 end )
 
 hook.Add( "KeyPress", "snowballs_pickup", function( ply, key )
 	if IsValid(ply.FakeRagdoll) then return end
 	ply.SnowBallPickupCD = ply.SnowBallPickupCD or 0
 	if ply.SnowBallPickupCD > CurTime() then return end
+
 	if ( key == IN_USE ) then
 		local tr = hg.eyeTrace(ply, 120)
 		if tr.MatType == MAT_SNOW then

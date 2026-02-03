@@ -188,7 +188,7 @@ if CLIENT then
 			matrixR:Rotate(npcang)
 
 			if not IsValid(self.NPCworldModel) then
-				self.NPCworldModel = ClientsideModel(self.WorldModel)
+				self.NPCworldModel = ClientsideModel(self.WorldModelExchange and self.WorldModelExchange or self.WorldModel)
 				self:CallOnRemove("remove_npcworldmodel1",function()
 					if IsValid(self.NPCworldModel) then
 						self.NPCworldModel:Remove()
@@ -1681,22 +1681,41 @@ function SWEP:NPCThink()
         tr.filter = ent
 
         local trace = util.TraceLine(tr)
-
-        if IsValid(trace.Entity) and trace.Entity == enemy then
-            self.LastNPCAttack = CurTime() + self.AnimTime1
+		--  trace.Entity == ((enemy:IsPlayer() and IsValid(enemy.FakeRagdoll) and (enemy.organism and not enemy.organism.otrib)) and enemy.FakeRagdoll or enemy)
+        local trEnt = IsValid(trace.Entity) and trace.Entity
+		if IsValid(trEnt) then
+			self.LastNPCAttack = CurTime() + (self.AnimTime1 or 1)
 			ent:EmitSound(self.AttackSwing, 70)
 
             ent:SetSchedule(SCHED_MELEE_ATTACK1)
 
-            local dmginfo = DamageInfo()
-            dmginfo:SetAttacker(ent)
-            dmginfo:SetInflictor(self)
-            dmginfo:SetDamage(dmg)
-            dmginfo:SetDamageForce(trace.Normal * dmg * 1)
-            dmginfo:SetDamageType(self.DamageType)
-            dmginfo:SetDamagePosition(trace.HitPos)
-            trace.Entity:TakeDamageInfo(dmginfo)
-			ent:EmitSound(self.AttackHitFlesh, 60)
+			local timerId = self:EntIndex() .. "_NPCAttack"
+			timer.Create(timerId, self.AttackTime or 0.4, 1, function()
+				if IsValid(self) and IsValid(ent) and IsValid(trEnt) then
+					local dmginfo = DamageInfo()
+					dmginfo:SetAttacker(ent)
+					dmginfo:SetInflictor(self)
+					dmginfo:SetDamage(dmg)
+					dmginfo:SetDamageForce(trace.Normal * dmg * 1)
+					dmginfo:SetDamageType(self.DamageType)
+					dmginfo:SetDamagePosition(trace.HitPos)
+					trEnt:TakeDamageInfo(dmginfo)
+					ent:EmitSound(self.AttackHitFlesh, 60)
+
+					if trEnt:IsPlayer() then
+						hg.AddForceRag(trEnt, trace.PhysicsBone or 0, trace.Normal * math.min(dmg, 25) * 400, 0.5)
+
+						self:PunchPlayer(trEnt, false, trace.Normal, dmg)
+		
+						local phys = trEnt:GetPhysicsObjectNum(trace.PhysicsBone or 0)
+		
+						if IsValid(phys) then
+							phys:ApplyForceOffset(trace.Normal * math.min(dmg, 25) * 400, trace.HitPos)
+						end
+					end
+				end
+				if timer.Exists(timerId) then timer.Remove(timerId) end
+			end)
         end
     end
 end

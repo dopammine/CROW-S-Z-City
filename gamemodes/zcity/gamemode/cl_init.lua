@@ -22,7 +22,7 @@ net.Receive("ZB_SpectatePlayer", function(len)
 	viewmode = net.ReadInt(4)
 
 	timer.Simple(0.1,function()
-		LocalPlayer():BoneScaleChange()
+		-- LocalPlayer():BoneScaleChange()
 		LocalPlayer():SetHull(-hullscale,hullscale)
 		LocalPlayer():SetHullDuck(-hullscale,hullscale)
 

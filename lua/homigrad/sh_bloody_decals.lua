@@ -111,6 +111,7 @@ net.Receive("bloody_decal_1", function()
 	if IsValid(self) then
 		local mdl = self.worldModel2
 		mdl = IsValid(mdl) and mdl or self.worldModel
+		mdl = IsValid(mdl) and mdl or self.NPCworldModel
 		mdl = IsValid(mdl) and mdl or self
 		
 		if self.bloodID then

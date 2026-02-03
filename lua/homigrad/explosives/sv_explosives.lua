@@ -95,9 +95,9 @@ local ExpTypes = {
 		end
 
 		if entsCount > 10 then
-			EmitSound(table.Random(DebrisSounds), Ent:GetPos(), Ent:EntIndex(), CHAN_AUTO, 1, 80)
-			EmitSound(table.Random(DebrisSounds), Ent:GetPos(), Ent:EntIndex(), CHAN_AUTO, 1, 80)
-			EmitSound(table.Random(DebrisSounds), Ent:GetPos(), Ent:EntIndex(), CHAN_AUTO, 1, 80)
+			EmitSound(DebrisSounds[math.random(#DebrisSounds)], Ent:GetPos(), Ent:EntIndex(), CHAN_AUTO, 1, 80)
+			EmitSound(DebrisSounds[math.random(#DebrisSounds)], Ent:GetPos(), Ent:EntIndex(), CHAN_AUTO, 1, 80)
+			EmitSound(DebrisSounds[math.random(#DebrisSounds)], Ent:GetPos(), Ent:EntIndex(), CHAN_AUTO, 1, 80)
 		end
 
 		local bullet = {}
@@ -203,9 +203,9 @@ local ExpTypes = {
 		end
 
 		if entsCount > 10 then
-			EmitSound(table.Random(DebrisSounds), Ent:GetPos(), Ent:EntIndex(), CHAN_AUTO, 1, 80)
-			EmitSound(table.Random(DebrisSounds), Ent:GetPos(), Ent:EntIndex(), CHAN_AUTO, 1, 80)
-			EmitSound(table.Random(DebrisSounds), Ent:GetPos(), Ent:EntIndex(), CHAN_AUTO, 1, 80)
+			EmitSound(DebrisSounds[math.random(#DebrisSounds)], Ent:GetPos(), Ent:EntIndex(), CHAN_AUTO, 1, 80)
+			EmitSound(DebrisSounds[math.random(#DebrisSounds)], Ent:GetPos(), Ent:EntIndex(), CHAN_AUTO, 1, 80)
+			EmitSound(DebrisSounds[math.random(#DebrisSounds)], Ent:GetPos(), Ent:EntIndex(), CHAN_AUTO, 1, 80)
 		end
 
 		local bullet = {}
@@ -310,9 +310,9 @@ local ExpTypes = {
 		end
 
 		if entsCount > 10 then
-			EmitSound(table.Random(DebrisSounds), Ent:GetPos(), Ent:EntIndex(), CHAN_AUTO, 1, 80)
-			EmitSound(table.Random(DebrisSounds), Ent:GetPos(), Ent:EntIndex(), CHAN_AUTO, 1, 80)
-			EmitSound(table.Random(DebrisSounds), Ent:GetPos(), Ent:EntIndex(), CHAN_AUTO, 1, 80)
+			EmitSound(DebrisSounds[math.random(#DebrisSounds)], Ent:GetPos(), Ent:EntIndex(), CHAN_AUTO, 1, 80)
+			EmitSound(DebrisSounds[math.random(#DebrisSounds)], Ent:GetPos(), Ent:EntIndex(), CHAN_AUTO, 1, 80)
+			EmitSound(DebrisSounds[math.random(#DebrisSounds)], Ent:GetPos(), Ent:EntIndex(), CHAN_AUTO, 1, 80)
 		end
 
 		if not IsValid(Ent) then return end

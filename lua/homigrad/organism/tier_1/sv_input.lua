@@ -1523,7 +1523,7 @@ function hg.BreakNeck(ent)
 end
 
 hook.Add("OnAmputateLimb", "amputate_cuffs", function(org, ent, limb)
-	if limb == "larm" or limb == "rarm" and (ent.handcuffed or ent:GetNetVar("handcuffed", false)) then
+	if (limb == "larm" or limb == "rarm") and (org.handcuffed and ent:GetNetVar("handcuffed", false)) then
 		if ent.handcuffs then
 			if IsValid(ent.handcuffs[1]) then ent.handcuffs[1]:Remove() end
 			if IsValid(ent.handcuffs[2]) then ent.handcuffs[2]:Remove() end

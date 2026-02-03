@@ -700,7 +700,7 @@ hg.ConVars = hg.ConVars or {}
 
 		ply:SetNWEntity("spect", NULL)
 
-		if CLIENT and ply:Alive() then ply:BoneScaleChange() end
+		-- if CLIENT and ply:Alive() then ply:BoneScaleChange() end
 
 		ply:SetHull(HullMins, HullMaxs)
 		ply:SetHullDuck(HullDuckMins, HullDuckMaxs)

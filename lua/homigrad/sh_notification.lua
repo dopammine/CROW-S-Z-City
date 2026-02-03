@@ -7,8 +7,16 @@ hg.fur = {
 	" uwu",
 	" >w<",
 	" OwO",
+	" ^w^",
 	" *blushes*",
 	" -w-",
+	" ~w~",
+	" mrrawr~~",
+	" mrrp~",
+	" mrreow~",
+	" mwah~",
+	"~",
+	"~~"
 }
 
 local translateSymbol = {
