@@ -1,6 +1,6 @@
 hg = hg or {}
 hg.Version = "Release 1.10" --i mean there's new guns/modes and everything why WOULDN'T it be 1.10?
-hg.GitHub_ReposOwner = "mrboyplayz(CROW)" --crow why didn't you edit this you piece of garbage!!!
+hg.GitHub_ReposOwner = "CROW" --crow why didn't you edit this you piece of garbage!!!
 hg.GitHub_ReposName = "Crow's Z-City" --swagger repo name
 
 if SERVER then
