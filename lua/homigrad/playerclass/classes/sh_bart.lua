@@ -16,11 +16,15 @@ function CLASS.On(self)
     self:SetPlayerColor(Color(255, 217, 15):ToVector())
     self:SetSubMaterial()
     self:SetBodyGroups("00000000000")
-    GetAppearance(self)
-    local Appearance = self.Appearance or GetRandomAppearance(self, 1)
-    Appearance.ClothesStyle = ""
-    self:SetNetVar("Accessories", "")
-    self.CurAppearance = Appearance
+    local Appearance
+    if hg and hg.Appearance and hg.Appearance.GetRandomAppearance then
+        Appearance = self.CurAppearance or hg.Appearance.GetRandomAppearance()
+        Appearance.AClothes = ""
+        self:SetNetVar("Accessories", "")
+        self.CurAppearance = Appearance
+    else
+        self:SetNetVar("Accessories", "")
+    end
 
     if self.SetMaxHealth then
         self:SetMaxHealth(60)
@@ -29,7 +33,11 @@ function CLASS.On(self)
         self:SetHealth(60)
     end
 
-    self:SetNWString("PlayerName","Bart " .. (Appearance.Name or "Simpson"))
+    if Appearance and Appearance.AName then
+        self:SetNWString("PlayerName","Bart " .. Appearance.AName)
+    else
+        self:SetNWString("PlayerName","Bart")
+    end
 
     -- Bart weaker
     if self.organism then
