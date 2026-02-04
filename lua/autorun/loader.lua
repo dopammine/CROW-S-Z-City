@@ -9,10 +9,6 @@ if SERVER then
 	resource.AddWorkshop("3657294321") -- first content addon
 	resource.AddWorkshop("3544105055") -- second content addon
 	resource.AddWorkshop("3257937532") -- distac content
-	resource.AddWorkshop("3597480306") -- appetite for destruction one
-	resource.AddWorkshop("3598282322") -- appetite for destruction two
-	resource.AddWorkshop("3607888938") -- appetite for destruction three (thx barsik!!)
-	resource.AddWorkshop("3658601324") -- afd main addon (he just HAD to include some content there)
 end
 -- if hg.GitHub_ReposOwner and hg.GitHub_ReposOwner != "" then
 -- 	http.Fetch( "https://api.github.com/repos/" .. hg.GitHub_ReposOwner .. "/" .. hg.GitHub_ReposName .. "/commits?sha=" .. hg.GitHub_Branch .. "&per_page=1",
