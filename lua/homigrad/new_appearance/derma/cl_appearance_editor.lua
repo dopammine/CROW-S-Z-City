@@ -3,15 +3,15 @@ local APmodule = hg.Appearance
 local PANEL = {}
 
 local colors = {}
-colors.secondary        = Color(20, 25, 40, 210)    
-colors.presetBG         = Color(25, 30, 50, 220)
+colors.secondary        = Color(20, 25, 50, 210)    
+colors.presetBG         = Color(25, 30, 70, 220)
 colors.presetHover      = Color(40, 45, 75, 240)
 colors.mainText         = Color(230, 235, 255, 255)
 colors.secondaryText    = Color(140, 150, 180, 160)
-colors.highlightText    = Color(220, 60, 60, 255)   
+colors.highlightText    = Color(60, 120, 220, 255)   
 colors.selectionBG      = Color(40, 90, 180, 230)   
-colors.previewBorder    = Color(200, 60, 60, 255)  
-colors.presetBorder     = Color(80, 90, 140, 255)
+colors.previewBorder    = Color(60, 120, 200, 255)  
+colors.presetBorder     = Color(80, 110, 160, 255)
 colors.scrollbarBG          = Color(15, 20, 35, 220)
 colors.scrollbarGrip        = Color(60, 70, 120, 255)
 colors.scrollbarGripHover   = Color(90, 110, 190, 255)
@@ -109,7 +109,7 @@ local function CreateStyledScrollPanel(parent)
     return scroll
 end
 
-local clr_ico, clr_menu = Color(30, 30, 40, 255), Color(15, 15, 20, 250)
+local clr_ico, clr_menu = Color(30, 30, 50, 255), Color(15, 15, 25, 250)
 local function CreateStyledAccessoryMenu(parent, title)
     local menu = vgui.Create("DFrame")
     menu:SetTitle(title or "")
@@ -219,7 +219,7 @@ local function CreateStyledAccessoryMenu(parent, title)
         
         function ico:Paint(w, h)
             local borderCol = self.bIsHovered and colors.scrollbarGripHover or colors.scrollbarBorder
-            draw.RoundedBox(4, 0, 0, w, h, Color(30, 30, 40, 255))
+            draw.RoundedBox(4, 0, 0, w, h, Color(30, 30, 50, 255))
             surface.SetDrawColor(borderCol)
             surface.DrawOutlinedRect(0, 0, w, h, 1)
             
@@ -510,7 +510,7 @@ function PANEL:PostInit()
 
     function ApplyButton:Paint(w,h)
         draw.RoundedBox(4,0,0,w,h,colors.selectionBG)
-        surface.SetDrawColor(Color(30, 160, 35, 255))
+        surface.SetDrawColor(Color(30, 160, 125, 255))
         surface.DrawOutlinedRect(0,0,w,h,1)
     end
 
@@ -525,7 +525,7 @@ function PANEL:PostInit()
         main.AppearanceTable.AName = self:GetValue()
     end
     function NameEntry:Paint(w, h)
-        draw.RoundedBox(4, 0, 0, w, h, Color(20, 20, 25, 240))
+        draw.RoundedBox(4, 0, 0, w, h, Color(20, 20, 35, 240))
         surface.SetDrawColor(colors.scrollbarBorder)
         surface.DrawOutlinedRect(0, 0, w, h, 1)
         self:DrawTextEntryText(colors.mainText, colors.selectionBG, colors.mainText)
@@ -545,9 +545,9 @@ function PANEL:PostInit()
     savePresetBtn:SetTextColor(colors.mainText)
     savePresetBtn:DockMargin(0,0,5,0)
     function savePresetBtn:Paint(w, h)
-        local bgCol = self:IsHovered() and Color(30, 150, 35, 255) or colors.selectionBG
+        local bgCol = self:IsHovered() and Color(30, 150, 150, 255) or colors.selectionBG
         draw.RoundedBox(4, 0, 0, w, h, bgCol)
-        surface.SetDrawColor(Color(40, 180, 45, 255))
+        surface.SetDrawColor(Color(40, 180, 95, 255))
         surface.DrawOutlinedRect(0, 0, w, h, 1)
     end
     local presetNameEntry
