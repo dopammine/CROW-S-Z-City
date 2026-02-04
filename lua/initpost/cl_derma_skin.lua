@@ -1,8 +1,8 @@
 --\\
 hg.VGUI = hg.VGUI or {}
-hg.VGUI.MainColor = Color(150, 0 ,0)
-hg.VGUI.SecondaryColor = Color(155,0,0,240)
-hg.VGUI.BackgroundColor = Color(25,25,35,220)
+hg.VGUI.MainColor = Color(0, 150 ,150) --was originally red, now cyan
+hg.VGUI.SecondaryColor = Color(,0,135,240)
+hg.VGUI.BackgroundColor = Color(25,35,45,220)
 hg.VGUI.MainSkin = "ZCity"
 
 function hg.GetMainSkin()
@@ -10,8 +10,8 @@ function hg.GetMainSkin()
 end
 --//
 
-hook.Add("ForceDermaSkin", "ZCity", function()
-	return "ZCity" --; This will paint all Derma objects to new skin
+hook.Add("ForceDermaSkin", "CROWskin", function()
+	return "ZCity" --; This will paint all Derma objects to new skin(cyan)
 end)
 
 --; Adapted from Helix
@@ -114,10 +114,10 @@ local gradient = surface.GetTextureID("vgui/gradient-d")
 local gradientUp = surface.GetTextureID("vgui/gradient-u")
 local gradientLeft = surface.GetTextureID("vgui/gradient-l")
 -- local gradientRadial = Material("helix/gui/radial-gradient.png")
-local defaultBackgroundColor = Color(30, 30, 30, 200)
+local defaultBackgroundColor = Color(30, 30, 55, 200)
 
 local SKIN = {}
-derma.DefineSkin("ZCity", "ZCity skin.", SKIN)
+derma.DefineSkin("ZCity", "ZCity skin. Crow-ified.", SKIN)
 
 SKIN.fontCategory = "ZCity_Fixed_Medium_Light"
 SKIN.fontCategoryBlur = "ZCity_Fixed_Medium_Light_Blur"
@@ -126,13 +126,13 @@ SKIN.fontSegmentedProgress = "ZCity_Fixed_Medium_Light"
 SKIN.Colours = table.Copy(derma.SkinList.Default.Colours)
 
 SKIN.Colours.Info = Color(100, 185, 255)
-SKIN.Colours.Success = Color(64, 185, 85)
-SKIN.Colours.Error = Color(255, 100, 100)
+SKIN.Colours.Success = Color(56, 185, 95)
+SKIN.Colours.Error = Color(100, 255, 255)
 SKIN.Colours.Warning = Color(230, 180, 0)
 SKIN.Colours.MenuLabel = color_white
 SKIN.Colours.DarkerBackground = Color(0, 0, 0, 77)
 
-SKIN.Colours.Outline = Color(155, 0, 0, 255)
+SKIN.Colours.Outline = Color(0, 155, 155, 255)
 SKIN.Colours.Background = Color(0, 0, 0, 205)
 
 SKIN.Colours.SegmentedProgress = {}
