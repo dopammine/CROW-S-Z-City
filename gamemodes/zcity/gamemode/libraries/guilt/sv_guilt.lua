@@ -282,26 +282,26 @@ hook.Add("PlayerDisconnected","GuiltSaveOnDisconect",function(ply)
     ply:guilt_SetValue( ply.Karma or 100 )
 end)
 
-hook.Add("Player Spawn","SlowlyRestoreKarma",function(ply)
+hook.Add("PlayerSpawn", "SlowlyRestoreKarma", function(ply)
     if OverrideSpawn then return end
 
     ply.lastwarning = nil
-    //ply.firstwarning = nil
     ply.Karma = ply.Karma or 100
-    ply:SetNetVar("Karma",ply.Karma)
-    //ply:guilt_SetValue( ply.Karma or 100 )
-    
+    ply:SetNetVar("Karma", ply.Karma)
     ply.Guilt = 0
 end)
 
-hook.Add("Player Think", "karmagain", function(ply)
+hook.Add("PlayerTick", "karmagain", function(ply)
     if (ply.KarmaGainThink or 0) > CurTime() then return end
     ply.KarmaGainThink = CurTime() + 120
 
-    ply.Karma = math.Clamp((ply.Karma or 100) + (ply.Karma > 100 and 0.1 or (ply.KarmaGain or 0.75)), 0, zb.MaxKarma)
-    
+    ply.Karma = math.Clamp(
+        (ply.Karma or 100) + (ply.Karma > 100 and 0.1 or (ply.KarmaGain or 0.75)),
+        0,
+        zb.MaxKarma
+    )
+
     ply:SetNetVar("Karma", ply.Karma)
-    //ply:guilt_SetValue( ply.Karma or 100 )
 end)
 
 hook.Add("Org Clear","removekarmashaking",function(org)
@@ -312,51 +312,6 @@ hook.Add("Should Fake Up", "karma", function(ply)
     if ply.organism and ply.organism.start_shaking then return false end
 end)
 
-local seizuremsgs = {
-    "bllllhlhmmmbmmmmbmbmb",
-    "bbb b-bbbbbb bllmbmmbb",
-    "ddgdgg-d bbbglgggg",
-    "mmmmammmm aaghbgbblllb",
-    "hhel-bbbphphpppph",
-    "zzzzblzzzmzzzzz",
-}
-hook.Add("Org Think", "Its_Karma_Bro",function(owner, org, timeValue)
-    if not owner or not owner:IsPlayer() or org.otrub or not org.isPly then return end
-    if not owner:IsPlayer() or not owner:Alive() then return end
-    
-    local ply = owner
-    
-    if (ply.Karma or 100) < 50 then
-        if ((math.random(math.Clamp((ply.Karma or 100),20,zb.MaxKarma) * 300) == 1 or org.start_shaking)) then
-            hg.StunPlayer(ply)
-            local time = 15
-            
-            ply:Notify(seizuremsgs[math.random(#seizuremsgs)], 16, "seizure", 1, function()
-                if !IsValid(ply) then return end
-                
-                ply:ChatPrint("You are experiencing an epileptic seizure.")
-            end)
-
-            org.start_shaking = org.start_shaking or (CurTime() + time)
-            local ent = hg.GetCurrentCharacter(owner)
-            local mul = ((org.start_shaking) - CurTime()) / time
-            
-            if mul > 0 then
-                ent:GetPhysicsObjectNum(math.random(ent:GetPhysicsObjectCount()) - 1):ApplyForceCenter(VectorRand(-750 * mul,750 * mul))
-            else
-                org.start_shaking = nil
-            end
-        else
-            org.start_shaking = nil
-        end
-	end
-
-    if (ply.Karma or 100) < 35 then
-        if math.random(2000) == 1 then
-            hg.organism.Vomit(owner)
-        end
-    end
-end)
 
 hook.Add("ZB_EndRound","savevalues",function()
     for i,ply in ipairs(player.GetAll()) do
