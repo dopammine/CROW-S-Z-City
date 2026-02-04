@@ -1,7 +1,7 @@
 --\\
 hg.VGUI = hg.VGUI or {}
 hg.VGUI.MainColor = Color(0, 150 ,150) --was originally red, now cyan
-hg.VGUI.SecondaryColor = Color(,0,135,240)
+hg.VGUI.SecondaryColor = Color(0,135,240)
 hg.VGUI.BackgroundColor = Color(25,35,45,220)
 hg.VGUI.MainSkin = "ZCity"
 
