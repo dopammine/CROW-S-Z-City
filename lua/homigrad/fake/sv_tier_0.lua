@@ -1,4 +1,4 @@
-﻿local PLAYER = FindMetaTable("Player")
+local PLAYER = FindMetaTable("Player")
 if not HookGetRagdollEntity then HookGetRagdollEntity = PLAYER.GetRagdollEntity end
 function PLAYER:GetRagdollEntity()
 	local ent = self:GetNWEntity("RagdollDeath")
@@ -628,15 +628,16 @@ function hg.SetFreemove(ply, set)
 	if set then
 		ply.lastFakeTime = hg_ragdollcombat:GetBool() and 9999 or 1
 		ply.lastFake = CurTime() + ply.lastFakeTime
-		//ply:SetNetVar("lastFake",ply.lastFake)
+		//ply:SetNetVar("lastFake", ply.lastFake)
 		ply:SetMoveType(MOVETYPE_WALK)
-		--local hull = Vector(5,5,5)
-		--ply:SetHull(-Vector(hull,hull,0),Vector(hull,hull,72))
-		--ply:SetHullDuck(-Vector(hull,hull,0),Vector(hull,hull,36))
-		--ply:SetViewOffset(Vector(0,0,64))
-		--ply:SetViewOffsetDucked(Vector(0,0,34))
+		local hull = Vector(5,5,5)
+		ply:SetHull(-Vector(hull,hull,0),Vector(hull,hull,72))
+		ply:SetHullDuck(-Vector(hull,hull,0),Vector(hull,hull,36))
+		ply:SetViewOffset(Vector(0,0,64))
+		ply:SetViewOffsetDucked(Vector(0,0,34))
 	else
 		ply.lastFake = 0
+		ply.lastFakeTime = 0
 		//ply:SetNetVar("lastFake",0)
 		//if ply:GetMoveType() != (ply:InVehicle() and MOVETYPE_NOCLIP or MOVETYPE_NONE) then
 			//ply:SetMoveType(ply:InVehicle() and MOVETYPE_NOCLIP or MOVETYPE_NONE)
