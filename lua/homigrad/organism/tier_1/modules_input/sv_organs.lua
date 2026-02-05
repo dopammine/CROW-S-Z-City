@@ -91,8 +91,19 @@ input_list.brain = function(org, bone, dmg, dmgInfo)
 		ParticleEffect( "headshot", dmgInfo:GetDamagePosition(), dmgInfo:GetDamageForce():GetNormalized():Angle() )
 	end
 
-	if org.brain >= 0.01 and math.random(3) == 1 then
-		hg.applyFencingToPlayer(org.owner, org)
+	if org.brain >= 0.01 and (org.brain - oldDmg) > 0.01 and math.random(3) == 1 then
+		--hg.applyFencingToPlayer(org.owner, org)
+		org.shock = 70
+
+		timer.Simple(0.1, function()
+			local rag = hg.GetCurrentCharacter(org.owner)
+
+			if rag:IsRagdoll() then
+				local stype = hg.getRandomSpasm()
+				hg.applySpasm(rag, stype)
+				if rag.organism then rag.organism.spasm, rag.organism.spasmType = true, stype end
+			end
+		end)
 	end
 
 	org.consciousness = math.Approach(org.consciousness, 0, dmg * 3)

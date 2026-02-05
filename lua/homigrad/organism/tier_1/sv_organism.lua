@@ -43,6 +43,7 @@ hook.Add("Org Clear", "Main", function(org)
 	org.rlegamputated = false
 	org.rarmamputated = false
 	org.larmamputated = false
+	org.headamputated = false
 
 	org.furryinfected = false
 
@@ -147,6 +148,7 @@ local function send_organism(org, ply)
 	sendtable.rlegamputated = org.rlegamputated
 	sendtable.rarmamputated = org.rarmamputated
 	sendtable.larmamputated = org.larmamputated
+	sendtable.headamputated = org.headamputated
 	sendtable.lungsfunction = org.lungsfunction
 	sendtable.consciousness = org.consciousness
 	sendtable.assimilated = org.assimilated
@@ -204,6 +206,7 @@ local function send_bareinfo(org)
 	sendtable.rlegamputated = org.rlegamputated
 	sendtable.rarmamputated = org.rarmamputated
 	sendtable.larmamputated = org.larmamputated
+	sendtable.headamputated = org.headamputated
 	sendtable.LodgedEntities = org.LodgedEntities
 	sendtable.berserkActive2 = org.berserkActive2
 	sendtable.CantCheckPulse = org.CantCheckPulse

@@ -73,3 +73,14 @@ hook.Add("Org Think", "VirusRandomEvents", function(owner, org, timeValue)
         end
     end
 end)
+
+hook.Add("Org Think", "TemperatureSounds", function(owner, org, timeValue) -- добавил звуки при низкой температуре Ж))
+    if not owner:IsPlayer() or not owner:Alive() or org.otrub then return end
+    if owner:IsPlayer() and org.temperature > 24 and org.temperature < 35 then
+        if not owner.ColdRandomEventTime or CurTime() >= owner.ColdRandomEventTime then
+            local event = math.random(1, 2) == 1 and "Cough" or "Sneeze"
+            module.TriggerRandomEvent(owner, event)
+            owner.ColdRandomEventTime = CurTime() + math.random(math.Remap(org.temperature, 35, 24, 60, 15), math.Remap(org.temperature, 35, 24, 120, 30))
+        end
+    end
+end)

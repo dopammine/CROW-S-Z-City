@@ -314,7 +314,18 @@ input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
 	end
 
 	if org.brain >= 0.01 and math.random(3) == 1 and (rnd or (org.skull - oldDmg) > 0.6) then
-		hg.applyFencingToPlayer(org.owner, org)
+		--hg.applyFencingToPlayer(org.owner, org)
+		org.shock = 70
+
+		timer.Simple(0.1, function()
+			local rag = hg.GetCurrentCharacter(org.owner)
+
+			if rag:IsRagdoll() then
+				local stype = hg.getRandomSpasm()
+				hg.applySpasm(rag, stype)
+				if rag.organism then rag.organism.spasm, rag.organism.spasmType = true, stype end
+			end
+		end)
 	end
 
 	if dmg > 0.4 then
