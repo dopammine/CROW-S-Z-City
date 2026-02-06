@@ -216,6 +216,58 @@ local braindamage_phraselist = {
 	"Bhrhraihin.",
 }
 
+local cold_phraselist = {
+	"It's getting very cold..",
+	"Too cold for me.",
+	"I'm shivering, fucking hell, man.",
+	"Extremely chilly out here..",
+	"Need something to heat up",
+	"I feel sick from that cold, fuck."
+}
+
+local freezing_phraselist = {
+	"I.. Do not feel m-my b-body..",
+	"I cant.. f-feel my legs",
+	"I'm f-fuck-king fre-ezing..",
+	"I-I think-k my face is num-mb..",
+	"Cold-d..",
+	"I.. Cannot feel any-ythi-ing..",
+}
+
+local numb_phraselist = {
+	"It's not.. cold anymore..",
+	"Why.. does it feel warm..?",
+	"I think I'm okay.. I think...",
+	"Finally some warmth...",
+}
+
+local hot_phraselist = {
+	"I'm so sweaty..",
+	"This hot is killing me..",
+	"My clothing is covered in sweat, fuck.",
+	"I'm smelling like shit!",
+	"It's a bit too hot, fuck, man.",
+	"I'm heating up real bad",
+	"Why is it so hot in here",
+}
+
+local heatstroke_phraselist = {
+	"I NEED WATER!!",
+	"Please, water..",
+	"I feel dizzy.. Fuuck-",
+	"MY HEAD!- It hurts..",
+	"My head is aching..",
+	"Why.. Do I feel weird..?",
+	"My heart.. It's about to burst..",
+	"I feel my heart pounding, FUCK!!"
+}
+
+local heatvomit_phraselist = {
+	"That heat..- I'm gonna vomit-",
+	"Ugghhh... I'm about to puke-",
+	"Fuuck.. Oughhh.. I dont feel-"
+}
+
 local hg_showthoughts = ConVarExists("hg_showthoughts") and GetConVar("hg_showthoughts") or CreateClientConVar("hg_showthoughts", "1", true, true, "Show the thoughts of your character", 0, 1)
 
 function string.Random(length)
@@ -251,11 +303,14 @@ function hg.likely_to_phrase(ply)
 	local brain = org.brain
 	local blood = org.blood
 	local fear = org.fear
+	local temperature = org.temperature
 	local broken_dislocated = org.just_damaged_bone and ((org.just_damaged_bone - CurTime()) < -3)
 
 	return (broken_dislocated) and 5
-		or (pain > 75) and 5
 		or (pain > 65) and 5
+		or (temperature < 28 and 0.5)
+		or (temperature < 31 and 1)
+		or (temperature > 40 and 2)
 		or (blood < 3000 and 0.3)
 		--or (fear > 0.5 and 0.7)
 		or (brain > 0.1 and brain * 5)
@@ -287,6 +342,7 @@ local function get_status_message(ply)
 
 	local pain = org.pain
 	local brain = org.brain
+	local temperature = org.temperature
 	local blood = org.blood
 	local hungry = org.hungry
 	local broken_dislocated = org.just_damaged_bone and ((org.just_damaged_bone + 3 - CurTime()) < -3)
@@ -339,6 +395,12 @@ local function get_status_message(ply)
 		--most_wanted_phraselist = ((IsAimedAt(ply) > 0.9) and is_aimed_at_phrases or (math.random(10) == 1 and fear_hurt_ironic or fear_phrases))
 	end
 
+	if temperature < 35 then
+		most_wanted_phraselist = temperature > 31 and cold_phraselist or (temperature < 28 and numb_phraselist or freezing_phraselist)
+	elseif temperature > 38 then
+		most_wanted_phraselist = temperature < 40 and hot_phraselist or heatstroke_phraselist
+	end
+
 	if not most_wanted_phraselist and hungry and hungry > 25 and math.random(3) == 1 then
 		most_wanted_phraselist = hungry > 45 and very_hungry or hungry_a_bit
 	end
@@ -354,6 +416,35 @@ local function get_status_message(ply)
 	else
 		return ""
 	end
+end
+
+local allowedlist_types = {
+	heatvomit = heatvomit_phraselist,
+}
+
+function hg.get_phraselist(ply, type)
+	if not IsValid(ply) then
+		if CLIENT then
+			ply = lply
+		else
+			return
+		end
+	end
+	
+	local nomessage = ply.PlayerClassName == "Gordon" || ply.PlayerClassName == "Combine"
+
+	if nomessage then return "" end
+    if ply:GetInfoNum("hg_showthoughts", 1) == 0 then return "" end
+
+	local org = ply.organism	
+	if not org or not org.brain then return "" end
+
+	if not isstring(type) or not allowedlist_types[type] then return "" end
+
+	local needed_list = allowedlist_types[type]
+
+	local str = needed_list[math.random(#needed_list)]
+	return str
 end
 
 function hg.get_status_message(ply)
