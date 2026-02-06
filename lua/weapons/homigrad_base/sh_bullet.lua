@@ -258,12 +258,18 @@ game.AddDecal("Impact.ShootPowderAdd", "decals/burn01a")
 
 local ipairs, ents = ipairs, ents
 local ents_FindInSphere = ents.FindInSphere
+local vectorup = Vector(0, 0, 75)
 local function gasInertia(pos, force)
 	for _, ent in ipairs(ents_FindInSphere(pos, force)) do
 		if IsValid(ent) and not ent:IsNPC() and not ent:IsPlayer() then
 			local phys = ent:GetPhysicsObject()
 			if IsValid(phys) then
-				phys:ApplyForceCenter((pos - ent:GetPos()) * (-phys:GetMass() / 2))
+				local entpos = ent:GetPos()
+				local dist = pos:Distance(entpos)
+				local falloff = 1.2 - (dist / (force))
+
+				phys:Wake()
+				phys:ApplyForceCenter(((pos - entpos) * ((-phys:GetMass() / 1.5) * (force / 100)) + vectorup) * falloff)
 			end
 		end
 	end
@@ -303,8 +309,8 @@ bulletHit = function(ply, tr, dmgInfo, bullet, Weapon)
 			util.Decal("Impact.ShootPowderAdd", trPos + trNormal, trPos - trNormal)
 		end
 
-		gasInertia(trPos, force * 2)
-		gasInertia(trStart, force * 4)
+		gasInertia(trPos, force * 3)
+		gasInertia(trStart, force * 6)
 	end
 
 	timer.Simple(0,function()

@@ -2059,6 +2059,15 @@ local IsValid = IsValid
 		if self.ReloadSound then util.PrecacheSound(self.ReloadSound) end
 	end
 --//
+--\\ Faster npcs (does not works)
+	--[[hook.Add("OnEntityCreated", "fasternpcs", function(ent)
+		if IsValid(ent) and ent:IsNPC() then
+			timer.Simple(.1, function()
+				ent:SetPlaybackRate(2)
+			end)
+		end
+	end)]]--
+--//
 --\\ timescale pitch change
 	local cheats = GetConVar( "sv_cheats" )
 	local timeScale = GetConVar( "host_timescale" )
@@ -2115,10 +2124,14 @@ local IsValid = IsValid
 		end
 
 		if not flashlightwep then --custom flashlight
+			if IsValid(wep) and (wep.IsPistolHoldType and not wep:IsPistolHoldType() and ply.PlayerClassName ~= "Gordon") then return end
+
 			local inv = ply:GetNetVar("Inventory",{})
 			if inv and inv["Weapons"] and inv["Weapons"]["hg_flashlight"] and enabled and hg.CanUseLeftHand(ply) then
-				hg.GetCurrentCharacter(ply):EmitSound("items/flashlight1.wav",65)
-				ply:SetNetVar("flashlight",not ply:GetNetVar("flashlight"))
+				local flashvar = ply:GetNetVar("flashlight")
+
+				hg.GetCurrentCharacter(ply):EmitSound("items/flashlight1.wav", 65, flashvar and 110 or 130)
+				ply:SetNetVar("flashlight",not flashvar)
 				--return true
 				if IsValid(ply.flashlight) then ply.flashlight:Remove() end
 			else
