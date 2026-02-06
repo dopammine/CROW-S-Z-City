@@ -81,6 +81,11 @@ SWEP.AmmoTypes2 = {
 		[4] = {"23x75 Zvezda"},
 		[5] = {"23x75 Waver"}
 	},
+	["20/70 gauge"] = {
+		[1] = {"20/70 gauge"},
+		[2] = {"20/70 Slug"},
+		[3] = {"20/70 Flechette"},
+	},
 }
 
 function SWEP:OnReloaded()
