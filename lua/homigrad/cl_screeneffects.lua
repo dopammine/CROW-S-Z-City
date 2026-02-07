@@ -55,6 +55,8 @@ local tab = {
 	["$pp_colour_colour"] = 1
 }
 
+local WitnessLerp = 0
+
 --local potatopc = GetConVar("hg_potatopc") or CreateClientConVar("hg_potatopc", "0", true, false, "enable this if you are noob", 0, 1)
 local hook_Run = hook.Run
 hook.Add("RenderScreenspaceEffects", "homigrad", function()
@@ -76,6 +78,12 @@ hook.Add("RenderScreenspaceEffects", "homigrad", function()
 	//DrawToyTown(addtiveLayer.toytown, addtiveLayer.toytown_h * ScrH())
 	tab["$pp_colour_brightness"] = addtiveLayer.brightness
 	DrawColorModify(tab)
+
+	if WitnessLerp > 0 then
+		surface.SetMaterial(vignetteMat)
+		surface.SetDrawColor(0, 0, 0, math.Clamp(WitnessLerp * 255, 0, 255))
+		surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
+	end
 
 	hook_Run("Post Pre Post Processing")
 
@@ -254,6 +262,7 @@ local function stopthings()
 	assimilatedLerp = 0
 	tempLerp = 36.6
 	consciousnessLerp = 1
+	WitnessLerp = 0
 
 	lply.tinnitus = 0
 	
