@@ -97,14 +97,14 @@ function PANEL:InitializeMarkup()
 	local gm = gmod.GetGamemode().Name .. " | " .. string.NiceName(zb ~= nil and zb.GetRoundName or mapname)
 
     if hg.PluvTown.Active then
-        local text = "<font=ZC_MM_Title><colour=80,140,255,255>    </colour>City</font>\n<font=ZCity_Small>" .. gm .. "</font>"
+        local text = "<font=ZC_MM_Title><colour=80,140,255,255>CROW'S </colour><colour=255,60,60,255>Z</colour>City</font>\n<font=ZCity_Small>" .. gm .. "</font>"
 
         self.SelectedPluv = table.Random(hg.PluvTown.PluvMats)
 
         return markup.Parse(text)
     end
 
-    local text = "<font=ZC_MM_Title><colour=80,140,255,255>Z</colour>-City</font>\n<font=ZCity_Small>" .. gm .. "</font>"
+    local text = "<font=ZC_MM_Title><colour=80,140,255,255>CROW'S </colour><colour=255,60,60,255>Z</colour>City</font>\n<font=ZCity_Small>" .. gm .. "</font>"
     return markup.Parse(text)
 end
 
