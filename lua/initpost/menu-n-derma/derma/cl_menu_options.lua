@@ -118,7 +118,7 @@ function PANEL:CreateCategory( strCategory )
 end
 
 local color_blacky = Color(39,39,39,220)
-local color_reddy = Color(105,0,0,220)
+local color_reddy = Color(40,90,180,220)
 
 function PANEL:CreateOption( strCategory, bType, cConVar, bDecimals, strTitle, strDesc, bString )
     if not cConVar then
