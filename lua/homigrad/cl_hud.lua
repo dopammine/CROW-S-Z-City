@@ -145,7 +145,7 @@ hg.radialOptions = hg.radialOptions or {}
 local colBlack = Color(0, 0, 0, 152)
 local colOption = Color(40, 0, 55, 152)
 local colWhite = Color(255, 255, 255, 255)
-local colWhiteTransparent = Color(176, 40, 40, 100)
+local colWhiteTransparent = Color(40, 80, 176, 100)
 local colTransparent = Color(0, 0, 0, 0)
 local matHuy = Material("vgui/white")
 local vecXY = Vector(0, 0)
@@ -156,8 +156,8 @@ local current_option = 1
 local current_option_select = 1
 local hook_Run = hook.Run
 
-local incoentCol = Color(128,0,0)
-local taitorCol = Color(155,0,0)
+local incoentCol = Color(80,160,255)
+local taitorCol = Color(40,120,220)
 
 local menuPanel
 
@@ -538,7 +538,7 @@ local function CopyRight( text, font, x, y, color, ang, scale )
 
 	cam.PushModelMatrix( m, true )
 		draw.RoundedBox(5,0,2,w+52,h+2,Color(0,0,0))
-		draw.RoundedBox(5,0,2,w+50,h,Color(255,0,0))
+		draw.RoundedBox(5,0,2,w+50,h,Color(80,160,255))
 		draw.DrawText( text, font, 25, 0, color )	
 	cam.PopModelMatrix()
 
