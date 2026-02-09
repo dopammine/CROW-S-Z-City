@@ -40,9 +40,6 @@ function CLASS.On(self)
         self:SetHealth(250)
     end
 
-    -- Treat Homer fists throws as Fury-13 for strong throws
-    self:SetNetVar("Fury13_Active", true)
-
     -- Homer buffs
     if self.organism then
         self.organism.recoilmul = 0.5
@@ -57,7 +54,7 @@ function CLASS.On(self)
         self.organism.berserk = math.max(self.organism.berserk or 0, 2)
     end
 
-    self.MeleeDamageMul = 3
+    self.MeleeDamageMul = 2.2
 
     if Appearance and Appearance.AName then
         self:SetNWString("PlayerName","Homer " .. Appearance.AName)
