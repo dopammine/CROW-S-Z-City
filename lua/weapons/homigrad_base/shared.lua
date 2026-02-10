@@ -1462,6 +1462,9 @@ hg.postureFunctions2 = {
 			self.AdditionalAngPreLerp[2] = self.AdditionalAngPreLerp[2] - 10
 		end
 	end,
+	[10] = function(self,ply)
+		self.AdditionalAngPreLerp[3] = self.AdditionalAngPreLerp[3] + 180
+	end,
 }
 
 SWEP.AdditionalPosPreLerp = Vector(0,0,0)
