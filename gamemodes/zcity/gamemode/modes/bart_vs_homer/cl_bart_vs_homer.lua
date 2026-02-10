@@ -37,21 +37,23 @@ function MODE:HUDPaint()
         zb.RemoveFade()
         local fade = math.Clamp(zb.ROUND_START + 8 - CurTime(), 0, 1)
 
-        local roleName = "Player"
-        local role = lply.role
-        if role and role.name then
-            roleName = role.name
+        local roleName = nil
+        local class = lply.PlayerClassName or (lply.GetPlayerClass and lply:GetPlayerClass())
+        if class == "homer" then
+            roleName = "Homer"
+        elseif class == "bart" then
+            roleName = "Bart"
         else
-            local class = lply.PlayerClassName
-            if class == "homer" then
-                roleName = "Homer"
-            elseif class == "bart" then
-                roleName = "Bart"
+            local role = lply.role
+            if role and role.name and role.name ~= "Player" then
+                roleName = role.name
             end
         end
 
         draw.SimpleText("ZCity | Bart VS Homer", "ZB_HomicideMediumLarge", sw * 0.5, sh * 0.1, Color(0, 162, 255, 255 * fade), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-        draw.SimpleText("You are " .. roleName, "ZB_HomicideMediumLarge", sw * 0.5, sh * 0.5, Color(255, 217, 15, 255 * fade), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        if roleName then
+            draw.SimpleText("You are " .. roleName, "ZB_HomicideMediumLarge", sw * 0.5, sh * 0.5, Color(255, 217, 15, 255 * fade), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        end
         draw.SimpleText("KILL HOMER OR BART FUCKING LOSESERRRRR", "ZB_HomicideMedium", sw * 0.5, sh * 0.9, Color(255, 255, 255, 255 * fade), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
     end
 

@@ -63,6 +63,9 @@ function MODE:Intermission()
     net.WriteUInt(IsValid(homer) and homer:EntIndex() or 0, 16)
     net.Broadcast()
 
+    net.Start("bvh_roundstart")
+    net.Broadcast()
+
     if hg and hg.UpdateRoundTime then
         hg.UpdateRoundTime(self.ROUND_TIME)
     end
@@ -73,8 +76,6 @@ function MODE:RoundStart()
         ply:Freeze(false)
     end
     self._started = CurTime()
-    net.Start("bvh_roundstart")
-    net.Broadcast()
     if not (self.saved and self.saved.homer_entindex) then
         local all = player.GetHumans()
         local candidates = {}
@@ -232,4 +233,3 @@ end
 function MODE.GuiltCheck(attacker, victim, add, harm, amt)
     return 1, true
 end
-
