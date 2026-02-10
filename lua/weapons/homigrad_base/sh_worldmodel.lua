@@ -78,6 +78,9 @@ hg.postureFuncWorldModel = {
 		if self:IsZoom() then return end
 		self.weaponAng[3] = self.weaponAng[3] - 40
 	end,
+	[10] = function(self,ply)
+		self.weaponAng[3] = self.weaponAng[3] + 180
+	end,
 }
 SWEP.lerpaddcloseanim = 0
 SWEP.closeanimdis = 40
@@ -908,5 +911,4 @@ end)
 function SWEP:ShouldDrawViewModel()
 	return false
 end
-
 
