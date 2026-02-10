@@ -52,7 +52,7 @@ function SWEP:DrawWorldModel2()
 
 	--WorldModel:SetMaterial("phoenix_storms/gear")
 	--WorldModel:SetColor(Color(255, 84, 58))
-	WorldModel:SetModelScale(math.max(math.abs(math.sin(CurTime()*2)),0)+0.4)
+	WorldModel:SetModelScale(0.75 + math.abs(math.sin(CurTime() * 2)) * 0.15)
 	
 	if IsValid(owner) then
 		local offsetVec = self.offsetVec
@@ -62,8 +62,29 @@ function SWEP:DrawWorldModel2()
 		local matrix = owner:GetBoneMatrix(boneid)
 		if not matrix then return end
 		local newPos, newAng = LocalToWorld(offsetVec, offsetAng, matrix:GetTranslation(), matrix:GetAngles())
+		local targetPly = owner
+		local targetPos = owner:EyePos()
+		local nearestDistSqr = math.huge
+		local searchRadius = 200
+		local searchRadiusSqr = searchRadius * searchRadius
+		for _, ply in ipairs(player.GetAll()) do
+			if ply == owner or not ply:Alive() then continue end
+			local head = ply:LookupBone("ValveBiped.Bip01_Head1")
+			local headPos = head and ply:GetBonePosition(head) or ply:EyePos()
+			local distSqr = headPos:DistToSqr(newPos)
+			if distSqr <= searchRadiusSqr and distSqr < nearestDistSqr then
+				nearestDistSqr = distSqr
+				targetPly = ply
+				targetPos = headPos
+			end
+		end
+		local lookAng = (targetPos - newPos):Angle()
+		lookAng:RotateAroundAxis(lookAng:Right(), offsetAng[1])
+		lookAng:RotateAroundAxis(lookAng:Up(), offsetAng[2])
+		lookAng:RotateAroundAxis(lookAng:Forward(), offsetAng[3] + 180)
+		self.pluvLookAng = LerpAngle(FrameTime() * 8, self.pluvLookAng or lookAng, lookAng)
 		WorldModel:SetPos(newPos)
-		WorldModel:SetAngles(newAng)
+		WorldModel:SetAngles(self.pluvLookAng)
 		WorldModel:SetupBones()
 	else
 		WorldModel:SetPos(self:GetPos())
