@@ -79,7 +79,6 @@ hg.postureFuncWorldModel = {
 		self.weaponAng[3] = self.weaponAng[3] - 40
 	end,
 	[10] = function(self,ply)
-		self.weaponAng[3] = self.weaponAng[3] + 180
 	end,
 }
 SWEP.lerpaddcloseanim = 0
@@ -258,6 +257,12 @@ function SWEP:PosAngChanges(ply, desiredPos, desiredAng, bNoAdditional, closeani
 	self.fuckingfuckpos = pos
 	desiredPos, desiredAng = LocalToWorld(self.RHPos + (bNoAdditional and vector_origin or (self.AdditionalPos + self.AdditionalPos2)), bNoAdditional and angle_zero or (self.AdditionalAng + self.AdditionalAng2), pos, ang)
 	desiredAng[3] = desiredAng[3] + 90
+	self.wtfPostureLerp = LerpFT(0.08, self.wtfPostureLerp or 0, (ply.posture == 10) and 1 or 0)
+	if self.wtfPostureLerp > 0 then
+		local wtfAng = Angle(desiredAng[1], desiredAng[2], desiredAng[3])
+		wtfAng:RotateAroundAxis(wtfAng:Forward(), 180)
+		desiredAng = LerpAngle(self.wtfPostureLerp, desiredAng, wtfAng)
+	end
 
 	self.restlerp = Lerp(hg.lerpFrameTime(0.0001, dtime), self.restlerp or 0, self:IsResting() and 1 or 0)
     
@@ -911,4 +916,3 @@ end)
 function SWEP:ShouldDrawViewModel()
 	return false
 end
-
