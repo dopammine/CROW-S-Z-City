@@ -934,4 +934,66 @@ if CLIENT then
             pnv_light:Update()
         end
     end)
+
+    hook.Add("Think","PNV_ThinkFur",function()
+        local ply = LocalPlayer()
+        if ply:Alive() and ply.PlayerClassName == "furry" then
+            if input.IsKeyDown(KEY_F) and not gui.IsGameUIVisible() and not IsValid(vgui.GetKeyboardFocus()) and (CurTime() > next_toggle_time) then
+                togglePNV()
+                next_toggle_time = CurTime() + toggle_cooldown
+            end
+        end
+        if not ply:Alive() and pnv_enabled then togglePNV() end
+        if ply.PlayerClassName ~= "furry" and pnv_enabled then togglePNV() end
+
+        if pnv_enabled and IsValid(pnv_light) then
+            pnv_light:SetPos(ply:EyePos())
+            pnv_light:SetAngles(ply:EyeAngles())
+            pnv_light:Update()
+        end
+    end)
+
+    local chaseSound
+    local chaseVolume = 0
+    local nextChaseCheck = 0
+    local lastChaseTime = 0
+    hook.Add("Think","FurryChaseSound",function()
+        local ply = LocalPlayer()
+        if not IsValid(ply) then return end
+        local now = CurTime()
+        if now < nextChaseCheck then return end
+        nextChaseCheck = now + 0.1
+        local dt = math.max(now - lastChaseTime, 0)
+        lastChaseTime = now
+
+        local targetVolume = 0
+
+        if ply:Alive() and ply.PlayerClassName ~= "furry" then
+            local pos = ply:GetPos()
+            for _, v in player.Iterator() do
+                if v ~= ply and v:Alive() and v.PlayerClassName == "furry" then
+                    if v:GetPos():DistToSqr(pos) <= 1100000 then
+                        targetVolume = 1
+                        break
+                    end
+                end
+            end
+        end
+
+        chaseVolume = math.Approach(chaseVolume, targetVolume, dt * 3)
+        if chaseVolume > 0 then
+            if not chaseSound then
+                chaseSound = CreateSound(ply, "chase.wav")
+                chaseSound:PlayEx(chaseVolume, 100)
+            else
+                if not chaseSound:IsPlaying() then
+                    chaseSound:PlayEx(chaseVolume, 100)
+                end
+                chaseSound:ChangeVolume(chaseVolume, 0)
+            end
+        elseif chaseSound then
+            chaseSound:Stop()
+            chaseSound = nil
+        end
+    end)
 end
