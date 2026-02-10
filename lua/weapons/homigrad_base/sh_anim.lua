@@ -131,6 +131,8 @@ hg.postureFunctions = {
 	[8] = function(self,ply)
 		if self.IsPistolHoldType and not self:IsPistolHoldType() then ply.posture = 0 end		
 	end,
+	[10] = function(self,ply)
+	end,
 }
 
 function SWEP:ReadyStance()
