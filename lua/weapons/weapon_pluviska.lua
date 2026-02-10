@@ -8,7 +8,7 @@ SWEP.Primary.Wait = 1
 SWEP.Primary.Next = 0
 SWEP.HoldType = "slam"
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/gibs/hgibs_spine.mdl"
+SWEP.WorldModel = "models/props/pluv.mdl"
 if CLIENT then
 	SWEP.WepSelectIcon = Material("pluv/pluv.png")
 	SWEP.IconOverride = "pluv/pluv.png"
@@ -29,9 +29,9 @@ SWEP.ofsA = Angle(90,-90,90)
 
 function SWEP:InitializeAdd()
 	self:SetHold(self.HoldType)
-	self:SetModel("models/gibs/hgibs_spine.mdl")
-	self:SetCurModel("models/gibs/hgibs_spine.mdl")
-	self.WorldModel = "models/gibs/hgibs_spine.mdl"
+	self:SetModel("models/props/pluv.mdl")
+	self:SetCurModel("models/props/pluv.mdl")
+	self.WorldModel = "models/props/pluv.mdl"
 
 	if SERVER then
 		self:PhysicsInit(SOLID_VPHYSICS)
@@ -42,7 +42,6 @@ function SWEP:InitializeAdd()
 end
 
 function SWEP:DrawWorldModel2()
-	render.SetColorModulation(0.5,0,0)
 	self.model = IsValid(self.model) and self.model or ClientsideModel( self:GetCurModel() )
 	self.model:SetNoDraw(true)
 	local WorldModel = self.model
@@ -72,7 +71,6 @@ function SWEP:DrawWorldModel2()
 	end
 	
 		WorldModel:DrawModel()
-	render.SetColorModulation(1,1,1)
 end
 
 if SERVER then
