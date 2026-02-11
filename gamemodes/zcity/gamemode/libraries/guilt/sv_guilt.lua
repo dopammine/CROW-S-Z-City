@@ -197,7 +197,7 @@ hook.Add("HomigradDamage", "GuiltReg", function(ply, dmgInfo, hitgroup, ent, har
     
     if rnd.name != "hmcd" and (Attacker.Team and Victim.Team and attackerTeam ~= Victim:Team()) then return end
     if zb.ROUND_STATE != 1 and (rnd.name != "cstrike" or !zb.RoundsLeft) then return end
-    if Victim.Guilt and Victim.Guilt > 1 and !zb.IsForce(Attacker) then return end
+    if Victim.Guilt and Victim.Guilt > 1 then return end
     if Attacker:IsBerserk() then return end
 
     local victimWep = Victim:IsPlayer() and IsValid(Victim:GetActiveWeapon()) and Victim:GetActiveWeapon()
@@ -213,7 +213,7 @@ hook.Add("HomigradDamage", "GuiltReg", function(ply, dmgInfo, hitgroup, ent, har
     local add = amt * maxharm
 
     add = add * (Victim:IsPlayer() and Attacker:PlayerClassEvent("Guilt", Victim) or 1)
-    add = add * 2
+    add = add * 20
 
     local mul, shouldBanGuilt
     
@@ -263,13 +263,13 @@ hook.Add("HomigradDamage", "GuiltReg", function(ply, dmgInfo, hitgroup, ent, har
 end)
 
 function zb.IsForce(Attacker)
-    return Attacker.PlayerClassName == "police" and Attacker.PlayerClassName == "nationalguard" and Attacker.PlayerClassName == "swat"
+    return Attacker.PlayerClassName == "police" or Attacker.PlayerClassName == "nationalguard" or Attacker.PlayerClassName == "swat"
 end
 
 local function IsLookingAt(ply, targetVec)
     if not IsValid(ply) or not ply:IsPlayer() then return false end
     local diff = targetVec - ply:GetShootPos()
-    return true--ply:GetAimVector():Dot(diff) / diff:Length() >= 0.6 
+    return ply:GetAimVector():Dot(diff) / diff:Length() >= 0.6 
 end -- i dont think it should matter if he looks at you or not. just drop your weapon
 
 function zb.ForcesAttackedInnocent(self, Victim)
@@ -332,6 +332,8 @@ hook.Add("ZB_StartRound","NO_HARM",function()
     
     zb.HarmDone = {}
     zb.HarmDoneKarma = {}
+    zb.GuiltTable = {}
+    zb.HarmDoneDetailed = {}
 end)
 
 util.AddNetworkString("get_karma")
