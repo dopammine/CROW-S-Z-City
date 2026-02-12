@@ -51,7 +51,7 @@ function MODE:AssignTeams()
     end
 end
 
-util.AddNetworkString("criresp_start")
+util.AddNetworkString("hns_start")
 function MODE:Intermission()
     game.CleanUpMap()
     hg.UpdateRoundTime(self.ROUND_TIME)
@@ -62,7 +62,7 @@ function MODE:Intermission()
         ply:SetupTeam(ply:Team())
     end
 
-	net.Start("criresp_start")
+	net.Start("hns_start")
 	net.Broadcast()
 
 end
@@ -159,7 +159,7 @@ function MODE:GiveEquipment()
                     local inv = ply:GetNetVar("Inventory") or {}
                     inv["Weapons"] = inv["Weapons"] or {}
                     inv["Weapons"]["hg_sling"] = true
-                    --inv["Weapons"]["hg_melee_belt"] = true	mcity only thing
+                    --inv["Weapons"]["hg_melee_belt"] = true
                     inv["Weapons"]["hg_flashlight"] = true
                     inv["Weapons"]["hg_brassknuckles"] = true
                     ply:SetNetVar("Inventory", inv)
@@ -253,7 +253,7 @@ end
 function MODE:CanSpawn()
 end
 
-util.AddNetworkString("cri_roundend")
+util.AddNetworkString("hns_roundend")
 function MODE:EndRound()
 	for k,ply in player.Iterator() do
 		if timer.Exists("SWATSpawn"..ply:EntIndex()) then
@@ -281,7 +281,7 @@ function MODE:EndRound()
     end
 
 	timer.Simple(2,function()
-		net.Start("cri_roundend")
+		net.Start("hns_roundend")
 			net.WriteBool(winner)
 		net.Broadcast()
 	end)
