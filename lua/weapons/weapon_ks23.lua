@@ -8,7 +8,7 @@ SWEP.Category = "Weapons - Shotguns"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/weapons/zcity/w_shot_m3juper90.mdl"
+SWEP.WorldModel = "models/weapons/w_shot_m3super90.mdl"
 SWEP.WorldModelFake = "models/weapons/arc9/darsu_eft/c_ks23.mdl"
 
 SWEP.FakePos = Vector(-12, 4, 7.5)
@@ -50,20 +50,19 @@ SWEP.FakeViewBobBone = "Camera_animated"
 SWEP.FakeViewBobBaseBone = "ValveBiped.Bip01_Spine4"
 SWEP.ViewPunchDiv = 5
 
---SWEP.ReloadHold = nil
+
 SWEP.FakeVPShouldUseHand = false
 
 SWEP.WepSelectIcon2 = Material("entities/arc9_eft_ks23.png")
 SWEP.WepSelectIcon2box = true
 SWEP.IconOverride = "entities/arc9_eft_ks23.png"
 
-SWEP.LocalMuzzlePos = Vector(26,0.09,5.098)
+SWEP.LocalMuzzlePos = Vector(32,0.09,5.098)
 SWEP.LocalMuzzleAng = Angle(0.2,-0.0,0)
 SWEP.WeaponEyeAngles = Angle(-0.7,0.1,0)
 
 SWEP.CustomShell = "23x75sh10"
---SWEP.EjectPos = Vector(-0,8,4)
---SWEP.EjectAng = Angle(0,-90,0)
+
 SWEP.ReloadSound = "weapons/remington_870/870_shell_in_1.wav"
 SWEP.CockSound = "pwb2/weapons/ithaca37stakeout/pump.wav"
 SWEP.weight = 5
@@ -108,12 +107,7 @@ SWEP.holsteredBone = "ValveBiped.Bip01_Spine2"
 SWEP.holsteredPos = Vector(4, 8, -6)
 SWEP.holsteredAng = Angle(210, 0, 180)
 
---local to head
---SWEP.RHPos = Vector(1,-5,3.4)
---SWEP.RHAng = Angle(0,-15,90)
-----local to rh
---SWEP.LHPos = Vector(18,-0.8,-3.6)
---SWEP.LHAng = Angle(-100,-180,0)
+
 
 SWEP.AnimList = {
 	["idle"] = "idle",

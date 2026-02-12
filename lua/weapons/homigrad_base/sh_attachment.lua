@@ -695,7 +695,10 @@ if CLIENT then
 	local function refreshtbl()
 		local tblcpy = {}
 
-		local tbl = lply:GetNetVar("Inventory")["Attachments"]
+		local inv = lply:GetNetVar("Inventory")
+		if inv == nil then return end
+
+		local tbl = inv["Attachments"]
 		local wep = lply:GetActiveWeapon()
 		local achtbl = {}
 		if IsValid(wep) and ishgweapon(wep) then
@@ -728,6 +731,7 @@ if CLIENT then
 	end)
 
 	local mat = Material("homigrad/vgui/gradient_left.png")
+	local clr_blackalpha = Color(0, 0, 0, 100)
 
 	CreateMenu = function()
 		if IsValid(hg.attachmentsMenuPanel) then
@@ -772,7 +776,7 @@ if CLIENT then
 		sbar:SetHideButtons(true)
 
 		function sbar:Paint(w, h)
-			draw.RoundedBox(0, 0, 0, w, h, Color(0, 0, 0, 100))
+			draw.RoundedBox(0, 0, 0, w, h, clr_blackalpha)
 		end
 
 		function sbar.btnGrip:Paint(w, h)
