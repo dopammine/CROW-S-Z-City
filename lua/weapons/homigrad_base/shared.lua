@@ -585,13 +585,6 @@ if SERVER then
 		net.WritePlayer(ply)
 		net.Send(ply)
 	end)
-
-	hg_shoot_tinnitus = ConVarExists("hg_shoot_tinnitus") and GetConVar("hg_shoot_tinnitus") or CreateConVar("hg_shoot_tinnitus","0", {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}, "Enables shooting tinnitus")
-	SetGlobalBool("hg_shoot_tinnitus",hg_shoot_tinnitus:GetBool())
-
-	cvars.AddChangeCallback("hg_shoot_tinnitus", function(convar_name, value_old, value_new)
-		SetGlobalBool("hg_shoot_tinnitus",hg_shoot_tinnitus:GetBool())
-	end)
 else
 	net.Receive("resettinnitus", function(len, ply)
 		local ply = net.ReadPlayer() or ply
@@ -600,7 +593,7 @@ else
 
 	hook.Add("Player Think", "TinnitusPadaet", function(ply, ent)
 		if (ply.TinnitusFactor or 0) > 0 then
-			ply.TinnitusFactor = math.min(math.max((ply.TinnitusFactor or 0) - 0.5, 0),300)
+			ply.TinnitusFactor = math.min(math.max((ply.TinnitusFactor or 0) - 0.5, 0),102)
 		end
 	end)
 end
@@ -616,10 +609,8 @@ function SWEP:EmitShoot()
 	local ply = self:GetOwner()
 	ply = IsValid(ply) and ply or self
 
-	local hadEarProtection = IsValid(lply) and lply.armors and lply.armors["ears"] == "headphones1"
-
 	if CLIENT then
-		if hadEarProtection then
+		if IsValid(lply) and lply.armors and lply.armors["ears"] == "headphones1" then
 			vol = vol / 2
 		end
 	end
@@ -643,7 +634,7 @@ function SWEP:EmitShoot()
 		end
 	end
 
-	if !self.Supressor and !self.NoWINCHESTERFIRE then
+	if not self.Supressor and !self.NoWINCHESTERFIRE then
 		self:PlaySnd("rifle_win1892/win1892_fire_01.wav", nil, nil, vol * (1 - insideVal / 16), math.Clamp(1 / self.Primary.Force / (self.NumBullet or 1) * 100 * 50,90,150), 55555, true)
 
 		self:PlaySnd("zcitysnd/sound/weapons/firearms/hndg_colt1911/colt_1911_fire1.wav", nil, nil, vol * (insideVal / 16), 150, 51256, true)
@@ -651,21 +642,13 @@ function SWEP:EmitShoot()
 
 		self:PlaySnd("weapons/shoot/shot1.wav", nil, nil, vol * 1, 150, 52256, true)
 	end
-	local nearDist = (GetViewEntity() == ply or GetViewEntity():GetPos():Distance( self:GetPos() ) < 150)
-
-	if GetGlobalBool("hg_shoot_tinnitus", false) and nearDist and !self.Supressor and !hadEarProtection then
-		lply.TinnitusFactor = (lply.TinnitusFactor or 0) + ( (self.Primary.Force * (self.NumBullet or 1) ) / 3) + insideVal
-		if lply.TinnitusFactor > 32 then
-			lply:AddTinnitus(lply.TinnitusFactor / 100)
-		end
-	end
-
-	if (self.Primary.SoundFP or self.Supressor and self.SupressedSoundFP) and nearDist then
+	
+	if (self.Primary.SoundFP or self.Supressor and self.SupressedSoundFP) and (GetViewEntity() == ply or GetViewEntity():GetPos():Distance( self:GetPos() ) < 150) then
 		self:PlaySnd((self.Supressor and self.SupressedSoundFP) or self.Primary.SoundFP, nil, nil, vol, nil, 55533, not self.Supressor)
 	else
 		self:PlaySnd(self.Supressor and (self.SupressedSound or (self:IsPistolHoldType() and "homigrad/weapons/pistols/sil.wav" or "m4a1/m4a1_suppressed_fp.wav")) or self.Primary.Sound, nil, nil, vol, nil, 55533, not self.Supressor)
 	end
-	if !self.Supressor then
+	if not self.Supressor then
 		self:PlaySndDist(self.DistSound, nil, nil, nil, nil, 55511, not self.Supressor)
 	end
 end
@@ -1300,7 +1283,6 @@ function SWEP:CoreStep()
 	if self:IsClient() then self:Step_SprayVel(dtime) end
 	self.dtimethink = SysTime()
 	//self:ThinkAtt()
-	if self.ThinkAdd then self:ThinkAdd() end
 
 	--self:Animation()
 
@@ -1479,6 +1461,8 @@ hg.postureFunctions2 = {
 			self.AdditionalAngPreLerp[1] = self.AdditionalAngPreLerp[1] + 2
 			self.AdditionalAngPreLerp[2] = self.AdditionalAngPreLerp[2] - 10
 		end
+	end,
+	[10] = function(self,ply)
 	end,
 }
 
@@ -1716,7 +1700,7 @@ function SWEP:GetAdditionalValues()
 	local walk = math.Clamp(self.walkinglerp / 100,0,1)
 	
 	self.huytime = self.huytime + walk * dtime * 8 * (ply:OnGround() and 1 or 0.1)
-
+	--if 
 	--ply.oldposture = ply.posture
 	if self:IsSprinting() then
 		--ply.posture = 1
@@ -1744,8 +1728,7 @@ function SWEP:GetAdditionalValues()
 	self.AdditionalAngPreLerp[1] = self.AdditionalAngPreLerp[1] - y * 2 * lena
 	self.AdditionalAngPreLerp[3] = self.AdditionalAngPreLerp[3] - y * 3 * lena
 
-	--// Sprint anim
-	if CLIENT and self:IsLocal() and owner:IsOnGround() and not self.reload then
+	if CLIENT and self:IsLocal() and owner:IsOnGround() then
 		local runMul = vellen / owner:GetRunSpeed()
 		if runMul >= 0.32 then
 			if not self:IsPistolHoldType() and not self.CanEpicRun then
@@ -1779,7 +1762,7 @@ function SWEP:GetAdditionalValues()
 	local suiciding = false--ply.suiciding
 	local huypitch = ((ply.suiciding and !IsValid(ply.FakeRagdoll)) or huya or (self:IsSprinting() or ((ply.posture == 4 or ply.posture == 3) and not self:IsZoom())))
 
-	self.pitch = Lerp(hg.lerpFrameTime(0.001,dtime), self.pitch, ply:GetNWFloat("InLegKick",0) > CurTime() and 0.5 or suiciding and 1 or huypitch and 0.65 or self.reload and 0.75 or 0)
+	self.pitch = Lerp(hg.lerpFrameTime(0.001,dtime), self.pitch, ply:GetNWFloat("InLegKick",0) > CurTime() and 0.5 or suiciding and 1 or huypitch and 0.65 or 0)
 	
 	if not huypitch then
 		local torso = ply:LookupBone("ValveBiped.Bip01_Spine1")
@@ -1981,7 +1964,7 @@ function SWEP:SetHandPos(noset)
 			hg.bone_apply_matrix(ent, rh, rhmat)
 			--ent:SetBoneMatrix(rh, rhmat)
 			
-			hg.set_holdrh(ent, self.hold_type or (self:IsPistolHoldType() and "pistol_hold2" or "ak_hold"))
+			if GetViewEntity() == self:GetOwner() then hg.set_holdrh(ent, self.hold_type or (self:IsPistolHoldType() and "pistol_hold2" or "ak_hold")) end
 		end
 		
 		if (( hg.CanUseLeftHand(ply) and self.lhandik )) and self.attachments and vec2 and addvec2 and ang2 then
@@ -2003,7 +1986,7 @@ function SWEP:SetHandPos(noset)
 			local hold = self.hold_type or (self:IsPistolHoldType() and "pistol_hold2" or "ak_hold")
 			hold = self.attachments.grip and #self.attachments.grip ~= 0 and hg.attachments.grip[self.attachments.grip[1]].hold or hold
 			
-			hg.set_hold(ent, hold)
+			if GetViewEntity() == self:GetOwner() then hg.set_hold(ent, hold) end
 		end
 	else
 		local wpn = self
@@ -2088,7 +2071,7 @@ function SWEP:SetHandPos(noset)
 				local hold = self.hold_type or (self:IsPistolHoldType() and "pistol_hold2" or "ak_hold")
 				hold = self.attachments.grip and #self.attachments.grip ~= 0 and hg.attachments.grip[self.attachments.grip[1]].hold or hold
 
-				hg.set_hold(ent, hold)
+				if GetViewEntity() == self:GetOwner() then hg.set_hold(ent, hold) end
 			end
 		end
 	end
