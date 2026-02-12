@@ -3,10 +3,14 @@ MODE.name = "hideseek"
 local song
 local songfade = 0
 local song2
+local song2fade = 0
+local ashStarted = false
 local roundEnding = false
 net.Receive("criresp_start", function()
+    ashStarted = false
     roundEnding = false
     if IsValid(song2) then song2:Stop() song2 = nil end
+    song2fade = 0
     timer.Simple(0.2, function()
         sound.PlayFile("sound/zbattle/criresp/criepmission.mp3", "mono noblock", function(station)
             if IsValid(station) then
@@ -211,7 +215,7 @@ CreateEndMenu = function(whowin)
 	surface.SetTextColor(col.r, col.g, col.b, col.a)
 	local lenghtX, lenghtY = surface.GetTextSize(ply:GetPlayerName() or "He quited...")
 	surface.SetTextPos(15, h / 2 - lenghtY / 2)
-	surface.DrawText(ply:Name() .. (ply:GetNetVar("handcuffed", false) and " - neutralized" or (not ply:Alive() and " - dead") or ""))
+	surface.DrawText(ply:Name() .. (ply:GetNetVar("handcuffed", false) and " - neutralized" or (not ply:Alive() and " - dead") or " - alive"))
 	surface.SetFont("ZB_InterfaceMediumLarge")
 	surface.SetTextColor(col.r, col.g, col.b, col.a)
 	local lenghtX, lenghtY = surface.GetTextSize(ply:Frags() or "He quited...")
