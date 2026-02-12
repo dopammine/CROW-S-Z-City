@@ -74,6 +74,7 @@ hg.postures = {
     [7] = {"Gangsta",isPistolOnly = true},
     [8] = {"One-handed",isPistolOnly = true},
 	[9] = "Somalian",
+	[10] = "WTF",
 }
 
 if CLIENT then
@@ -91,6 +92,7 @@ if CLIENT then
 7 - gangsta shooting
 8 - one-handed shooting
 9 - somalian shooting
+10 - wtf shooting
 ]]) printed = true end
 		local pos = math.Round(args[1] or -1)
 		net.Start("change_posture")
