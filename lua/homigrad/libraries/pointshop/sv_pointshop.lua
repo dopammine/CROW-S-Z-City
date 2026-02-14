@@ -82,10 +82,11 @@ local plyMeta = FindMetaTable("Player")
 function plyMeta:GetPointshopVars()
     local steamID64 = self:SteamID64()
     if not util.IsBinaryModuleInstalled("mysqloo")  then
-        PLUGIN.PlayerInstances[steamID64] = PLUGIN.PlayerInstances[steamID64] or {}
-        PLUGIN.PlayerInstances[steamID64].donpoints = PLUGIN.PlayerInstances[steamID64].donpoints or 0
-        PLUGIN.PlayerInstances[steamID64].points = PLUGIN.PlayerInstances[steamID64].points or 0
-        PLUGIN.PlayerInstances[steamID64].items = PLUGIN.PlayerInstances[steamID64].items or {}
+        PLUGIN.PlayerInstances[steamID64] = {}
+
+		PLUGIN.PlayerInstances[steamID64].donpoints = 0
+        PLUGIN.PlayerInstances[steamID64].points = 0
+        PLUGIN.PlayerInstances[steamID64].items = {}
         return PLUGIN.PlayerInstances[steamID64]
     end
 
@@ -109,15 +110,14 @@ function plyMeta:PS_AddPoints( ammout )
 end
 
 function plyMeta:PS_SetPoints( value )
+    if not util.IsBinaryModuleInstalled("mysqloo") then return end
 	local steamID64 = self:SteamID64()
     local pointshopVars = self:GetPointshopVars()
 
-    if util.IsBinaryModuleInstalled("mysqloo") then
-        local updateQuery = mysql:Update("hg_pointshop")
-            updateQuery:Update("points", value)
-            updateQuery:Where("steamid", steamID64)
-        updateQuery:Execute()
-    end
+    local updateQuery = mysql:Update("hg_pointshop")
+		updateQuery:Update("points", value)
+		updateQuery:Where("steamid", steamID64)
+	updateQuery:Execute()
 
     pointshopVars.points = value
 end
@@ -157,15 +157,14 @@ function plyMeta:PS_AddDPoints( ammout )
 end
 
 function plyMeta:PS_SetDPoints( value )
+    if not util.IsBinaryModuleInstalled("mysqloo") then return end
 	local steamID64 = self:SteamID64()
     local pointshopVars = self:GetPointshopVars()
 
-    if util.IsBinaryModuleInstalled("mysqloo") then
-        local updateQuery = mysql:Update("hg_pointshop")
-            updateQuery:Update("donpoints", value)
-            updateQuery:Where("steamid", steamID64)
-        updateQuery:Execute()
-    end
+    local updateQuery = mysql:Update("hg_pointshop")
+		updateQuery:Update("donpoints", value)
+		updateQuery:Where("steamid", steamID64)
+	updateQuery:Execute()
 
     pointshopVars.donpoints = value
 end
@@ -192,12 +191,10 @@ function plyMeta:PS_SetItems( tItems )
     local steamID64 = self:SteamID64()
     local pointshopVars = self:GetPointshopVars()
 
-    if util.IsBinaryModuleInstalled("mysqloo") then
-        local updateQuery = mysql:Update("hg_pointshop")
-            updateQuery:Update("items", util.TableToJSON(tItems))
-            updateQuery:Where("steamid", steamID64)
-        updateQuery:Execute()
-    end
+    local updateQuery = mysql:Update("hg_pointshop")
+		updateQuery:Update("items", util.TableToJSON(tItems))
+		updateQuery:Where("steamid", steamID64)
+	updateQuery:Execute()
 
     pointshopVars.items = tItems
 end
@@ -223,7 +220,6 @@ end
 -- networking and other
 
 util.AddNetworkString("hg_pointshop_net")
-util.AddNetworkString("hg_pointshop_sync")
 
 function PLUGIN:NET_SendPointShopVars( ply )
 
@@ -237,6 +233,7 @@ end
 util.AddNetworkString("hg_pointshop_send_notificate")
 
 function PLUGIN:NET_BuyItem( ply, uid )
+    if not util.IsBinaryModuleInstalled("mysqloo") then return end
     if hg.PointShop.Items[uid].ISDONATE then return end
     if not hg.PointShop.Items[uid] then print(ply, "[PS-ZCity] The player is trying to buy invalid item.", "UID: "..uid ) return end
     if ply:PS_HasItem( uid ) then PLUGIN:NET_SendPointShopVars( ply ) return end
@@ -280,28 +277,4 @@ hook.Add("HG_PlayerSay","OpenPointShop",function(ply, txtTbl, txt)
     if txt == "!pointshop" then
         ply:ConCommand("hg_pointshop")
     end
-end)
-
-hook.Add("PlayerDeath", "PointshopEarnPoints", function(victim, _, attacker)
-    if not IsValid(attacker) or not attacker:IsPlayer() then return end
-    if attacker == victim then return end
-    if IsValid(victim) and victim:IsPlayer() and attacker.Team and victim.Team and attacker:Team() == victim:Team() then return end
-
-    attacker:PS_AddPoints(5)
-end)
-
-concommand.Add("hg_setpoints",function(ply, cmd, args)
-    if not ply:IsAdmin() then return end
-
-    local lenargs = #args
-    local target = player.GetListByName(lenargs > 1 and args[1] or ply:Name())[1]
-    if not IsValid(target) then return end
-
-    local newpoints = tonumber(lenargs > 1 and args[2] or args[1])
-    if not newpoints then return end
-
-    target:PS_SetPoints(math.max(newpoints, 0))
-    net.Start("hg_pointshop_sync")
-        net.WriteTable(target:GetPointshopVars())
-    net.Send(target)
 end)
