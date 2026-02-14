@@ -111,8 +111,6 @@ local function createButton(k,ent,size,Pan,mainpan)
             self:SetText( "Wait..." )
             self.InWait = true
             PLUGIN:SendNET("BuyItem",{ent.ID},function(data)
-                if not IsValid(self) then return end
-                if not IsValid(mainpan) then return end
                 self:SetText( LocalPlayer():PS_HasItem(ent.ID) and "SOLD" or "Buy: "..(ent.ISDONATE and "DONATE" or ent.PRICE.." ZP")  )
                 mainpan:Update(data)
                 self.InWait = false
