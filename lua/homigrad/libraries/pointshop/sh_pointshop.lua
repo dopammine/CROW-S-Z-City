@@ -40,14 +40,6 @@ if CLIENT then
         end
     end)
 
-    net.Receive("hg_pointshop_sync",function()
-        local data = net.ReadTable()
-        LocalPlayer().PS_MyItensens = data
-        if IsValid(PLUGIN.MenuPanel) then
-            PLUGIN.MenuPanel:Update(data)
-        end
-    end)
-
     function PLUGIN:SendNET(strFunc,tVars,callback)
         net.Start( "hg_pointshop_net" )
             net.WriteString( strFunc )
