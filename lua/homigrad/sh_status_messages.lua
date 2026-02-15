@@ -134,6 +134,14 @@ local schizo_monologue = {
     "Watch them bleed.",
     "Empathy is weaknes.",
     "So let it be written, so let it be done.",
+	"Who was that?..",
+	"There's no point in hiding...",
+	"It's more fun when they run..",
+	"Hello?...",
+	"What are you things..",
+	"Hatred is filling me..",
+	"Everyone dies eventually, what does it matter if they die now?..",
+	"Fuck, I want all of you dead so bad..",
 }
 local is_aimed_at_phrases = {
     "Oh God. This is it.",
