@@ -109,30 +109,38 @@ local schizo_monologue = {
     "They will run. You will end it.",
     "No turning back.",
     "Quiet. Listen. Move.",
-    "They are worthless."
-    "Three little pigs.."
-    "My name is not important."
-    "If I don't do it, who will?"
-    "This party stinks, I fucking hate these people."
-    "Look what they did to you, Jason."
-    "Humanity is disgusting."
-    "Fucking animals."
-    "What was that?"
-    "I'm hearing things.."
-    "No good pieces of shit."
-    "Who's there?"
-    "I'll make them beg."
-    "No mercy."
-    "You should just kill yourself, It's not worth it."
-    "Your life means nothing, nobody will remember you."
-    "Cut your throat, put an end to your misery already."
-    "You'll be on the news for this."
-    "Tragedy? More like comedy to me."
-    "Who the fuck wants to be Daniel Lamb?"
-    "Get revenge now. Grab a rifle."
-    "KILL THEM ALL."
-    "Watch them bleed."
-    "Empathy is weakness."
+    "They are worthless.",
+    "Three little pigs..",
+    "My name is not important.",
+    "If I don't do it, who will?",
+    "This party stinks, I fucking hate these people.",
+    "Look what they did to you, Jason.",
+    "Humanity is disgusting.",
+    "Fucking animals.",
+    "What was that?",
+    "I'm hearing things..",
+    "No good pieces of shit.",
+    "Who's there?",
+    "I'll make them beg.",
+    "No mercy.",
+    "You should just kill yourself, It's not worth it.",
+    "Your life means nothing, nobody will remember you.",
+    "Cut your throat, put an end to your misery already.",
+    "You'll be on the news for this.",
+    "Tragedy? More like comedy to me.",
+    "Who the fuck wants to be Daniel Lamb?",
+    "Get revenge now. Grab a rifle.",
+    "KILL THEM ALL.",
+    "Watch them bleed.",
+    "Empathy is weakness.",
+	"Who was that?..",
+	"There's no point in hiding...",
+	"It's more fun when they run..",
+	"Hello?...",
+	"What are you things..",
+	"Hatred is filling me..",
+	"Everyone dies eventually, what does it matter if they die now?..",
+	"Fuck, I want all of you dead so bad..",
 }
 local is_aimed_at_phrases = {
     "Oh God. This is it.",
