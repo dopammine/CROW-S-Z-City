@@ -66,6 +66,7 @@ local random_phrase = {
 	"Breathing feels oddly satisfying right now.",
 	"What if this quiet lasts forever?",
 	"Why isn't anything happening?",
+	"I feel, oddly happy for some reason.",
 }
 
 local fear_hurt_ironic = {
@@ -109,34 +110,35 @@ local schizo_monologue = {
     "They will run. You will end it.",
     "No turning back.",
     "Quiet. Listen. Move.",
-    "They are worthless."
-    "Three little pigs.."
-    "My name is not important."
-    "If I don't do it, who will?"
-    "This party stinks, I fucking hate these people."
-    "Look what they did to you, Jason."
-    "Humanity is disgusting."
-    "Fucking animals."
-    "What was that?"
-    "I'm hearing things.."
-    "No good pieces of shit."
-    "Who's there?"
-    "I'll make them beg."
-    "No mercy."
-    "You should just kill yourself, It's not worth it."
-    "Your life means nothing, nobody will remember you."
-    "Cut your throat, put an end to your misery already."
-    "You'll be on the news for this."
-    "Tragedy? More like comedy to me."
-    "Who the fuck wants to be Daniel Lamb?"
-    "Get revenge now. Grab a rifle."
-    "KILL THEM ALL."
-    "Watch them bleed."
-    "Empathy is weakness."
+    "They are worthless.",
+    "Three little pigs..",
+    "My name is not important.",
+    "If I don't do it, who will?",
+    "This party stinks, I fucking hate these people.",
+    "Look what they did to you, Jason.",
+    "Humanity is disgusting.",
+    "Fucking animals.",
+    "What was that?",
+    "I'm hearing things..",
+    "No good pieces of shit.",
+    "Who's there?",
+    "I'll make them beg.",
+    "No mercy.",
+    "You should just kill yourself, It's not worth it.",
+    "Your life means nothing, nobody will remember you.",
+    "Cut your throat, put an end to your misery already.",
+    "You'll be on the news for this.",
+    "Tragedy? More like comedy to me.",
+    "Who the fuck wants to be Daniel Lamb?",
+    "Get revenge now. Grab a rifle.",
+    "KILL THEM ALL.",
+    "Watch them bleed.",
+    "Empathy is weakness.",
 }
 local is_aimed_at_phrases = {
     "Oh God. This is it.",
     "Don't. move.",
+	"I can see their finger hesitating to pull the trigger. Fuck.",
     "Is this really how I die?",
     "I should've run. Why didn't I run?",
     "Please don't pull the trigger. Please.",
