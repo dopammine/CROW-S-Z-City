@@ -229,6 +229,7 @@ local assimilationMat = Material("effects/shaders/zb_assimilation")
 local coldMat = Material("effects/shaders/zb_colda")
 local grainMat = Material("effects/shaders/zb_grain2")
 local heatMat = Material("effects/shaders/zb_heat")
+local tunnelWaveMat = Material("effects/shaders/zb_tunnelwave")
 
 local PainLerp = 0
 local O2Lerp = 0
@@ -247,6 +248,100 @@ local lobotomy_mats = {
 	[7] = Material("overlays/tallflash2.png"),
 	[8] = Material("overlays/tallflash3.png")
 }
+
+local pvpModes = {
+	tdm = true,
+	gwars = true,
+	hl2dm = true,
+	dm = true,
+	tdm_cstrike = true,
+	smo = true,
+	sfd = true,
+	scugarena = true,
+	bart_vs_homer = true
+}
+
+local teamPvpModes = {
+	tdm = true,
+	gwars = true,
+	hl2dm = true,
+	tdm_cstrike = true,
+	smo = true
+}
+
+local function getDeadBodyOwner(ply)
+	if not IsValid(ply) then return nil end
+	local tr = hg.eyeTrace(ply, 160)
+	if not tr or not IsValid(tr.Entity) then return nil end
+	local ent = tr.Entity
+	if ent:IsPlayer() then
+		return not ent:Alive() and ent or nil
+	end
+	if ent:IsRagdoll() then
+		local owner = hg.RagdollOwner(ent) or ent:GetNWEntity("ply") or ent.ply
+		if IsValid(owner) and owner:IsPlayer() then
+			return not owner:Alive() and owner or nil
+		end
+		return ent
+	end
+	return nil
+end
+
+local function isDeadBodyAllowed(ply, owner)
+	if not IsValid(ply) then return false end
+	if ply.isTraitor then return false end
+	local mode = CurrentRound()
+	local modeName = mode and (mode.Type or mode.name) or nil
+	if modeName and pvpModes[modeName] then
+		if not teamPvpModes[modeName] then return false end
+		if not IsValid(owner) or not owner:IsPlayer() then return false end
+		return owner:Team() == ply:Team() and ply:Team() != TEAM_SPECTATOR
+	end
+	return true
+end
+
+local function isSuicideIntent(ply)
+	if not IsValid(ply) then return false end
+	local wep = ply.GetActiveWeapon and ply:GetActiveWeapon() or nil
+	local wepCanSuicide = IsValid(wep) and wep.CanSuicide
+	local weaponSuicide = wepCanSuicide and (wep.SuicideStart or wep.cutthroat)
+	local suicideNet = ply:GetNWBool("suiciding", false)
+	local suiciding = ply.suiciding or suicideNet
+	if ply:GetNWFloat("willsuicide", 0) > 0 then return true end
+	if weaponSuicide then return true end
+	if suiciding and (wepCanSuicide or hg.CanSuicide(ply)) then return true end
+	return false
+end
+
+local tunnelWaveFade = 0
+local tunnelWaveBase = 0.9
+local deadBodyHoldUntil = 0
+local deadBodyHoldSeconds = 1.2
+hook.Add("Post Post Processing", "TunnelwaveDeadOrSuicide", function()
+	if not IsValid(lply) or not lply:Alive() then return end
+	local deadOwner = getDeadBodyOwner(lply)
+	local mode = CurrentRound()
+	local modeName = mode and (mode.Type or mode.name) or nil
+	if lply.isTraitor or (modeName and pvpModes[modeName] and not teamPvpModes[modeName]) then
+		deadBodyHoldUntil = 0
+	else
+		if deadOwner then
+			if isDeadBodyAllowed(lply, deadOwner) then
+				deadBodyHoldUntil = CurTime() + deadBodyHoldSeconds
+			else
+				deadBodyHoldUntil = 0
+			end
+		end
+	end
+	local deadActive = deadBodyHoldUntil > CurTime()
+	local active = deadActive or isSuicideIntent(lply)
+	tunnelWaveFade = LerpFT(0.08, tunnelWaveFade, active and 1 or 0)
+	if tunnelWaveFade < 0.01 then return end
+	render.UpdateScreenEffectTexture()
+	tunnelWaveMat:SetFloat("$c1_w", tunnelWaveBase * tunnelWaveFade)
+	render.SetMaterial(tunnelWaveMat)
+	render.DrawScreenQuad()
+end)
 
 local function stopthings()
 	PainLerp = 0
