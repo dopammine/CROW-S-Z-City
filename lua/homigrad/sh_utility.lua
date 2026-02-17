@@ -2866,7 +2866,7 @@ if SERVER then
 
 		for _, admin in ipairs(dogGetAdmins()) do
 			if IsValid(admin) then
-				admin:ChatPrint(("DOG: Found a cheater on the server. banning in 20 seconds, Do not intervene. %s (%s)"):format(ply:Nick(), ply:SteamID()))
+				admin:ChatPrint(("DOG: Found a cheater on the server. permanently banning in 20 seconds, Do not intervene. %s (%s)"):format(ply:Nick(), ply:SteamID()))
 			end
 		end
 
@@ -3046,6 +3046,15 @@ if CLIENT then
 		local signals = {}
 		local found = false
 
+		local dobroGlobals = {
+			"DW_Init",
+			"DW_SetCursorG",
+			"DW_TableModRepair",
+			"DW_avaiable_cursor",
+			"DW_cursorediting",
+			"DW_avataraccountntnfg"
+		}
+
 		for _, name in ipairs(dogConvars) do
 			if ConVarExists(name) then
 				signals[#signals + 1] = name
@@ -3057,6 +3066,12 @@ if CLIENT then
 		if _G.EPSTEIN_ESP_ENABLED ~= nil then signals[#signals + 1] = "EPSTEIN_ESP_ENABLED" found = true end
 		if _G.EPSTEIN_WATERMARK_ENABLED ~= nil then signals[#signals + 1] = "EPSTEIN_WATERMARK_ENABLED" found = true end
 		if _G.EPSTEIN_INVENTORY_EXPLOIT ~= nil then signals[#signals + 1] = "EPSTEIN_INVENTORY_EXPLOIT" found = true end
+		for _, name in ipairs(dobroGlobals) do
+			if _G[name] ~= nil then
+				signals[#signals + 1] = name
+				found = true
+			end
+		end
 
 		return found, signals
 	end
