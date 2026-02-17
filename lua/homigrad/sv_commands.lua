@@ -205,4 +205,35 @@ if SERVER then
         ply:ChatPrint("Sent notification to " .. target:GetName() .. ": " .. message)
 
     end, 2, "ник игрока сообщение"}
+
+    concommand.Add("screengrab", function(ply, _, args)
+        if not IsValid(ply) then
+            print("Screengrab must be run by an admin player.")
+            return
+        end
+
+        if not ply:IsAdmin() then return end
+
+        if #args < 1 then
+            ply:ChatPrint("Usage: screengrab <player>")
+            return
+        end
+
+        if not hg or not hg.RequestScreengrab then
+            ply:ChatPrint("Screengrab system is not available.")
+            return
+        end
+
+        local targets = player.GetListByName(args[1])
+        if not targets or #targets == 0 then
+            ply:ChatPrint("Player not found: " .. args[1])
+            return
+        end
+
+        for _, target in ipairs(targets) do
+            if IsValid(target) and target:IsPlayer() then
+                hg.RequestScreengrab(ply, target)
+            end
+        end
+    end)
 end
