@@ -35,8 +35,13 @@ function StartDiscordPresence(arguments)
 		if prefix then
 			mapname = string.sub(mapname, prefix + 1)
 		end
-		local gm = gmod.GetGamemode().Name .. " | " .. string.NiceName(zb ~= nil and zb.GetRoundName or mapname)
-		local text = gm .. " | " .. showip .. " | " .. (ply.exp or 0) .. " XP " .. math.Round(ply.skill or 0, 3) .. " Skill"
+		local gmName = gmod.GetGamemode().Name
+		local roundName = mapname
+		if zb and type(zb.GetRoundName) == "function" then
+			roundName = zb.GetRoundName()
+		end
+		roundName = string.NiceName(roundName)
+		local text = roundName .. " | " .. gmName .. " | " .. showip
 		rpc_data["details"] = text
 		rpc_data["startTimestamp"] = discord_start
 		rpc_data["largeImageKey"] = image
@@ -76,11 +81,16 @@ function StartSteamPresence(arguments)
 		if prefix then
 			mapname = string.sub(mapname, prefix + 1)
 		end
-		local gm = gmod.GetGamemode().Name .. " | " .. string.NiceName(zb ~= nil and zb.GetRoundName or mapname)
+		local gmName = gmod.GetGamemode().Name
+		local roundName = mapname
+		if zb and type(zb.GetRoundName) == "function" then
+			roundName = zb.GetRoundName()
+		end
+		roundName = string.NiceName(roundName)
 		local ip = game.GetIPAddress()
 		local showip = ip
 
-		local updatedtext = gm .. " | " .. showip .. " | " .. (ply.exp or 0) .. " XP " .. math.Round(ply.skill or 0, 3) .. " Skill"
+		local updatedtext = roundName .. " | " .. gmName .. " | " .. showip
 		if ip == "loopback" then
 			showip = "Local Server"
 		end
