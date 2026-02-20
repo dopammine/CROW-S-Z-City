@@ -205,7 +205,7 @@ hook.Add("HomigradDamage", "GuiltReg", function(ply, dmgInfo, hitgroup, ent, har
     local add = amt * maxharm
 
     add = add * (Victim:IsPlayer() and Attacker:PlayerClassEvent("Guilt", Victim) or 1)
-    add = add * 1.5
+    add = add * 2
 
     local mul, shouldBanGuilt
     
