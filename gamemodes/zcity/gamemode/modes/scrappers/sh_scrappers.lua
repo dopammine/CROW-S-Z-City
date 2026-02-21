@@ -52,11 +52,17 @@ MODE.WeaponsShopList = {
     ["weapon_glock17"] = {
         price = 1000
     },
+    ["weapon_m9beretta"] = {
+        price = 1150
+    },
     ["weapon_glock18c"] = {
         price = 1250
     },
     ["weapon_glock26"] = {
         price = 650
+    },
+    ["weapon_px4beretta"] = {
+        price = 620
     },
     ["weapon_makarov"] = {
         price = 450
@@ -88,8 +94,14 @@ MODE.WeaponsShopList = {
     ["weapon_remington870"] = {
         price = 3000
     },
-    ["weapon_m570a1"] = {
+    ["weapon_m590a1"] = {
         price = 3250
+    },
+    ["weapon_doublebarrel"] = {
+        price = 2150
+    },
+    ["weapon_doublebarrel_short"] = {
+        price = 1850
     },
     ["weapon_vector"] = {
         price = 2500
@@ -334,9 +346,6 @@ MODE.MiscShopList = {
     },
 	["weapon_bigconsumable"] = {
         price = 100
-    },
-	["hg_flashlight"] = {
-        price = 150
     },
 	["weapon_walkie_talkie"] = {
         price = 250
