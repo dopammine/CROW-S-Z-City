@@ -392,6 +392,25 @@ end
 
 local net, math, hg, IsValid = net, math, hg, IsValid
 local takeRagdollDamage
+local sfdDamageMul = 0.25
+local function isSfdRound(org)
+	if org and org.superfighter then return true end
+	if zb and zb.CROUND == "superfighters" then return true end
+	if CurrentRound then
+		local mode = CurrentRound()
+		local name = mode and (mode.name or mode.Type) or nil
+		if name == "superfighters" or name == "sfd" then return true end
+	end
+	return false
+end
+hook.Add("ScalePlayerDamage", "sfd-normalize-damage", function(ply, hitgroup, dmginfo)
+	if not (ply and ply.organism) then return end
+	if not isSfdRound(ply.organism) then return end
+	local hooks = hook.GetTable and hook.GetTable()
+	if not (hooks and hooks.ScalePlayerDamage and hooks.ScalePlayerDamage["ultra.megarealisicdamage"]) then return end
+	dmginfo:ScaleDamage(1 / 0.3)
+	dmginfo:ScaleDamage(sfdDamageMul)
+end)
 hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	--[[if dmgInfo:IsDamageType(DMG_BULLET) then
 		if hgIsDoor(ent) and !ent:GetNoDraw() and dmgInfo:IsDamageType(DMG_BULLET) then
@@ -427,6 +446,21 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	end
 
 	if not org then return end
+	if isSfdRound(org) then
+		if ent:IsRagdoll() then
+			local ply = hg.RagdollOwner(ent)
+			if IsValid(ply) and ply:Alive() and not (ply.organism and ply.organism.godmode) then
+				if not dmgInfo:IsDamageType(DMG_CRUSH) then
+					ply:SetHealth(ply:Health() - dmgInfo:GetDamage() * sfdDamageMul)
+					if ply:Health() <= 0 and ply:Alive() then
+						ply:Kill()
+					end
+				end
+			end
+			return true
+		end
+		return
+	end
 
 	if dmgInfo:GetAttacker():GetClass() == "npc_zombie" then
 		--if not org then return end 
@@ -1275,6 +1309,7 @@ takeRagdollDamage = function(ent, dmgInfo)
 	local ply = hg.RagdollOwner(ent)
 	if not IsValid(ply) then return end
 	if ply.organism and ply.organism.godmode then return end
+	if isSfdRound(ply.organism) then return end
 	local traceResult = GetTraceDamage(ent, dmgInfo:GetDamagePosition(), dmgInfo:GetDamageForce())
 	--я не ебу как
 
