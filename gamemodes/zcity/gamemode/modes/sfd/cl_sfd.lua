@@ -68,6 +68,45 @@ local fighter = {
 local mat = Material("hmcd_dmzone")
 
 local mapsize = 7500
+local damageIndicators = {}
+local lastHealth
+
+local function drawDamageIndicators()
+	local ply = LocalPlayer()
+	if not IsValid(ply) or not ply:Alive() then
+		lastHealth = nil
+		return
+	end
+	local hp = ply:Health()
+	if not lastHealth then
+		lastHealth = hp
+	end
+	if hp < lastHealth then
+		local dmg = lastHealth - hp
+		if dmg > 0 then
+			damageIndicators[#damageIndicators + 1] = {
+				amount = dmg,
+				time = CurTime(),
+				x = ScrW() * 0.5 + math.random(-40, 40),
+				y = ScrH() * 0.5 + math.random(-30, 30)
+			}
+		end
+		lastHealth = hp
+	elseif hp > lastHealth then
+		lastHealth = hp
+	end
+	local now = CurTime()
+	for i = #damageIndicators, 1, -1 do
+		local item = damageIndicators[i]
+		local t = (now - item.time) / 1.2
+		if t >= 1 then
+			table.remove(damageIndicators, i)
+		else
+			local alpha = 255 * (1 - t)
+			draw.SimpleText("-" .. math.Round(item.amount), "HomigradFontLarge", item.x, item.y - t * 30, Color(255, 80, 80, alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+		end
+	end
+end
 
 function MODE:PostDrawTranslucentRenderables(bDepth, bSkybox, isDraw3DSkybox)
 	if(!bSkybox and !isDraw3DSkybox)then
@@ -88,6 +127,7 @@ function MODE:RenderScreenspaceEffects()
 end
 
 function MODE:HUDPaint()
+	drawDamageIndicators()
 	if zb.ROUND_START + 5 > CurTime() then
 		draw.SimpleText( string.FormattedTime(zb.ROUND_START + 5 - CurTime(), "%02i:%02i:%02i"	), "ZB_HomicideMedium", sw * 0.5, sh * 0.75, Color(255,55,55), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 	else
