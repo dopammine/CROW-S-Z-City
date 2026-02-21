@@ -1,4 +1,5 @@
 local MODE = MODE
+MODE.Description = "Survive the Infected whilst Getting money/loot to extract."
 
 MODE.StartingMoney = 1000
 MODE.LobbyTime = 120
@@ -51,8 +52,23 @@ MODE.WeaponsShopList = {
     ["weapon_glock17"] = {
         price = 1000
     },
+    ["weapon_m9beretta"] = {
+        price = 1150
+    },
+    ["weapon_glock18c"] = {
+        price = 1250
+    },
+    ["weapon_glock26"] = {
+        price = 650
+    },
+    ["weapon_px4beretta"] = {
+        price = 620
+    },
     ["weapon_makarov"] = {
         price = 450
+    },
+    ["weapon_mp-80"] = {
+        price = 300
     },
     ["weapon_deagle"] = {
         price = 3000
@@ -66,7 +82,7 @@ MODE.WeaponsShopList = {
     ["weapon_mac11"] = {
         price = 2500
     },
-    ["weapon_revolver"] = {
+    ["weapon_revolver2"] = {
         price = 2000
     },
     ["weapon_m249"] = {
@@ -78,14 +94,14 @@ MODE.WeaponsShopList = {
     ["weapon_remington870"] = {
         price = 3000
     },
-    ["weapon_hg_grenade_tpik"] = {
-        price = 750
+    ["weapon_m590a1"] = {
+        price = 3250
     },
-    ["weapon_leadpipe"] = {
-        price = 200
+    ["weapon_doublebarrel"] = {
+        price = 2150
     },
-    ["weapon_tomahawk"] = {
-        price = 500
+    ["weapon_doublebarrel_short"] = {
+        price = 1850
     },
     ["weapon_vector"] = {
         price = 2500
@@ -100,7 +116,16 @@ MODE.WeaponsShopList = {
         price = 3600
     },
     ["weapon_sr25"] = {
-        price = 12600
+        price = 11500
+    },
+    ["weapon_ruger"] = {
+        price = 9250
+    },
+    ["weapon_kar98"] = {
+        price = 10500
+    },
+    ["weapon_mini14"] = {
+        price = 9800
     },
     ["weapon_pkm"] = {
         price = 15600
@@ -108,14 +133,14 @@ MODE.WeaponsShopList = {
     ["weapon_saiga12"] = {
         price = 3490
     },
-    ["weapon_hg_rgd_tpik"] = {
-        price = 640
-    },
-    ["weapon_hatchet"] = {
-        price = 580
-    },
     ["weapon_fn45"] = {
         price = 1240
+    },
+    ["weapon_pl15"] = {
+        price = 500
+    },
+    ["weapon_m1911"] = {
+        price = 700
     },
 }
 
@@ -132,8 +157,28 @@ MODE.MedicineShopList = {
         price = 500,
         slot = 4
     },
+    ["weapon_fentanyl"] = {
+        price = 750,
+        slot = 4
+    },
+    ["weapon_fury13"] = {
+        price = 23000,
+        slot = 4
+    },
     ["weapon_bandage_sh"] = {
         price = 100,
+        slot = 4
+    },
+    ["weapon_painkillers"] = {
+        price = 100,
+        slot = 4
+    },
+    ["weapon_bigbandage_sh"] = {
+        price = 200,
+        slot = 4
+    },
+    ["weapon_naloxone"] = {
+        price = 350,
         slot = 4
     },
     ["weapon_tourniquet"] = {
@@ -177,16 +222,16 @@ MODE.AttachmentsShopList = {
         slot = 0
     },
     -- Оптика
-    ["ent_att_optic1"] = {
+    ["ent_att_laser2"] = {
         price = 600,
         slot = 0
     },
     ["ent_att_optic2"] = {
-        price = 900,
+        price = 850,
         slot = 0
     },
     ["ent_att_optic3"] = {
-        price = 1200,
+        price = 1150,
         slot = 0
     },
     ["ent_att_optic4"] = {
@@ -194,7 +239,7 @@ MODE.AttachmentsShopList = {
         slot = 0
     },
     ["ent_att_optic5"] = {
-        price = 1600,
+        price = 1500,
         slot = 0
     },
     ["ent_att_optic6"] = {
@@ -260,6 +305,54 @@ MODE.ArmorShopList = {
         price = 300,
         slot = 0
     },
+    ["ent_armor_helmet7"] = {
+        price = 350,
+        slot = 0
+    },
+}
+MODE.MiscShopList = {
+    ["weapon_hg_grenade_tpik"] = {
+        price = 1100
+    },
+    ["weapon_claymore"] = {
+        price = 1150
+    },
+    ["weapon_hg_crowbar"] = {
+        price = 750
+    },
+    ["weapon_bat"] = {
+        price = 650
+    },
+    ["weapon_leadpipe"] = {
+        price = 500
+    },
+    ["weapon_melee"] = {
+        price = 800
+    },
+    ["weapon_pocketknife"] = {
+        price = 200
+    },
+    ["weapon_hatchet"] = {
+        price = 700
+    },
+    ["weapon_hg_rgd_tpik"] = {
+        price = 950
+    },
+    ["weapon_hg_molotov_tpik"] = {
+        price = 1350
+    },    
+	["weapon_hg_type59_tpik"] = {
+        price = 850
+    },
+	["weapon_bigconsumable"] = {
+        price = 100
+    },
+	["weapon_walkie_talkie"] = {
+        price = 250
+    },
+	["weapon_smallconsumable"] = {
+        price = 50
+    },
 }
 
 MODE.ShopList = {
@@ -267,6 +360,7 @@ MODE.ShopList = {
     ["Medicine"] = MODE.MedicineShopList,
     ["Attachments"] = MODE.AttachmentsShopList,
     ["Armor"] = MODE.ArmorShopList,
+    ["Other"] = MODE.MiscShopList,
 }
 
 function hg.GetItem(item)

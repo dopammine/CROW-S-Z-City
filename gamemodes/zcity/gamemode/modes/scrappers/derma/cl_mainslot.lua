@@ -6,6 +6,11 @@ function PANEL:Init()
 end
 
 function PANEL:SetWeapon(weapon)
+    local isSingleSlot = self.text == "Primary"
+    if isSingleSlot and istable(weapon) then
+        weapon = weapon[1]
+    end
+
     if istable(weapon) then
         local slots = {}
 
@@ -24,6 +29,52 @@ function PANEL:SetWeapon(weapon)
             slots[k]:SetTall(ScreenScale(11))
             slots[k]:SetFont("ZB_ScrappersMedium")
             slots[k]:SetText(weapon2.PrintName or "fail")
+            if slots[k].SetTextInset then
+                slots[k]:SetTextInset(ScreenScale(11) + ScreenScale(3), 0)
+            end
+
+            slots[k].IconPanel = slots[k]:Add("EditablePanel")
+            slots[k].IconPanel:Dock(LEFT)
+            slots[k].IconPanel:SetWide(ScreenScale(11))
+            slots[k].IconPanel.Paint = function(this, w, h)
+                local drawn = false
+                if weapon2 and isfunction(weapon2.DrawWeaponSelection) then
+                    weapon2:DrawWeaponSelection(0, 0, w, h, 255)
+                    drawn = true
+                end
+
+                if not drawn and weapon2 then
+                    local mat
+                    if weapon2.WepSelectIcon then
+                        if type(weapon2.WepSelectIcon) == "IMaterial" then
+                            mat = weapon2.WepSelectIcon
+                        else
+                            mat = Material(tostring(weapon2.WepSelectIcon), "smooth")
+                        end
+                    elseif weapon2.IconOverride then
+                        mat = Material(weapon2.IconOverride, "smooth")
+                    elseif weapon2.SelectIcon then
+                        mat = Material(weapon2.SelectIcon, "smooth")
+                    end
+
+                    if mat then
+                        surface.SetDrawColor(255, 255, 255, 255)
+                        surface.SetMaterial(mat)
+                        local size = math.min(w - ScreenScale(2), h - ScreenScale(2))
+                        surface.DrawTexturedRect((w - size) / 2, (h - size) / 2, size, size)
+                        drawn = true
+                    end
+                end
+
+                if not drawn and weapon2 and weapon2.WepSelectFont and weapon2.IconLetter then
+                    draw.SimpleText(weapon2.IconLetter, weapon2.WepSelectFont, w / 2, h / 2, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+                    drawn = true
+                end
+
+                if not drawn then
+                    draw.SimpleText("?", "ZB_ScrappersMedium", w / 2, h / 2, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+                end
+            end
 
             slots[k].DoClick = function(this)
                 self:DoClick(k)
@@ -40,24 +91,54 @@ function PANEL:SetWeapon(weapon)
     elseif weapon then
         local weapon2 = weapons.Get(weapon)
 
-        self.model = self:Add("DModelPanel")
-        self.model:Dock(FILL)
-        self.model:SetModel(weapon2.WorldModel)
-        self.model:SetCamPos(Vector(40, 50, 55))
-        self.model:SetLookAng(Vector(-48,-48,-48):Angle())
-        self.model:SetFOV(20)
-        self.model.LayoutEntity = function(this,ent) end
-        self.model.DoClick = function(this)
+        self.icon = self:Add("DButton")
+        self.icon:Dock(FILL)
+        self.icon:SetText("")
+        self.icon.DoClick = function(this)
             self:DoClick()
         end
 
-        DEFINE_BASECLASS("DModelPanel")
+        self.icon.Paint = function(this, w, h)
+            local drawn = false
+            if weapon2 and isfunction(weapon2.DrawWeaponSelection) then
+                weapon2:DrawWeaponSelection(0, 0, w, h, 255)
+                drawn = true
+            end
 
-        self.model.Paint = function(this, w, h)
-            BaseClass.Paint(this, w, h)
+            if not drawn and weapon2 then
+                local mat
+                if weapon2.WepSelectIcon then
+                    if type(weapon2.WepSelectIcon) == "IMaterial" then
+                        mat = weapon2.WepSelectIcon
+                    else
+                        mat = Material(tostring(weapon2.WepSelectIcon), "smooth")
+                    end
+                elseif weapon2.IconOverride then
+                    mat = Material(weapon2.IconOverride, "smooth")
+                elseif weapon2.SelectIcon then
+                    mat = Material(weapon2.SelectIcon, "smooth")
+                end
+
+                if mat then
+                    surface.SetDrawColor(255, 255, 255, 255)
+                    surface.SetMaterial(mat)
+                    local size = math.min(w - ScreenScale(8), h - ScreenScale(24))
+                    surface.DrawTexturedRect((w - size) / 2, (h - size) / 2, size, size)
+                    drawn = true
+                end
+            end
 
             surface.SetDrawColor(red)
             surface.DrawOutlinedRect(0, 0, w, h, 2)
+
+            if not drawn and weapon2 and weapon2.WepSelectFont and weapon2.IconLetter then
+                draw.SimpleText(weapon2.IconLetter, weapon2.WepSelectFont, w / 2, h / 2, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+                drawn = true
+            end
+
+            if not drawn and weapon2 then
+                draw.SimpleText(weapon2.PrintName or tostring(weapon), "ZB_ScrappersMedium", w / 2, h / 2, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+            end
 
             if weapon2 then
                 draw.SimpleText(weapon2.PrintName, "ZB_ScrappersMedium", ScreenScale(4), ScreenScale(4))

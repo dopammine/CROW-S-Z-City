@@ -2,20 +2,25 @@ MODE.name = "scrappers"
 MODE.PrintName = "Scrappers"
 MODE.start_time = 0
 MODE.end_time = 5
- 
+
 MODE.ROUND_TIME = 300
- 
+
 
 MODE.OverrideSpawn = true
 MODE.LootSpawn = true
 MODE.ForBigMaps = true
 
-MODE.Chance = 0.05
+MODE.Chance = 0.01
 
 local MODE = MODE
 
+function MODE.GuiltCheck(Attacker, Victim, add, harm, amt)
+	return 0, false --we want this to be a ffa extraction shooter so disable guilt
+end
+
 function MODE:CanLaunch()
-    return false
+	local points = zb.GetMapPoints( "SCRAPPERS_EXTRACTION" )
+    return (#points > 0) 	--this mode REQUIRES extraction points to be even playable
 end
 
 util.AddNetworkString("zb_Scrappers_BuyOut")
@@ -102,18 +107,24 @@ end)
 
 -- Мод много продаж
 net.Receive("zb_SellItem", function(len, ply) -- Бог простил
-    local slot = net.ReadUInt(16)
+    local slot = net.ReadString()
     local pos = net.ReadUInt(16)
     
     local Inventory = ply:GetLocalVar("zb_Scrappers_Inventory", {})
     
     if table.IsEmpty(Inventory) then return end
-    if !Inventory[slot] or !Inventory[slot][pos] then return end
-    local weapon = hg.GetItem(Inventory[slot][pos]) or {}
-    local slot2 = weapon and weapon.ScrappersSlot or "Other"
+    if not Inventory[slot] or not Inventory[slot][pos] then return end
+    local item = Inventory[slot][pos]
 
-    if not MODE.ShopList[table.GetKeys(MODE.ShopList)[ slot2 ]][ Inventory[slot][pos] ] then return end
-    local price = MODE.ShopList[table.GetKeys(MODE.ShopList)[slot2]][Inventory[slot][pos]]["price"]
+    local price
+    for tabName, tabData in pairs(MODE.ShopList or {}) do
+        if tabData and tabData[item] and tabData[item].price then
+            price = tabData[item].price
+            break
+        end
+    end
+    if not price then return end
+
     ply:SetLocalVar("zb_Scrappers_Money", ply:GetLocalVar("zb_Scrappers_Money", MODE.StartingMoney) + price - (price * (50/100)))
     Inventory[slot][pos] = nil
 
@@ -129,9 +140,10 @@ zb.slotFunctions = {
         Inventory[slot][pos] = nil
     end,
     ["Secondary"] = function(RaidInventory,Inventory,slot,pos)--secondary
-        if RaidInventory[slot] and not table.IsEmpty(RaidInventory[slot]) then return end
-        
-        RaidInventory[slot] = Inventory[slot][pos]
+        RaidInventory[slot] = RaidInventory[slot] or {}
+        if #RaidInventory[slot] >= 2 then return end
+        if table.HasValue(RaidInventory[slot], Inventory[slot][pos]) then return end
+        RaidInventory[slot][#RaidInventory[slot] + 1] = Inventory[slot][pos]
         Inventory[slot][pos] = nil
     end,
     ["Melee"] = function(RaidInventory,Inventory,slot,pos)--melee
@@ -219,6 +231,25 @@ net.Receive("ZB_PlayerReady", function(len, ply)
     end
 end)
 
+concommand.Add("zb_scrappers_endround", function(ply, cmd, args)
+	if not ply:IsSuperAdmin() then return end
+
+    if timer.Exists("zb_Scrappers_ExtractionTime") then
+        timer.Adjust("zb_Scrappers_ExtractionTime", 0)
+	else
+		print("Wait for the Extraction phase to start!")
+	end
+end)
+concommand.Add("zb_scrappers_setmoney", function(ply, cmd, args)
+	if not ply:IsSuperAdmin() then return end
+
+	if args[1] then
+        ply:SetLocalVar("zb_Scrappers_Money", tonumber(args[1]))
+	else
+		print("You must input a number!")
+	end
+end)
+
 function MODE:ShouldRoundEnd()
     local playersAlive = zb:CheckAlive()
     if timer.Exists("zb_Scrappers_ExtractionTime") and #playersAlive == 0 then
@@ -275,7 +306,7 @@ function MODE:ExtractedPlayer(ply)
 end
 
 function MODE:LoadPlayers()
-    local spawns = table.Copy(zb.Points["SCRAPPERS_SPAWNPOINTS"].Points)
+    local spawns = table.Copy(zb.Points["SCRAPPERS_SPAWNPOINTS"].Points) or table.Copy(zb.Points["RandomSpawns"].Points)	--so it can work WITHOUT dedicated spawnpoints
 
     for i, ply in ipairs(player.GetAll()) do
 
@@ -289,21 +320,36 @@ function MODE:LoadPlayers()
         ply:SetAngles(spawns[random].ang)
 
         table.remove(spawns, random)
-
+		ply:SetSuppressPickupNotices(true)
         ply:Give("weapon_hands_sh")
-        for k, v in pairs(ply:GetLocalVar("zb_Scrappers_RaidInventory", {})) do
-            if not v then continue end
-            --print(v)
-            --if istable(v) then PrintTable(v) end
-            local wep = hg.GiveItem(ply,v)
-
-            timer.Simple(0, function()
-                if IsValid(wep) and wep.Primary and wep.Primary.ClipSize and wep.Primary.Ammo then
-                    ply:GiveAmmo(wep.Primary.ClipSize * 3, wep.Primary.Ammo, true)
+        local raidInv = ply:GetLocalVar("zb_Scrappers_RaidInventory", {})
+        for slot, data in pairs(raidInv) do
+            if not data then continue end
+            if istable(data) then
+                for _, item in pairs(data) do
+                    local wep = hg.GiveItem(ply, item)
+                    timer.Simple(0, function()
+                        if IsValid(wep) and wep.GetMaxClip1 and wep:GetMaxClip1() > 0 then
+                            local ammoType = wep:GetPrimaryAmmoType()
+                            if ammoType and ammoType > 0 then
+                                ply:GiveAmmo(wep:GetMaxClip1() * 3, ammoType, true)
+                            end
+                        end
+                    end)
                 end
-            end)
+            else
+                local wep = hg.GiveItem(ply, data)
+                timer.Simple(0, function()
+                    if IsValid(wep) and wep.GetMaxClip1 and wep:GetMaxClip1() > 0 then
+                        local ammoType = wep:GetPrimaryAmmoType()
+                        if ammoType and ammoType > 0 then
+                            ply:GiveAmmo(wep:GetMaxClip1() * 3, ammoType, true)
+                        end
+                    end
+                end)
+            end
         end
-
+	ply:SetSuppressPickupNotices(false)
     end
 
     SetNetVar("zb_Scrappers_Extraction", math.Round(CurTime()) + self.RoundTime)

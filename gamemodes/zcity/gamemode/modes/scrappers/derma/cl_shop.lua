@@ -71,13 +71,13 @@ local ShopSound = ShopSound or nil
 function PANEL:Init()
     self:SetSize(sw, sh)
     self:SetMouseInputEnabled(true)
-    self:SetKeyboardInputEnabled(true)
+    self:SetKeyboardInputEnabled(false)
     self:RequestFocus()
 
     self.time = self.time or CurTime() + MODE.LobbyTime
 
     if !ShopSound then
-        sound.PlayFile("sound/zbattle/shop.mp3", "", function(station)
+        sound.PlayFile("sound/zbattle/shop.mp3", "noblock", function(station)
             ShopSound = station
             station:SetVolume(0.2)
         end)
@@ -223,7 +223,7 @@ function PANEL:PopulateMainMenu()
     frame.ready = frame:Add("ZB_ScrappersButton")
     frame.ready:SetPos(sw * (0.5 - 0.075), sh * 0.8 )
     frame.ready:SetSize(sw * 0.15, sh * 0.05)
-    frame.ready:SetText("Готов")
+    frame.ready:SetText("Ready")
 
     frame.ready.DoClick = function(self)
         isReady = !isReady
@@ -236,7 +236,7 @@ function PANEL:PopulateMainMenu()
     local market = frame:Add("ZB_ScrappersButton")
     market:SetPos(sw * 0.25, sh * 0.4)
     market:SetSize(sw * 0.15, sh * 0.05)
-    market:SetText("Маркет")
+    market:SetText("Market")
 
     market.DoClick = function()
         SlidePanel(frame, self.ShopFrame)
@@ -245,7 +245,7 @@ function PANEL:PopulateMainMenu()
     local inventory = frame:Add("ZB_ScrappersButton")
     inventory:SetPos(sw * 0.6, sh * 0.4)
     inventory:SetSize(sw * 0.15, sh * 0.05)
-    inventory:SetText("Инвентарь")
+    inventory:SetText("Inventory")
 
     inventory.DoClick = function()
         self.InventoryFrame:PopulateSlots()
@@ -283,7 +283,7 @@ function PANEL:PopulateMainMenu()
         frame.primary:SetSize(sw * 0.15, sh * 0.15)
         frame.primary:SetPos(sw * 0.25, sh * 0.47 )
 
-        frame.primary.text = "Основное"
+        frame.primary.text = "Primary"
 
         frame.primary:SetWeapon(RaidInventory["Primary"])
 
@@ -291,8 +291,11 @@ function PANEL:PopulateMainMenu()
             net.Start("zb_FromRaidToInv")
                 net.WriteString("Primary")
             net.SendToServer()
-
-            RaidInventory["Primary"] = nil
+            if istable(RaidInventory["Primary"]) then
+                table.remove(RaidInventory["Primary"], 1)
+            else
+                RaidInventory["Primary"] = nil
+            end
             this:Remove()
             
             timer.Simple(0.1 * math.max(LocalPlayer():Ping() / 10,1),function()
@@ -304,16 +307,16 @@ function PANEL:PopulateMainMenu()
         frame.secondary:SetSize(sw * 0.15, sh * 0.15)
         frame.secondary:SetPos(sw * (0.5 - 0.075), sh * 0.47 )
 
-        frame.secondary.text = "Второстепенное"
+        frame.secondary.text = "Secondary"
 
         frame.secondary:SetWeapon(RaidInventory["Secondary"])
 
-        frame.secondary.DoClick = function(this)
+        frame.secondary.DoClick = function(this, k)
             net.Start("zb_FromRaidToInv")
                 net.WriteString("Secondary")
+                net.WriteUInt(k, 8)
             net.SendToServer()
-
-            RaidInventory["Secondary"] = nil
+            table.remove(RaidInventory["Secondary"], k)
             this:Remove()
 
             timer.Simple(0.1 * math.max(LocalPlayer():Ping() / 10,1),function()
@@ -325,7 +328,7 @@ function PANEL:PopulateMainMenu()
         frame.melee:SetSize(sw * 0.15, sh * 0.15)
         frame.melee:SetPos(sw * 0.6, sh * 0.47 )
 
-        frame.melee.text = "Холодное"
+        frame.melee.text = "Melee"
 
         frame.melee:SetWeapon(RaidInventory["Melee"])
 
@@ -347,7 +350,7 @@ function PANEL:PopulateMainMenu()
         frame.medicine:SetSize(sw * 0.15, sh * 0.15)
         frame.medicine:SetPos(sw * 0.25, sh * 0.64 )
 
-        frame.medicine.text = "Медицина"
+        frame.medicine.text = "Medical"
 
         frame.medicine:SetWeapon(RaidInventory["Medicine"])
 
@@ -369,7 +372,7 @@ function PANEL:PopulateMainMenu()
         frame.other:SetSize(sw * 0.15, sh * 0.15)
         frame.other:SetPos(sw * (0.5 - 0.075), sh * 0.64 )
 
-        frame.other.text = "Разное"
+        frame.other.text = "Misc"
 
         frame.other:SetWeapon(RaidInventory["Other"])
 
@@ -391,7 +394,7 @@ function PANEL:PopulateMainMenu()
         frame.armor:SetSize(sw * 0.15, sh * 0.15)
         frame.armor:SetPos(sw * 0.6, sh * 0.64 )
 
-        frame.armor.text = "Броня"
+        frame.armor.text = "Armor"
 
         frame.armor:SetWeapon(RaidInventory["Armor"])
 
@@ -424,11 +427,11 @@ local ShopTabs = {
 }
 
 local ShopTabsRussian = {
-    ["Weapons"] = "Оружие",
-    ["Attachments"] = "Обвесы",
-    ["Medicine"] = "Медицина",
-    ["Armor"] = "Броня",
-    ["Other"] = "Разное"
+    ["Weapons"] = "Weapons",
+    ["Attachments"] = "Attachments",
+    ["Medicine"] = "Medical",
+    ["Armor"] = "Armor",
+    ["Other"] = "Misc"
 }
 
 function PANEL:PopulateShop()
@@ -458,7 +461,7 @@ function PANEL:PopulateShop()
         tablabel[v]:SetContentAlignment(5)
         tablabel[v]:SetSize(sw * 0.15, sh * 0.06)
         tablabel[v]:SetFont("ZB_ScrappersMediumLarge")
-        tablabel[v]:SetText(ShopTabsRussian[v] or "fail")
+        tablabel[v]:SetText(ShopTabsRussian[v] or "Failed to load Tab names!")
     end
 
     local ShopList = zb.ScrappersScrambledList
@@ -475,15 +478,11 @@ function PANEL:PopulateShop()
             
             local weapon = hg.GetItemEnt(v2.weapon) or {}
             
-            tabitem[k][k2].model = tabitem[k][k2]:Add("DModelPanel")
-            tabitem[k][k2].model:Dock(FILL)
-            tabitem[k][k2].model:SetModel(weapon.WorldModel or "models/error.mdl")
-            tabitem[k][k2].model:SetCamPos(Vector(55, 55, 60))
-            tabitem[k][k2].model:SetLookAng(Vector(-48,-48,-48):Angle())
-            tabitem[k][k2].model:SetFOV(20)
-            tabitem[k][k2].model.LayoutEntity = function(this,ent) end
+            tabitem[k][k2].icon = tabitem[k][k2]:Add("DButton")
+            tabitem[k][k2].icon:Dock(FILL)
+            tabitem[k][k2].icon:SetText("")
 
-            tabitem[k][k2].model.DoClick = function(this)
+            tabitem[k][k2].icon.DoClick = function(this)
                 if this.Bought then return end
 
                 local money = LocalPlayer():GetLocalVar("zb_Scrappers_Money", MODE.StartingMoney)
@@ -502,26 +501,60 @@ function PANEL:PopulateShop()
                 net.SendToServer()
             end
 
-            DEFINE_BASECLASS("DModelPanel")
-
-            tabitem[k][k2].model.Paint = function(this, w, h)
+            tabitem[k][k2].icon.Paint = function(this, w, h)
                 surface.SetDrawColor(red)
                 surface.DrawOutlinedRect(0, 0, w, h, 2)
 
                 if tabitem[k][k2].Bought then
                     surface.SetDrawColor(255, 255, 255, 10)
                     surface.DrawRect(2, 2, w - 4, h - 4)
-                    draw.SimpleText("ПРОДАНО", "ZB_ScrappersMediumLarge", w / 2, h / 2, (zb.ScrappersScrambledList[k][k2].MeBuying and green) or red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+                    draw.SimpleText("SOLD", "ZB_ScrappersMediumLarge", w / 2, h / 2, (zb.ScrappersScrambledList[k][k2].MeBuying and green) or red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
                 else
-                    BaseClass.Paint(this, w, h)
+                    local drawn = false
+                    if isfunction(weapon.DrawWeaponSelection) then
+                        weapon:DrawWeaponSelection(0, 0, w, h, 255)
+                        drawn = true
+                    end
+
+                    if not drawn then
+                        local mat
+                        if weapon.WepSelectIcon then
+                            if type(weapon.WepSelectIcon) == "IMaterial" then
+                                mat = weapon.WepSelectIcon
+                            else
+                                mat = Material(tostring(weapon.WepSelectIcon), "smooth")
+                            end
+                        elseif weapon.IconOverride then
+                            mat = Material(weapon.IconOverride, "smooth")
+                        elseif weapon.SelectIcon then
+                            mat = Material(weapon.SelectIcon, "smooth")
+                        end
+
+                        if mat then
+                            surface.SetDrawColor(255, 255, 255, 255)
+                            surface.SetMaterial(mat)
+                            local size = math.min(w - ScreenScale(8), h - ScreenScale(24))
+                            surface.DrawTexturedRect((w - size) / 2, (h - size) / 2, size, size)
+                            drawn = true
+                        end
+                    end
+
+                    if not drawn and weapon.WepSelectFont and weapon.IconLetter then
+                        draw.SimpleText(weapon.IconLetter, weapon.WepSelectFont, w / 2, h / 2, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+                        drawn = true
+                    end
+
+                    if not drawn then
+                        draw.SimpleText(weapon.PrintName or tostring(v2.weapon), "ZB_ScrappersMedium", w / 2, h / 2, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+                    end
                 end
 
                 draw.SimpleText(weapon.PrintName, "ZB_ScrappersMedium", ScreenScale(4), ScreenScale(4))
 
                 if tabitem[k][k2].AuctionPrice and tabitem[k][k2].AuctionPrice != v2.price then
-                    draw.SimpleText("Цена: $" .. v2.price .. " + " .. tabitem[k][k2].AuctionPrice - v2.price, "ZB_ScrappersMedium", ScreenScale(4), h - ScreenScale(15))
+                    draw.SimpleText("Price: $" .. v2.price .. " + " .. tabitem[k][k2].AuctionPrice - v2.price, "ZB_ScrappersMedium", ScreenScale(4), h - ScreenScale(15))
                 else
-                    draw.SimpleText("Цена: $" .. v2.price, "ZB_ScrappersMedium", ScreenScale(4), h - ScreenScale(15))
+                    draw.SimpleText("Price: $" .. v2.price, "ZB_ScrappersMedium", ScreenScale(4), h - ScreenScale(15))
                 end
 
                 if tabitem[k][k2].BuyingOut then
@@ -541,7 +574,7 @@ function PANEL:PopulateShop()
     local returnButton = frame:Add("ZB_ScrappersButton")
     returnButton:SetPos(offset + (sw * 0.2), sh * 0.9)
     returnButton:SetSize(sw * 0.15, sh * 0.05)
-    returnButton:SetText("Вернуться")
+    returnButton:SetText("Return")
 
     returnButton.DoClick = function()
         SlidePanelBack(frame, self.MainFrame)
@@ -567,13 +600,13 @@ function PANEL:PopulateShop()
 end
 
 local categories = {
-    ["Primary"] = "Основное",
-    ["Secondary"] = "Второстепенное",
-    ["Melee"] = "Холодное",
-    ["Medicine"] = "Медицина",
-    ["Other"] = "Разное",
-    ["Armor"] = "Броня",
-    ["Attachments"] = "Обвесы"
+    ["Primary"] = "Primary",
+    ["Secondary"] = "Secondary",
+    ["Melee"] = "Melee",
+    ["Medicine"] = "Medical",
+    ["Other"] = "Misc",
+    ["Armor"] = "Armor",
+    ["Attachments"] = "Attachments"
 }
 
 function PANEL:PopulateInventory()
@@ -616,14 +649,10 @@ function PANEL:PopulateInventory()
 
                     tabitems[#tabitems + 1] = tabitem[k][k2]
 
-                    tabitem[k][k2].model = tabitem[k][k2]:Add("DModelPanel")
-                    tabitem[k][k2].model:Dock(FILL)
-                    tabitem[k][k2].model:SetModel(weapon2.WorldModel or "models/error.mdl")
-                    tabitem[k][k2].model:SetCamPos(Vector(40, 50, 55))
-                    tabitem[k][k2].model:SetLookAng(Vector(-48,-48,-48):Angle())
-                    tabitem[k][k2].model:SetFOV(20)
-                    tabitem[k][k2].model.LayoutEntity = function(this,ent) end
-                    tabitem[k][k2].model.DoClick = function(this)
+                    tabitem[k][k2].icon = tabitem[k][k2]:Add("DButton")
+                    tabitem[k][k2].icon:Dock(FILL)
+                    tabitem[k][k2].icon:SetText("")
+                    tabitem[k][k2].icon.DoClick = function(this)
                         local slot = weapon and weapon.ScrappersSlot or k or "Other"
                         
                         net.Start("zb_FromInvToRaid")
@@ -637,7 +666,7 @@ function PANEL:PopulateInventory()
                             zb.ScrappersShop.MainFrame:PopulateSlots()
                         end)
                     end
-                    tabitem[k][k2].model.DoRightClick = function(this)
+                    tabitem[k][k2].icon.DoRightClick = function(this)
                         local slot = weapon and weapon.ScrappersSlot or k or "Other"
 
                         net.Start("zb_SellItem")
@@ -652,17 +681,51 @@ function PANEL:PopulateInventory()
                         end)
                     end
 
-                    DEFINE_BASECLASS("DModelPanel")
+                    tabitem[k][k2].icon.Paint = function(this, w, h)
+                        local drawn = false
+                        if isfunction(weapon2.DrawWeaponSelection) then
+                            weapon2:DrawWeaponSelection(0, 0, w, h, 255)
+                            drawn = true
+                        end
 
-                    tabitem[k][k2].model.Paint = function(this, w, h)
-                        BaseClass.Paint(this, w, h)
+                        if not drawn then
+                            local mat
+                            if weapon2.WepSelectIcon then
+                                if type(weapon2.WepSelectIcon) == "IMaterial" then
+                                    mat = weapon2.WepSelectIcon
+                                else
+                                    mat = Material(tostring(weapon2.WepSelectIcon), "smooth")
+                                end
+                            elseif weapon2.IconOverride then
+                                mat = Material(weapon2.IconOverride, "smooth")
+                            elseif weapon2.SelectIcon then
+                                mat = Material(weapon2.SelectIcon, "smooth")
+                            end
+
+                            if mat then
+                                surface.SetDrawColor(255, 255, 255, 255)
+                                surface.SetMaterial(mat)
+                                local size = math.min(w - ScreenScale(8), h - ScreenScale(24))
+                                surface.DrawTexturedRect((w - size) / 2, (h - size) / 2, size, size)
+                                drawn = true
+                            end
+                        end
 
                         surface.SetDrawColor(red)
                         surface.DrawOutlinedRect(0, 0, w, h, 2)
 
+                        if not drawn and weapon2.WepSelectFont and weapon2.IconLetter then
+                            draw.SimpleText(weapon2.IconLetter, weapon2.WepSelectFont, w / 2, h / 2, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+                            drawn = true
+                        end
+
+                        if not drawn then
+                            draw.SimpleText(weapon2.PrintName or tostring(v2), "ZB_ScrappersMedium", w / 2, h / 2, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+                        end
+
                         draw.SimpleText(weapon2.PrintName, "ZB_ScrappersMedium", ScreenScale(4), ScreenScale(4))
                         
-                        draw.SimpleText(categories[k] or "Разное", "ZB_ScrappersMedium", ScreenScale(4), h - ScreenScale(12))
+                        draw.SimpleText(categories[k] or "Other", "ZB_ScrappersMedium", ScreenScale(4), h - ScreenScale(12))
                     end
                 end
             end
@@ -674,7 +737,7 @@ function PANEL:PopulateInventory()
     local returnButton = frame:Add("ZB_ScrappersButton")
     returnButton:SetPos(sw * 0.05, sh * 0.9)
     returnButton:SetSize(sw * 0.15, sh * 0.05)
-    returnButton:SetText("Вернуться")
+    returnButton:SetText("Return")
 
     returnButton.DoClick = function()
         SlidePanelBack(frame, self.MainFrame)

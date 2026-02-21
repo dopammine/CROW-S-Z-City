@@ -135,8 +135,8 @@ function MODE:PostDrawTranslucentRenderables(depth, skybox, skybox2)
         angle:RotateAroundAxis( angle:Forward(), 90 )
 
         cam.Start3D2D( v.pos + UpVector, angle, 0.05 )
-            draw.SimpleText("[Экстракция]", "ZB_ScrappersHumongous", 10, 10, color_black, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-            draw.SimpleText("[Экстракция]", "ZB_ScrappersHumongous", 0, 0, ExtractionColor, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+            draw.SimpleText("[EXTRACTION]", "ZB_ScrappersHumongous", 10, 10, color_black, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+            draw.SimpleText("[EXTRACTION]", "ZB_ScrappersHumongous", 0, 0, ExtractionColor, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
         cam.End3D2D()
     end
 end
@@ -172,8 +172,8 @@ function MODE:HUDPaint()
         end
 
         if extraction - CurTime() <= 60 and LastExtract then
-            draw.SimpleText("В зоне экстракции", "ZB_ScrappersMedium", sw * 0.01 + ScreenScale(0.75), sh * 0.97 + ScreenScale(0.75), color_black, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-            draw.SimpleText("В зоне экстракции", "ZB_ScrappersMedium", sw * 0.01, sh * 0.97, ExtractionColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+            draw.SimpleText("In the Extraction Zone", "ZB_ScrappersMedium", sw * 0.01 + ScreenScale(0.75), sh * 0.97 + ScreenScale(0.75), color_black, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+            draw.SimpleText("In the Extraction Zone", "ZB_ScrappersMedium", sw * 0.01, sh * 0.97, ExtractionColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
         end
     end
 
