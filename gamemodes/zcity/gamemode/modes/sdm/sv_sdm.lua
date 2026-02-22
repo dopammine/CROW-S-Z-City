@@ -7,13 +7,13 @@ MODE.LootSpawn = false
 MODE.GuiltDisabled = true
 MODE.randomSpawns = true
 MODE.ForBigMaps = false
-MODE.Chance = 0.04
+-- MODE.Chance = 0.04 what's the point of this mode shit anyway
 
 util.AddNetworkString("sdm_start")
 util.AddNetworkString("sdm_end")
 
 function MODE:CanLaunch()
-	return true
+	return false
 end
 
 function MODE:Intermission()
