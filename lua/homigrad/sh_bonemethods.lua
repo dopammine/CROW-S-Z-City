@@ -371,6 +371,34 @@ hook.Add("Player Think", "homigrad-bones", function(ply, time, dtime)
 	hg.HomigradBones(ply, dtime)
 end)
 
+hook.Add("Bones", "homigrad-walk-torso", function(ply, dtime)
+	if not IsValid(ply) or not ply:IsPlayer() or not ply:Alive() then return end
+	if not ply:OnGround() then
+		hg.bone.Set(ply, "spine", vector_origin, angle_zero, "walk", 0.08, dtime)
+		hg.bone.Set(ply, "spine1", vector_origin, angle_zero, "walk", 0.08, dtime)
+		hg.bone.Set(ply, "spine2", vector_origin, angle_zero, "walk", 0.08, dtime)
+		return
+	end
+
+	local speed = ply:GetVelocity():Length2D()
+	local scale = math.Clamp(speed / 200, 0, 1)
+	if scale <= 0.05 then
+		hg.bone.Set(ply, "spine", vector_origin, angle_zero, "walk", 0.08, dtime)
+		hg.bone.Set(ply, "spine1", vector_origin, angle_zero, "walk", 0.08, dtime)
+		hg.bone.Set(ply, "spine2", vector_origin, angle_zero, "walk", 0.08, dtime)
+		return
+	end
+
+	local t = CurTime() * 7
+	local pitch = math.sin(CurTime() * 4) * 4 * scale
+	local yaw = math.cos(t * 0.7) * 6 * scale
+	local ang = Angle(pitch, yaw, 0)
+
+	hg.bone.Set(ply, "spine", vector_origin, ang, "walk", 0.08, dtime)
+	hg.bone.Set(ply, "spine1", vector_origin, ang, "walk", 0.08, dtime)
+	hg.bone.Set(ply, "spine2", vector_origin, ang, "walk", 0.08, dtime)
+end)
+
 function hg.bone.Set(ply, lookup_name, vec, ang, layer, lerp, dtime2)
 	local dtime = dtime2 or dtime
 	boneName = hg.bone.matrixManual_Name[lookup_name]
