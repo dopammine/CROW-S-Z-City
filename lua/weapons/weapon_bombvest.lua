@@ -59,7 +59,7 @@ SWEP.AutoSwitchFrom	= false
 
 SWEP.Category = "ZCity Other"
 SWEP.Spawnable = true
-SWEP.AdminOnly = false
+SWEP.AdminOnly = true 	--we don't want regular people having this in sandbox!
 
 SWEP.Primary.Delay			= 0.5
 SWEP.Primary.Recoil			= 3
@@ -328,4 +328,5 @@ if(CLIENT)then
 			self.DatDetViewModel:SetModelScale(.5,0)
 		end
 	end
+
 end
