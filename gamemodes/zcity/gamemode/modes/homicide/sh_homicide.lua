@@ -152,7 +152,7 @@ For people who like to play checkers.]],
 			-- ply:Give("weapon_hg_smokenade_tpik")
 			-- ply:Give("weapon_hg_shuriken")
 			
-			ply.organism.recoilmul = 0.8
+			ply.organism.recoilmul = 0.6
 			ply.organism.stamina.max = 300
 			-- local inv = ply:GetNetVar("Inventory", {})
 			-- inv["Weapons"]["hg_flashlight"] = true
@@ -210,30 +210,64 @@ Can detect presence and potency of chemical agents in the air.]],
 			ply:SetNetVar("Inventory", inv)
 			MODE.CleanChemicalsOfPlayer(ply)
 		end,
+	},	
+	["traitor_shadow_soe"] = {
+		Name = "Shadow",
+		Description = [[A master of silent elimination.
+Equipped with concealed weapons that won't be visible on your body.
+Uses tranquilizer gun, tetrodoxin, handcuffs and a disguise.
+Enhanced stealth capabilities with increased stamina. (+40 units)
+For those who prefer to kill from the shadows.]],
+		Objective = "You're a silent killer. Use your concealed weapons to eliminate targets without being detected.",
+		SpawnFunction = function(ply)
+			-- Silent tranquilizer gun for ranged takedowns
+			local tranq = ply:Give("weapon_tranquilizer")
+			if IsValid(tranq) then
+				-- Dynamic ammo based on player count for balance
+				local playerCount = #player.GetAll()
+				local ammoAmount = math.max(1, math.floor(playerCount / 6)) -- 1 mag per 6 players, minimum 1
+				ply:GiveAmmo(tranq:GetMaxClip1() * ammoAmount, tranq:GetPrimaryAmmoType(), true)
+			end
+			ply:Give("weapon_sogknife")
+			ply:Give("weapon_traitor_poison1")
+			ply:Give("weapon_traitor_suit")
+			ply:Give("weapon_adrenaline")
+			ply:Give("weapon_handcuffs")
+			ply:Give("weapon_hg_smokenade_tpik")
+			
+			ply.organism.stamina.max = 260
+			local inv = ply:GetNetVar("Inventory", {})
+			inv["Weapons"]["hg_flashlight"] = true
+			
+			ply:SetNetVar("Inventory", inv)
+		end,
 	},
-	--==//
-	-- ["traitor_demoman"] = {
-		-- Name = "Demoman",
-		-- Description = [[Has many explosives.
--- Can rig certain items with bombs
--- (Radio, certain consumables, etc.)]],
-		-- Objective = "You're the ultimate chemist who decided to use knowledge to hurt others.",
-		-- SpawnFunction = function(ply)
-			-- ply:Give("weapon_sogknife")
-			-- ply:Give("weapon_adrenaline")
-			-- ply:Give("weapon_hg_rgd_tpik")
-			-- ply:Give("weapon_hg_pipebomb_tpik")
-			-- ply:Give("weapon_hg_smokenade_tpik")
-			-- ply:Give("weapon_traitor_ied")
-			-- ply:Give("weapon_walkie_talkie")
+	--[[
+	 ["traitor_demoman"] = {
+		 Name = "Shaid",
+		 Description = [[Has many explosives.
+ Slightly more stamina than others (+40 Stamina units).
+ Has an explosive vest to kill themselves and anyone nearby.
+ For those who like to watch things blow up.],
+		 Objective = "You're a demolision expert who decided to use your explosives to hurt others.",
+		 SpawnFunction = function(ply)
+			 ply:Give("weapon_sogknife")
+			 ply:Give("weapon_bombvest")
+			 ply:Give("weapon_adrenaline")
+			 ply:Give("weapon_hg_shuriken")
+			 ply:Give("weapon_hg_rgd_tpik")
+			 ply:Give("weapon_hg_pipebomb_tpik")
+			 ply:Give("weapon_hg_molotov_tpik")
+			 ply:Give("weapon_traitor_ied")
+			 --ply:Give("weapon_walkie_talkie")
 			
-			-- ply.organism.stamina.max = 220
-			-- local inv = ply:GetNetVar("Inventory", {})
-			-- inv["Weapons"]["hg_flashlight"] = true
+			 ply.organism.stamina.max = 260
+			 local inv = ply:GetNetVar("Inventory", {})
+			 inv["Weapons"]["hg_flashlight"] = true
 			
-			-- ply:SetNetVar("Inventory", inv)
-		-- end,
-	-- },
+			 ply:SetNetVar("Inventory", inv)
+		 end,
+	 },
 	["traitor_zombie"] = {
 		Name = "Zombie",
 		Description = [[Can infect other players silently.
@@ -241,8 +275,8 @@ Infected players can be cured by a doctor.
 If all players are cured zombie will lose.
 Instead of dying will be randomly transported to another infected player's body.
 Has no weapons or any tools.
-Despite being zombie, still bears appearance of a normal human.]],
-		Objective = "You're the zombie. Infect everyone to win. Avoid doctor.",
+Despite being zombie, still bears appearance of a normal human.],
+		Objective = "You're the zombie. Infect everyone to win. Avoid the doctor.",
 		SpawnFunction = function(ply)
 			-- ply:Give("weapon_sogknife")	
 			-- ply:Give("weapon_adrenaline")
@@ -253,7 +287,7 @@ Despite being zombie, still bears appearance of a normal human.]],
 			
 			-- ply:SetNetVar("Inventory", inv)
 		end,
-	},
+	}, --]]
 	--=//
 }
 --//
@@ -262,6 +296,7 @@ Despite being zombie, still bears appearance of a normal human.]],
 MODE.ProfessionsRoundTypes = {
 	["standard"] = true,
 	["soe"] = true,
+	["gunfreezone"] = true,
 }
 
 MODE.Professions = {
@@ -313,8 +348,34 @@ MODE.RoleChooseRoundTypes = {
 			["traitor_infiltrator"] = true,
 			["traitor_chemist"] = true,
 			["traitor_assasin"] = true,
-			--; ОБЪЕДЕНИТЬ ХИМИКА И ДИВЕРСАНТА!!! наверное
-			-- ["traitor_demoman"] = true,
+			--["traitor_demoman"] = true, 	suicidal lunatic is now (NOT) available in standard! but it depends on which traitor class they chose.
+		},
+		Professions = {
+			["doctor"] = {
+				Chance = 1,
+			},
+			["huntsman"] = {
+				Chance = 1,
+			},
+			["engineer"] = {
+				Chance = 1,
+			},
+			["cook"] = {
+				Chance = 1,
+			},
+			["builder"] = {
+				Chance = 1,
+			},
+		},
+	},	
+	["gunfreezone"] = {
+		TraitorDefaultRole = "traitor_default",
+		Traitor = {
+			["traitor_default"] = true,
+			["traitor_infiltrator"] = true,
+			["traitor_chemist"] = true,
+			--["traitor_assasin"] = true,	there's no gunman so why have an assassin?
+			-- ["traitor_demoman"] = true,	having a shaid in gfz is op
 		},
 		Professions = {
 			["doctor"] = {
@@ -339,7 +400,7 @@ MODE.RoleChooseRoundTypes = {
 		Traitor = {
 			["traitor_default_soe"] = true,
 			["traitor_infiltrator_soe"] = true,
-			-- ["traitor_chemist_soe"] = true,
+			["traitor_shadow_soe"] = true,
 			["traitor_assasin_soe"] = true,
 			-- ["traitor_demoman_soe"] = true,
 		},
@@ -405,7 +466,7 @@ MODE.Roles.wildwest = {
 	},
 
 	gunner = {
-		name = "Bystander",
+		name = "Sheriff",
 		color = Color(159,85,0)
 	},
 
@@ -422,12 +483,12 @@ MODE.Roles.gunfreezone = {
 	},
 
 	gunner = {
-		name = "Innocent",
+		name = "Bystander",
 		color = Color(0,120,190)
 	},
 
 	innocent = {
-		name = "Innocent",
+		name = "Bystander",
 		color = Color(0,120,190)
 	},
 }
@@ -442,13 +503,13 @@ MODE.Roles.supermario = {
 	gunner = {
 		objective = "You're the hero Mario! Use your jumping ability to stop the traitor.",
 		name = "Hero Mario",
-		color = Color(158,0,190)
+		color = Color(0,120,190)
 	},
 
 	innocent = {
-		objective = "You're a bystander Mario, survive and avoid the traitor's traps!",
+		objective = "You're an innocent Mario, survive and avoid the traitor's traps!",
 		name = "Innocent Mario",
-		color = Color(0,120,190)
+		color = Color(0,190,0)
 	},
 }
 
