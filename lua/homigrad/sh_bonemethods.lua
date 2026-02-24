@@ -73,6 +73,30 @@ local function aprilFoolsEnabled()
 	local cvar = GetConVar("hg_aprilfools")
 	return cvar and cvar:GetBool()
 end
+if SERVER then
+	hook.Add("Think", "hg-aprilfools-random-dance", function()
+		if not aprilFoolsEnabled() then return end
+		local now = CurTime()
+		for _, ply in ipairs(player.GetAll()) do
+			if not IsValid(ply) or not ply:Alive() or ply:InVehicle() then continue end
+			if ply:GetNWFloat("hg_dance_until", 0) > now then continue end
+			ply.HG_AF_DanceCooldown = ply.HG_AF_DanceCooldown or 0
+			if now < ply.HG_AF_DanceCooldown then continue end
+			ply.HG_AF_NextDanceCheck = ply.HG_AF_NextDanceCheck or 0
+			if now < ply.HG_AF_NextDanceCheck then continue end
+			ply.HG_AF_NextDanceCheck = now + 5
+			if math.random() <= 0.2 then
+				local duration = SoundDuration("bbq.wav")
+				if not duration or duration <= 0 then
+					duration = 3
+				end
+				ply:SetNWFloat("hg_dance_until", now + duration)
+				ply:EmitSound("bbq.wav", 100, 100, 1, CHAN_AUTO)
+				ply.HG_AF_DanceCooldown = now + 50
+			end
+		end
+	end)
+end
 local function reset(ply)
 	ply.manipulated = ply.manipulated or {}
 	ply.unmanipulated = {}
@@ -391,6 +415,37 @@ end)
 
 hook.Add("Bones", "homigrad-walk-torso", function(ply, dtime)
 	if not IsValid(ply) or not ply:IsPlayer() or not ply:Alive() then return end
+	if ply:GetNWFloat("hg_dance_until", 0) > CurTime() then
+		local t = CurTime()
+		local speed = 5.5
+		local armSpeed = 8.5
+		local hipSide = math.sin(t * speed) * 26
+		local hipTwist = math.cos(t * speed) * 18
+		local bounce = math.abs(math.sin(t * speed * 0.5)) * 6
+		local armSide = -math.sin(t * armSpeed) * 55
+		local armForward = math.cos(t * armSpeed) * 35
+		local foreTwist = math.sin(t * armSpeed + math.pi / 2) * 25
+		local knee = math.sin(t * speed) * 12
+
+		hg.bone.Set(ply, "spine", vector_origin, Angle(bounce, hipTwist * 0.6, hipSide * 0.6), "dance", 0.08, dtime)
+		hg.bone.Set(ply, "spine1", vector_origin, Angle(bounce, hipTwist * 0.6, hipSide * 0.6), "dance", 0.08, dtime)
+		hg.bone.Set(ply, "spine2", vector_origin, Angle(bounce, hipTwist * 0.6, hipSide * 0.6), "dance", 0.08, dtime)
+		hg.bone.Set(ply, "pelvis", vector_origin, Angle(-bounce, -hipTwist, hipSide), "dance", 0.08, dtime)
+		hg.bone.Set(ply, "head", vector_origin, Angle(bounce * 0.4, hipTwist * 0.4, -hipSide * 0.2), "dance", 0.08, dtime)
+
+		hg.bone.Set(ply, "l_upperarm", vector_origin, Angle(armForward * 1.6, -hipTwist * 0.7, armSide * 1.8), "dance", 0.08, dtime)
+		hg.bone.Set(ply, "r_upperarm", vector_origin, Angle(armForward * 1.6, hipTwist * 0.7, armSide * 1.8), "dance", 0.08, dtime)
+		hg.bone.Set(ply, "l_forearm", vector_origin, Angle(armForward * 1.0, foreTwist * 1.9, armSide * 1.1), "dance", 0.08, dtime)
+		hg.bone.Set(ply, "r_forearm", vector_origin, Angle(armForward * 1.0, -foreTwist * 1.9, armSide * 1.1), "dance", 0.08, dtime)
+
+		hg.bone.Set(ply, "ValveBiped.Bip01_L_Thigh", vector_origin, Angle(knee, -hipTwist * 0.2, -hipSide * 0.3), "dance", 0.08, dtime)
+		hg.bone.Set(ply, "ValveBiped.Bip01_R_Thigh", vector_origin, Angle(-knee, hipTwist * 0.2, hipSide * 0.3), "dance", 0.08, dtime)
+		hg.bone.Set(ply, "ValveBiped.Bip01_L_Calf", vector_origin, Angle(-knee * 0.6, 0, 0), "dance", 0.08, dtime)
+		hg.bone.Set(ply, "ValveBiped.Bip01_R_Calf", vector_origin, Angle(knee * 0.6, 0, 0), "dance", 0.08, dtime)
+		hg.bone.Set(ply, "ValveBiped.Bip01_L_Foot", vector_origin, Angle(knee * 0.2, 0, -hipSide * 0.2), "dance", 0.08, dtime)
+		hg.bone.Set(ply, "ValveBiped.Bip01_R_Foot", vector_origin, Angle(-knee * 0.2, 0, hipSide * 0.2), "dance", 0.08, dtime)
+		return
+	end
 	if aprilFoolsEnabled() then
 		if not ply:OnGround() then
 			local vz = math.abs(ply:GetVelocity().z)
