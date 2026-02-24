@@ -749,3 +749,76 @@ hook.Add("Player Spawn", "ItDoesntNow", function(ply)
 
 	stopthings()
 end)
+
+
+local fatman = {
+	nextCheck = 0,
+	activeUntil = 0,
+	startedAt = 0,
+	duration = 0,
+	regular = CreateMaterial("hg_fatman_regular", "UnlitGeneric", {
+		["$basetexture"] = "custom/REGULARfatman",
+		["$vertexcolor"] = "1",
+		["$vertexalpha"] = "1"
+	}),
+	shocked = CreateMaterial("hg_fatman_shocked", "UnlitGeneric", {
+		["$basetexture"] = "custom/SHOCKEDfatman",
+		["$vertexcolor"] = "1",
+		["$vertexalpha"] = "1"
+	}),
+	dead = CreateMaterial("hg_fatman_dead", "UnlitGeneric", {
+		["$basetexture"] = "custom/DEADfatman",
+		["$vertexcolor"] = "1",
+		["$vertexalpha"] = "1"
+	})
+}
+
+hook.Add("Think", "hg-aprilfools-fatman", function()
+	if not GetGlobalBool("hg_aprilfools", false) then return end
+	local now = CurTime()
+	if now < fatman.nextCheck then return end
+	fatman.nextCheck = now + 5
+	if now < fatman.activeUntil then return end
+	if math.random() <= 0.2 then
+		local duration = SoundDuration("fatman.wav")
+		if not duration or duration <= 0 then
+			duration = 3
+		end
+		fatman.duration = duration
+		fatman.startedAt = now
+		fatman.activeUntil = now + duration
+		surface.PlaySound("fatman.wav")
+	end
+end)
+
+hook.Add("HUDPaint", "hg-aprilfools-fatman", function()
+	local now = CurTime()
+	if now >= fatman.activeUntil or fatman.startedAt <= 0 then return end
+	local elapsed = now - fatman.startedAt
+	local mat
+	if elapsed < 1 then
+		mat = fatman.regular
+	elseif elapsed < 2 then
+		mat = fatman.shocked
+	else
+		mat = fatman.dead
+	end
+	if not mat then return end
+	local scrW, scrH = ScrW(), ScrH()
+	local maxW = scrW * 0.6
+	local maxH = scrH * 0.8
+	local targetW = maxH * (9 / 16)
+	local targetH = maxH
+	if targetW > maxW then
+		targetW = maxW
+		targetH = maxW * (16 / 9)
+	end
+	local x = (scrW - targetW) * 0.5
+	local y = (scrH - targetH) * 0.5
+	render.SetLightingMode(1)
+	surface.SetMaterial(mat)
+	surface.SetDrawColor(255, 255, 255, 255)
+	surface.DrawTexturedRect(x, y, targetW, targetH)
+	render.SetLightingMode(0)
+end)
+
