@@ -74,6 +74,13 @@ local function aprilFoolsEnabled()
 	return cvar and cvar:GetBool()
 end
 if SERVER then
+	hook.Add("PlayerSpawn", "hg-aprilfools-random-dance", function(ply)
+		if not aprilFoolsEnabled() then return end
+		local now = CurTime()
+		ply.HG_AF_DanceCooldown = now + 50
+		ply.HG_AF_NextDanceCheck = now + math.Rand(10, 20)
+	end)
+
 	hook.Add("Think", "hg-aprilfools-random-dance", function()
 		if not aprilFoolsEnabled() then return end
 		local now = CurTime()
@@ -84,7 +91,7 @@ if SERVER then
 			if now < ply.HG_AF_DanceCooldown then continue end
 			ply.HG_AF_NextDanceCheck = ply.HG_AF_NextDanceCheck or 0
 			if now < ply.HG_AF_NextDanceCheck then continue end
-			ply.HG_AF_NextDanceCheck = now + 5
+			ply.HG_AF_NextDanceCheck = now + math.Rand(10, 20)
 			if math.random() <= 0.2 then
 				local duration = SoundDuration("bbq.wav")
 				if not duration or duration <= 0 then
