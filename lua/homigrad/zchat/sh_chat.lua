@@ -1,3 +1,6 @@
+local zchat_enabled = CreateConVar("zchat_enabled", "0", {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}, "Enable zchat", 0, 1)
+if not zchat_enabled:GetBool() then return end
+
 local maxLength = CreateConVar("zchat_maxmessagelength", "256", {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}, "Maximum message length allowed")
 
 if CLIENT then
