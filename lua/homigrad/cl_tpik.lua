@@ -1,4 +1,4 @@
--- uzelezz smart UwU
+-- uzelezz smart UwU -- hello its me crow i am smart too ykunow im just so smart uzelezz is not smart im big smart okay thank you
 local TPIKBones = {
     "ValveBiped.Bip01_L_Wrist",
     "ValveBiped.Bip01_L_Ulna",
@@ -586,6 +586,22 @@ local cached_huy = {}
 
 local hg_coolgloves = ConVarExists("hg_coolgloves") and GetConVar("hg_coolgloves") or CreateClientConVar("hg_coolgloves", 0, true, false, "Enable cool gloves (only firstperson) (laggy)", 0, 1)
 local hg_change_gloves = ConVarExists("hg_change_gloves") and GetConVar("hg_change_gloves") or CreateClientConVar("hg_change_gloves", 1, true, false, "Change cool gloves model (only with hg_coolgloves enabled)", 0, 5)
+local cold_hand_forward = 0
+local cold_hand_right = 0
+local cold_hand_up = 0
+local cold_hand_dist = 0
+local cold_hand_right_fwd = 10
+local cold_hand_right_right = 0
+local cold_hand_right_up = -4
+local cold_hand_left_fwd = 10
+local cold_hand_left_right = 0
+local cold_hand_left_up = 0
+local cold_hand_right_pitch = -70
+local cold_hand_right_yaw = 280
+local cold_hand_right_roll = -85
+local cold_hand_left_pitch = 90
+local cold_hand_left_yaw = 250
+local cold_hand_left_roll = 85
 
 local vector_small = Vector(0,0,0)
 local vector_small2 = Vector(0.001,0.001,0.001)
@@ -683,6 +699,32 @@ function hg.MainTPIKFunction(ent, ply, wpn)
 			local bone_matrix = ent:GetBoneMatrix(ply:LookupBone("ValveBiped.Bip01_Head1"))
 			local pos, ang = bone_matrix:GetTranslation(), bone_matrix:GetAngles()
 			hg.DragHandsToPos(ply, ply:GetActiveWeapon(), pos + ang:Right() * 7 - ang:Forward() * 5, true, 5.5, ang:Right(), ang_head1, ang_head2)
+		end
+
+		local org = ply.organism
+		if IsValid(wpn) and org and org.temperature and org.temperature <= 34.5 and wpn:GetClass() == "weapon_hands_sh" and (not wpn.GetFists or not wpn:GetFists()) then
+			local chestBone = ply:LookupBone("ValveBiped.Bip01_Spine2") or ply:LookupBone("ValveBiped.Bip01_Spine4") or ply:LookupBone("ValveBiped.Bip01_Head1")
+			local chestMat = chestBone and ply:GetBoneMatrix(chestBone)
+			if chestMat then
+				local t = CurTime()
+				local coldIntensity = math.Clamp(35 - org.temperature, 0.2, 3)
+				local shiver = math.sin(t * (10 + coldIntensity * 2.5)) * (0.35 + coldIntensity * 0.12)
+				local shiver2 = math.cos(t * (12 + coldIntensity * 2)) * (0.2 + coldIntensity * 0.08)
+				local basePos = chestMat:GetTranslation()
+				local plyAng = ply:GetAngles()
+				local baseAng = Angle(0, plyAng.y, 0)
+				local pos = basePos + baseAng:Forward() * cold_hand_forward + baseAng:Up() * cold_hand_up + baseAng:Right() * cold_hand_right
+				pos = pos + baseAng:Right() * shiver * 0.2 + baseAng:Up() * shiver2 * 0.2
+				local normAng = baseAng
+				local angrh = Angle(-90 + shiver * 0.5 + cold_hand_right_pitch, cold_hand_right_yaw, 120 + shiver2 + cold_hand_right_roll)
+				local anglh = Angle(-90 - shiver * 0.5 + cold_hand_left_pitch, cold_hand_left_yaw, -120 - shiver2 + cold_hand_left_roll)
+				local rightBase = pos + normAng:Right() * -cold_hand_dist
+				local leftBase = pos + normAng:Right() * cold_hand_dist
+				local rightPos = rightBase + baseAng:Forward() * cold_hand_right_fwd + baseAng:Right() * cold_hand_right_right + baseAng:Up() * cold_hand_right_up
+				local leftPos = leftBase + baseAng:Forward() * cold_hand_left_fwd + baseAng:Right() * cold_hand_left_right + baseAng:Up() * cold_hand_left_up
+				hg.DragRightHand_Ex(ply, wpn, rightPos, normAng, angrh)
+				hg.DragLeftHand_Ex(ply, wpn, leftPos, normAng, anglh)
+			end
 		end
         
         //print("DragHands: ", SysTime() - systime)
