@@ -38,6 +38,7 @@ local IsValid = IsValid
 local hg_fov = ConVarExists("hg_fov") and GetConVar("hg_fov") or CreateClientConVar("hg_fov", "70", true, false, "changes fov to value", 75, 100)
 local hg_realismcam = ConVarExists("hg_realismcam") and GetConVar("hg_realismcam") or CreateClientConVar("hg_realismcam", "0", true, false, "realism camera", 0, 1)
 local hg_gopro = ConVarExists("hg_gopro") and GetConVar("hg_gopro") or CreateClientConVar("hg_gopro", "0", true, false, "gopro camera", 0, 1)
+local hg_cool_camera = ConVarExists("hg_cool_camera") and GetConVar("hg_cool_camera") or CreateClientConVar("hg_cool_camera", "0", true, false, "cool camera", 0, 1)
 
 local oldview = render.GetViewSetup()
 local breathing_amount = 0
@@ -160,7 +161,15 @@ function HGAddView(ply, origin, angles, velLen)
 
 		//angles[1] = angles[1] + x * 1
 		//angles[2] = angles[2] + y * 1
-		ViewPunch4(Angle(y2, x2, x2 * 50) * 0.0005 * (ishgweapon(wep) and 1.5 or 1))
+		if hg_cool_camera:GetBool() then
+			local coolX = math.sin(huy * 1.6) * walk * 1.4 + math.sin(huy * 0.8 + 0.5) * walk * 0.4
+			local coolY = math.abs(math.cos(huy * 1.6)) * walk * 1.8 - walk * 0.6
+			local coolRoll = math.sin(huy * 1.6 + 1.1) * walk * 2.2
+			angles[3] = angles[3] + coolRoll * 0.40
+			ViewPunch4(Angle(coolY, coolX, coolRoll) * 0.0012 * (ishgweapon(wep) and 1.5 or 1))
+		else
+			ViewPunch4(Angle(y2, x2, x2 * 50) * 0.0005 * (ishgweapon(wep) and 1.5 or 1))
+		end
 
 		local music = hg.DynamicMusicV2.Player.GetTrack()
 
