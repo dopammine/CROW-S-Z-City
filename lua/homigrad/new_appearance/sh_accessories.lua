@@ -27,6 +27,17 @@ hg.Accessories = {
         placement = "face",
         name = "Bugeye Sunglasses"
     },
+	
+   ["pluv mask"] = {
+        model = "models/props/pluvmask.mdl",
+        bone = "ValveBiped.Bip01_Head1",
+        malepos = {Vector(-6,-1.8,0),Angle(180,-80,-90), 1},
+        fempos = {Vector(-6,-1.8,0),Angle(180,-80,-90), 1},
+        skin = 0,
+        norender = true,
+        placement = "head"
+        name = "Pluv Mask"
+    },
 
     ["aviators"] = {
         model = "models/arctic_nvgs/aviators.mdl",
