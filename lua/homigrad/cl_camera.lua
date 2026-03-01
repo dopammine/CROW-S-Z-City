@@ -89,6 +89,10 @@ local velocityAdd = Vector()
 local velocityAddVel = Vector()
 local walkLerped = 0
 local walkTime = 0
+local jumpTilt = 0
+local jumpPhase = 0
+local jumpStart = 0
+local lastOnGround = true
 
 local lerped_ang = Angle(0,0,0)
 function HGAddView(ply, origin, angles, velLen)
@@ -144,7 +148,8 @@ function HGAddView(ply, origin, angles, velLen)
 		
 		local walk = math.Clamp(walkLerped / 100, 0, 1)
 		
-		walkTime = walkTime + walk * FrameTime() * 2 * game.GetTimeScale() * (ply:OnGround() and 1 or 0)
+		local runMul = ply:IsSprinting() and 1.6 or 1
+		walkTime = walkTime + walk * FrameTime() * 2 * runMul * game.GetTimeScale() * (ply:OnGround() and 1 or 0)
 		
 		velocityAddVel = LerpFT(0.9, velocityAddVel * 0.9, -vel * 0.1)
 	
@@ -162,9 +167,39 @@ function HGAddView(ply, origin, angles, velLen)
 		//angles[1] = angles[1] + x * 1
 		//angles[2] = angles[2] + y * 1
 		if hg_cool_camera:GetBool() then
-			local coolX = math.sin(huy * 1.6) * walk * 1.4 + math.sin(huy * 0.8 + 0.5) * walk * 0.4
-			local coolY = math.abs(math.cos(huy * 1.6)) * walk * 1.8 - walk * 0.6
-			local coolRoll = math.sin(huy * 1.6 + 1.1) * walk * 2.2
+			local pain = org.avgpain or org.pain or 0
+			local isPain = pain > 25
+			local isCrouchWalk = ply:Crouching() and vellen > 10
+			local rollMul = (isPain or isCrouchWalk) and 2.2 or 1
+			local coolX = math.sin(huy * 1.6 * runMul) * walk * 1.4 + math.sin(huy * 0.8 * runMul + 0.5) * walk * 0.4
+			local coolY = math.abs(math.cos(huy * 1.6 * runMul)) * walk * 1.8 - walk * 0.6
+			local coolRoll = math.sin(huy * 1.6 * runMul + 1.1) * walk * 2.2 * rollMul
+			local onGround = ply:OnGround()
+			if lastOnGround and not onGround and vel[3] > 80 then
+				jumpPhase = 1
+				jumpStart = CurTime()
+			end
+			if jumpPhase == 1 then
+				local t = CurTime() - jumpStart
+				if t >= 2 then
+					jumpPhase = 2
+					jumpStart = CurTime()
+					t = 2
+				end
+				jumpTilt = math.Clamp(t / 2, 0, 1)
+			elseif jumpPhase == 2 then
+				local t = CurTime() - jumpStart
+				if t >= 2 then
+					jumpPhase = 0
+					jumpTilt = 0
+				else
+					jumpTilt = 1 - math.Clamp(t / 2, 0, 1)
+				end
+			else
+				jumpTilt = 0
+			end
+			angles[1] = angles[1] - jumpTilt * 6
+			lastOnGround = onGround
 			angles[3] = angles[3] + coolRoll * 0.40
 			ViewPunch4(Angle(coolY, coolX, coolRoll) * 0.0012 * (ishgweapon(wep) and 1.5 or 1))
 		else
