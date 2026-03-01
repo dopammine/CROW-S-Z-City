@@ -244,6 +244,167 @@ util.AddNetworkString("HMCD(StartPlayersRoleSelection)")
 util.AddNetworkString("HMCD(EndPlayersRoleSelection)")
 util.AddNetworkString("HMCD(SetSubRole)")
 util.AddNetworkString("hmcd_announce_traitor_lose")
+util.AddNetworkString("HMCD(CTRApply)")
+
+local CTR_TOTAL_POINTS = 30
+local CTR_ITEMS = {
+	["soe_walter_p22"] = {cost = 3, mode = "soe", exclusive = "soe_gun", give = function(ply)
+		local wep = ply:Give("weapon_p22")
+		if IsValid(wep) then
+			ply:GiveAmmo(wep:GetMaxClip1(), wep:GetPrimaryAmmoType(), true)
+		end
+	end},
+	["soe_cyanide_capsule"] = {cost = 4, mode = "soe", give = "weapon_traitor_poison_consumable"},
+	["soe_cyanide_canister"] = {cost = 3, mode = "soe", give = "weapon_traitor_poison3"},
+	["soe_curare_vial"] = {cost = 4, mode = "soe", give = "weapon_traitor_poison4"},
+	["soe_tetrodotoxin_syringe"] = {cost = 2, mode = "soe", give = "weapon_traitor_poison1"},
+	["soe_shuriken"] = {cost = 2, mode = "soe", give = "weapon_hg_shuriken"},
+	["soe_sog_seal_2000"] = {cost = 2, mode = "soe", give = "weapon_sogknife"},
+	["soe_rgd_5"] = {cost = 5, mode = "soe", give = "weapon_hg_rgd_tpik"},
+	["soe_f1"] = {cost = 4, mode = "soe", give = "weapon_hg_f1_tpik"},
+	["soe_molotov"] = {cost = 3, mode = "soe", give = "weapon_hg_molotov_tpik"},
+	["soe_type59"] = {cost = 4, mode = "soe", give = "weapon_hg_type59_tpik"},
+	["soe_pipebomb"] = {cost = 3, mode = "soe", give = "weapon_hg_pipebomb_tpik"},
+	["soe_ied"] = {cost = 4, mode = "soe", give = "weapon_traitor_ied"},
+	["soe_beretta_m9"] = {cost = 4, mode = "soe", exclusive = "soe_gun", give = "weapon_m9beretta"},
+	["soe_glock_17"] = {cost = 6, mode = "soe", exclusive = "soe_gun", give = "weapon_glock17"},
+	["soe_explosive_belt"] = {cost = 9, mode = "soe", give = "weapon_bombvest"},
+	["std_zoraki_stalker_m906"] = {cost = 3, mode = "standard", exclusive = "std_gun", give = "weapon_zoraki"},
+	["std_buck_120_general"] = {cost = 2, mode = "standard", give = "weapon_buck200knife"},
+	["std_tranquilazier_gun"] = {cost = 5, mode = "standard", exclusive = "std_gun", give = "weapon_tranquilizer"},
+	["std_rgd_5"] = {cost = 4, mode = "standard", give = "weapon_hg_rgd_tpik"},
+	["std_flashbang"] = {cost = 3, mode = "standard", give = "weapon_hg_flashbang_tpik"},
+	["std_heavy_dragoon_pistol"] = {cost = 4, mode = "standard", exclusive = "std_gun", give = "weapon_flintlock"},
+	["std_ied"] = {cost = 4, mode = "standard", give = "weapon_traitor_ied"},
+	["std_cyanide_capsule"] = {cost = 3, mode = "standard", give = "weapon_traitor_poison_consumable"},
+	["std_cyanide_canister"] = {cost = 3, mode = "standard", give = "weapon_traitor_poison3"},
+	["std_curare_vial"] = {cost = 4, mode = "standard", give = "weapon_traitor_poison4"},
+	["std_tetrodotoxin_syringe"] = {cost = 2, mode = "standard", give = "weapon_traitor_poison1"},
+	["std_shuriken"] = {cost = 2, mode = "standard", give = "weapon_hg_shuriken"},
+	["std_f1"] = {cost = 4, mode = "standard", give = "weapon_hg_f1_tpik"},
+	["std_molotov"] = {cost = 3, mode = "standard", give = "weapon_hg_molotov_tpik"},
+	["std_type59"] = {cost = 4, mode = "standard", give = "weapon_hg_type59_tpik"},
+	["std_pipebomb"] = {cost = 3, mode = "standard", give = "weapon_hg_pipebomb_tpik"},
+	["ability_assassin"] = {cost = 13, group = "abilities", ability = "assassin"},
+	["ability_infiltraitor"] = {cost = 13, group = "abilities", ability = "infiltrator"},
+}
+
+local CTR_ABILITY_SUBROLE = {
+	assassin = {standard = "traitor_assasin", soe = "traitor_assasin_soe"},
+	infiltrator = {standard = "traitor_infiltrator", soe = "traitor_infiltrator_soe"},
+}
+
+local CTR_ABILITY_STATS = {
+	traitor_assasin = {stamina = 300, recoilmul = 0.6},
+	traitor_assasin_soe = {stamina = 300, recoilmul = 0.4},
+	traitor_infiltrator = {stamina = 220},
+	traitor_infiltrator_soe = {stamina = 220, recoilmul = 1},
+}
+
+MODE.CTRLoadouts = MODE.CTRLoadouts or {}
+
+local function ctr_normalize_mode(mode)
+	if mode == "soe" then return "soe" end
+	return "standard"
+end
+
+local function ctr_should_apply(ply, data)
+	if not data then return false end
+	if not ply.isTraitor or not ply.MainTraitor then return false end
+	if MODE.Type == "soe" then
+		return data.mode == "soe"
+	end
+	return data.mode == "standard"
+end
+
+function MODE.ApplyCTRLoadout(ply, data)
+	if not data then return end
+	local inv = ply:GetNetVar("Inventory") or {}
+	inv["Weapons"] = inv["Weapons"] or {}
+	inv["Weapons"]["hg_flashlight"] = true
+	ply:SetNetVar("Inventory", inv)
+
+	if data.subrole then
+		local stats = CTR_ABILITY_STATS[data.subrole]
+		if stats then
+			if stats.stamina and ply.organism and ply.organism.stamina then
+				ply.organism.stamina.max = stats.stamina
+			end
+			if stats.recoilmul and ply.organism then
+				ply.organism.recoilmul = stats.recoilmul
+			end
+		end
+	end
+
+	for id in pairs(data.items or {}) do
+		local def = CTR_ITEMS[id]
+		if def and def.give then
+			if isstring(def.give) then
+				ply:Give(def.give)
+			else
+				def.give(ply)
+			end
+		end
+	end
+end
+
+net.Receive("HMCD(CTRApply)", function(_, ply)
+	if not IsValid(ply) then return end
+	local mode = ctr_normalize_mode(net.ReadString())
+	local count = net.ReadUInt(8)
+	local items = {}
+	local used = 0
+	local ability = nil
+	local exclusive = {}
+
+	for i = 1, count do
+		local id = net.ReadString()
+		local def = CTR_ITEMS[id]
+		if def then
+			if def.mode and def.mode ~= mode then continue end
+			if def.group == "abilities" then
+				if not ability then
+					ability = def.ability
+					used = used + (def.cost or 0)
+				end
+			else
+				if def.exclusive and exclusive[def.exclusive] then continue end
+				if not items[id] then
+					items[id] = true
+					if def.exclusive then
+						exclusive[def.exclusive] = true
+					end
+					used = used + (def.cost or 0)
+				end
+			end
+		end
+	end
+
+	if used > CTR_TOTAL_POINTS then return end
+
+	local subrole = nil
+	if ability then
+		local map = CTR_ABILITY_SUBROLE[ability]
+		if map then
+			subrole = map[mode]
+		end
+	end
+
+	if not next(items) and not subrole then
+		MODE.CTRLoadouts[ply] = nil
+		return
+	end
+
+	MODE.CTRLoadouts[ply] = {
+		mode = mode,
+		items = items,
+		subrole = subrole,
+	}
+end)
+
+hook.Add("PlayerDisconnected", "HMCD_CTRLoadoutCleanup", function(ply)
+	MODE.CTRLoadouts[ply] = nil
+end)
 
 MODE.Type = MODE.Type or "standard"
 MODE.Types = MODE.Types or {}
@@ -1591,33 +1752,43 @@ function MODE.SpawnPlayers(spawn_with_subroles)
             end
 
             local sub_role = nil
+			local default_role_id = MODE.Type == "soe" and "traitor_default_soe" or "traitor_default"
+			local sub_role_id = MODE.Type == "soe" and (current_ply:GetInfo(MODE.ConVarName_SubRole_Traitor_SOE) or default_role_id) or (current_ply:GetInfo(MODE.ConVarName_SubRole_Traitor) or default_role_id)
+			local ctr_data = MODE.CTRLoadouts and MODE.CTRLoadouts[current_ply]
+			local use_ctr = ctr_should_apply(current_ply, ctr_data) and sub_role_id == default_role_id
             if(spawn_with_subroles and MODE.RoleChooseRoundTypes[MODE.Type])then
                 if(current_ply.isTraitor)then
-                    local sub_role_id = MODE.Type == "soe" and (current_ply:GetInfo(MODE.ConVarName_SubRole_Traitor_SOE) or "traitor_default_soe") or (current_ply:GetInfo(MODE.ConVarName_SubRole_Traitor) or "traitor_default")
-					sub_role = sub_role_id
+					if use_ctr then
+						sub_role = ctr_data.subrole
+					else
+						sub_role = sub_role_id
+					end
                 end
 
                 if(current_ply.isGunner)then
                     MODE.Types[MODE.Type].GunManLoot(current_ply)
                 end
 
-                if(sub_role)then
-                    if(current_ply.isGunner)then
+				if current_ply.isTraitor then
+					if use_ctr then
+						if sub_role then
+							current_ply.SubRole = sub_role
+						end
+						MODE.ApplyCTRLoadout(current_ply, ctr_data)
+					elseif sub_role then
+						local role_info = MODE.SubRoles[sub_role]
+						if(!role_info or !MODE.RoleChooseRoundTypes[MODE.Type].Traitor[sub_role])then
+							sub_role = MODE.RoleChooseRoundTypes[MODE.Type].TraitorDefaultRole or "traitor_default"
+							role_info = MODE.SubRoles[sub_role]
+						end
 
-                    elseif(current_ply.isTraitor)then
-                        local role_info = MODE.SubRoles[sub_role]
-                        if(!role_info or !MODE.RoleChooseRoundTypes[MODE.Type].Traitor[sub_role])then
-                            sub_role = MODE.RoleChooseRoundTypes[MODE.Type].TraitorDefaultRole or "traitor_default"
-                            role_info = MODE.SubRoles[sub_role]
-                        end
-
-                        if(current_ply.MainTraitor)then
-                            local spawn_func = role_info.SpawnFunction
-                            current_ply.SubRole = sub_role
-                            spawn_func(current_ply)
-                        end
-                    end
-                end
+						if(current_ply.MainTraitor)then
+							local spawn_func = role_info.SpawnFunction
+							current_ply.SubRole = sub_role
+							spawn_func(current_ply)
+						end
+					end
+				end
             else
                 if(current_ply.isTraitor)then
                     MODE.Types[MODE.Type].TraitorLoot(current_ply)

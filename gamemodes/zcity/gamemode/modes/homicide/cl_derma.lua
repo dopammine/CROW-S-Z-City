@@ -223,6 +223,400 @@ end
 derma.DefineControl("HMCD_RolePanelList", "", PANEL, "DPanel")
 --//
 
+local CTR_TOTAL_POINTS = 30
+local CTR_PANEL_BG = Color(8, 12, 20, 240)
+local CTR_ACCENT = Color(40, 120, 220)
+local CTR_ACCENT_SOFT = Color(40, 120, 220, 120)
+local CTR_GRADIENT = Material("vgui/gradient-d")
+
+local function ctr_draw_text(text, font, posX, posY, color, textAlign)
+	draw.DrawText(text, font, posX + 2, posY + 2, ColorAlpha(color_black, 200), textAlign)
+	draw.DrawText(text, font, posX, posY, color, textAlign)
+end
+
+local CTR_SECTIONS = {
+	{
+		id = "soe",
+		title = "SOE",
+		items = {
+			{id = "soe_walter_p22", name = "Walter P22 (+1 mag)", cost = 3, group = "soe", exclusive = "soe_gun"},
+			{id = "soe_cyanide_capsule", name = "Cyanide Capsule", cost = 4, group = "soe"},
+			{id = "soe_cyanide_canister", name = "Cyanide Canister", cost = 3, group = "soe"},
+			{id = "soe_curare_vial", name = "Curare Vial", cost = 4, group = "soe"},
+			{id = "soe_tetrodotoxin_syringe", name = "Tetrodotoxin Syringe", cost = 2, group = "soe"},
+			{id = "soe_shuriken", name = "Shuriken", cost = 2, group = "soe"},
+			{id = "soe_sog_seal_2000", name = "SOG SEAL 2000", cost = 2, group = "soe"},
+			{id = "soe_rgd_5", name = "RGD - 5", cost = 5, group = "soe"},
+			{id = "soe_f1", name = "F1", cost = 4, group = "soe"},
+			{id = "soe_molotov", name = "Molotov Cocktail", cost = 3, group = "soe"},
+			{id = "soe_type59", name = "Type-59 Grenade", cost = 4, group = "soe"},
+			{id = "soe_pipebomb", name = "Pipebomb", cost = 3, group = "soe"},
+			{id = "soe_ied", name = "I.E.D.", cost = 4, group = "soe"},
+			{id = "soe_beretta_m9", name = "Beretta M9", cost = 4, group = "soe", exclusive = "soe_gun"},
+			{id = "soe_glock_17", name = "Glock 17", cost = 6, group = "soe", exclusive = "soe_gun"},
+			{id = "soe_explosive_belt", name = "Explosive Belt", cost = 9, group = "soe"},
+		},
+	},
+	{
+		id = "std",
+		title = "STD",
+		items = {
+			{id = "std_zoraki_stalker_m906", name = "Zoraki Stalker M906", cost = 3, group = "std", exclusive = "std_gun"},
+			{id = "std_buck_120_general", name = "Buck 120 General", cost = 2, group = "std"},
+			{id = "std_tranquilazier_gun", name = "Tranquilazier gun", cost = 5, group = "std", exclusive = "std_gun"},
+			{id = "std_rgd_5", name = "RGD - 5", cost = 4, group = "std"},
+			{id = "std_flashbang", name = "Flashbang", cost = 3, group = "std"},
+			{id = "std_heavy_dragoon_pistol", name = "Heavy Dragoon Pistol", cost = 4, group = "std", exclusive = "std_gun"},
+			{id = "std_ied", name = "I.E.D.", cost = 4, group = "std"},
+			{id = "std_cyanide_capsule", name = "Cyanide Capsule", cost = 3, group = "std"},
+			{id = "std_cyanide_canister", name = "Cyanide Canister", cost = 3, group = "std"},
+			{id = "std_curare_vial", name = "Curare Vial", cost = 4, group = "std"},
+			{id = "std_tetrodotoxin_syringe", name = "Tetrodotoxin Syringe", cost = 2, group = "std"},
+			{id = "std_shuriken", name = "Shuriken", cost = 2, group = "std"},
+			{id = "std_f1", name = "F1", cost = 4, group = "std"},
+			{id = "std_molotov", name = "Molotov Cocktail", cost = 3, group = "std"},
+			{id = "std_type59", name = "Type-59 Grenade", cost = 4, group = "std"},
+			{id = "std_pipebomb", name = "Pipebomb", cost = 3, group = "std"},
+		},
+	},
+	{
+		id = "abilities",
+		title = "Abilities",
+		items = {
+			{id = "ability_assassin", name = "Assassin", cost = 13, group = "abilities"},
+			{id = "ability_infiltraitor", name = "Infiltraitor", cost = 13, group = "abilities"},
+		},
+	},
+}
+
+local CTR_ITEM_INDEX = {}
+for _, section in ipairs(CTR_SECTIONS) do
+	for _, item in ipairs(section.items) do
+		CTR_ITEM_INDEX[item.id] = item
+	end
+end
+
+local function ctr_calc_used(selected)
+	local used = 0
+	if not selected then return used end
+	for id, enabled in pairs(selected) do
+		if enabled then
+			local item = CTR_ITEM_INDEX[id]
+			if item then
+				used = used + (item.cost or 0)
+			end
+		end
+	end
+	return used
+end
+
+local function ctr_clean_selected(selected)
+	local cleaned = {}
+	if not selected then return cleaned end
+	for id, enabled in pairs(selected) do
+		if enabled and CTR_ITEM_INDEX[id] then
+			cleaned[id] = true
+		end
+	end
+	return cleaned
+end
+
+local function ctr_create_item_button(panel, parent, item)
+	local btn = vgui.Create("DButton", parent)
+	btn:Dock(TOP)
+	btn:DockMargin(0, 0, 0, screen_scale_2(4))
+	btn:SetTall(screen_scale_2(24))
+	btn:SetText("")
+	btn.ItemId = item.id
+	btn.Paint = function(sel, w, h)
+		local selected = panel.Selected and panel.Selected[sel.ItemId]
+		draw.RoundedBox(0, 0, 0, w, h, ColorAlpha(color_black, 205))
+		if selected then
+			surface.SetDrawColor(CTR_ACCENT.r, CTR_ACCENT.g, CTR_ACCENT.b, 200)
+			surface.SetMaterial(CTR_GRADIENT)
+			surface.DrawTexturedRect(0, 0, w, h)
+			surface.SetDrawColor(80, 180, 255, 155)
+			surface.DrawOutlinedRect(0, 0, w, h, 2)
+		else
+			surface.SetDrawColor(CTR_ACCENT.r, CTR_ACCENT.g, CTR_ACCENT.b, 60)
+			surface.DrawOutlinedRect(0, 0, w, h, 1)
+		end
+		local name = item.name
+		local cost = tostring(item.cost) .. " pts"
+		local textY = h / 2 - screen_scale_2(6)
+		ctr_draw_text(name, "HomigradFontSmall", screen_scale_2(8), textY, color_white, TEXT_ALIGN_LEFT)
+		ctr_draw_text(cost, "HomigradFontSmall", w - screen_scale_2(8), textY, color_white, TEXT_ALIGN_RIGHT)
+	end
+	btn.DoClick = function(sel)
+		if panel.Selected[sel.ItemId] then
+			panel.Selected[sel.ItemId] = nil
+			panel:UpdatePoints()
+			return
+		end
+		local used = ctr_calc_used(panel.Selected)
+		if used + item.cost > panel.PointsMax then return end
+		if item.group == "abilities" then
+			for id, enabled in pairs(panel.Selected) do
+				if enabled then
+					local it = CTR_ITEM_INDEX[id]
+					if it and it.group == "abilities" then
+						panel.Selected[id] = nil
+					end
+				end
+			end
+		end
+		if item.exclusive then
+			for id, enabled in pairs(panel.Selected) do
+				if enabled then
+					local it = CTR_ITEM_INDEX[id]
+					if it and it.exclusive == item.exclusive then
+						panel.Selected[id] = nil
+					end
+				end
+			end
+		end
+		panel.Selected[sel.ItemId] = true
+		panel:UpdatePoints()
+	end
+	return btn
+end
+
+local function ctr_style_scrollbar(scroll)
+	local bar = scroll:GetVBar()
+	if not IsValid(bar) then return end
+	bar:SetWide(screen_scale_2(6))
+	bar:SetHideButtons(true)
+	bar.Paint = function(sel, w, h)
+		draw.RoundedBox(0, 0, 0, w, h, ColorAlpha(color_black, 200))
+	end
+	bar.btnGrip.Paint = function(sel, w, h)
+		draw.RoundedBox(0, 0, 0, w, h, CTR_ACCENT)
+	end
+end
+
+local PANEL = {}
+
+function PANEL:Construct()
+	self:SetSkin(hg.GetMainSkin())
+	self.Selected = ctr_clean_selected(self.Selected or {})
+	self.PointsMax = self.PointsMax or CTR_TOTAL_POINTS
+	self.Mode = self.Mode or "soe"
+	self:DockPadding(screen_scale_2(8), screen_scale_2(8), screen_scale_2(8), screen_scale_2(8))
+
+	self.Header = vgui.Create("DPanel", self)
+	self.Header:Dock(TOP)
+	self.Header:SetTall(screen_scale_2(36))
+	self.Header.CloseWidth = screen_scale_2(60)
+	self.Header.Paint = function(sel, w, h)
+		draw.RoundedBox(0, 0, 0, w, h, CTR_PANEL_BG)
+		surface.SetDrawColor(CTR_ACCENT)
+		surface.DrawOutlinedRect(0, 0, w, h, 2)
+		ctr_draw_text("Custom Traitor Role", "HomigradFontMedium", screen_scale_2(8), h / 2 - screen_scale_2(10), CTR_ACCENT, TEXT_ALIGN_LEFT)
+		ctr_draw_text(self.PointsText or "", "HomigradFontMedium", w - sel.CloseWidth - screen_scale_2(12), h / 2 - screen_scale_2(10), CTR_ACCENT, TEXT_ALIGN_RIGHT)
+	end
+
+	local close_btn = vgui.Create("DButton", self.Header)
+	close_btn:Dock(RIGHT)
+	close_btn:SetWide(self.Header.CloseWidth)
+	close_btn:SetText("")
+	close_btn.Paint = function(sel, w, h)
+		draw.RoundedBox(0, 0, 0, w, h, ColorAlpha(color_black, 205))
+		surface.SetDrawColor(CTR_ACCENT)
+		surface.DrawOutlinedRect(0, 0, w, h, 1)
+		ctr_draw_text("Close", "HomigradFontSmall", w / 2, h / 2 - screen_scale_2(6), color_white, TEXT_ALIGN_CENTER)
+	end
+	close_btn.DoClick = function()
+		self:Remove()
+	end
+
+	local body = vgui.Create("DPanel", self)
+	body:Dock(FILL)
+	body:DockMargin(0, screen_scale_2(8), 0, 0)
+	body.Paint = function() end
+
+	local left = vgui.Create("DPanel", body)
+	left:Dock(LEFT)
+	left:SetWide(screen_scale_2(240))
+	left:DockMargin(0, 0, screen_scale_2(10), 0)
+	left.Paint = function() end
+
+	local mode_label = vgui.Create("DLabel", left)
+	mode_label:Dock(TOP)
+	mode_label:SetFont("HomigradFontSmall")
+	mode_label:SetTextColor(color_white)
+	mode_label:SetText("Mode")
+	mode_label:DockMargin(0, screen_scale_2(8), 0, screen_scale_2(4))
+	mode_label:SizeToContents()
+
+	local mode_panel = vgui.Create("DPanel", left)
+	mode_panel:Dock(TOP)
+	mode_panel:SetTall(screen_scale_2(26))
+	mode_panel.Paint = function() end
+
+	local mode_soe = vgui.Create("DButton", mode_panel)
+	mode_soe:Dock(LEFT)
+	mode_soe:SetWide(screen_scale_2(80))
+	mode_soe:SetText("")
+	mode_soe.Paint = function(sel, w, h)
+		local active = self.Mode == "soe"
+		draw.RoundedBox(0, 0, 0, w, h, ColorAlpha(color_black, 205))
+		if active then
+			surface.SetDrawColor(CTR_ACCENT.r, CTR_ACCENT.g, CTR_ACCENT.b, 200)
+			surface.SetMaterial(CTR_GRADIENT)
+			surface.DrawTexturedRect(0, 0, w, h)
+		end
+		surface.SetDrawColor(CTR_ACCENT)
+		surface.DrawOutlinedRect(0, 0, w, h, 1)
+		ctr_draw_text("SOE", "HomigradFontSmall", w / 2, h / 2 - screen_scale_2(6), color_white, TEXT_ALIGN_CENTER)
+	end
+	mode_soe.DoClick = function()
+		self.Mode = "soe"
+		self:UpdateModePanels()
+	end
+
+	local mode_std = vgui.Create("DButton", mode_panel)
+	mode_std:Dock(LEFT)
+	mode_std:SetWide(screen_scale_2(80))
+	mode_std:SetText("")
+	mode_std:DockMargin(screen_scale_2(6), 0, 0, 0)
+	mode_std.Paint = function(sel, w, h)
+		local active = self.Mode == "std"
+		draw.RoundedBox(0, 0, 0, w, h, ColorAlpha(color_black, 205))
+		if active then
+			surface.SetDrawColor(CTR_ACCENT.r, CTR_ACCENT.g, CTR_ACCENT.b, 200)
+			surface.SetMaterial(CTR_GRADIENT)
+			surface.DrawTexturedRect(0, 0, w, h)
+		end
+		surface.SetDrawColor(CTR_ACCENT)
+		surface.DrawOutlinedRect(0, 0, w, h, 1)
+		ctr_draw_text("STD", "HomigradFontSmall", w / 2, h / 2 - screen_scale_2(6), color_white, TEXT_ALIGN_CENTER)
+	end
+	mode_std.DoClick = function()
+		self.Mode = "std"
+		self:UpdateModePanels()
+	end
+
+	local abilities_label = vgui.Create("DLabel", left)
+	abilities_label:Dock(TOP)
+	abilities_label:SetFont("HomigradFontSmall")
+	abilities_label:SetTextColor(color_white)
+	abilities_label:SetText("Abilities")
+	abilities_label:DockMargin(0, screen_scale_2(10), 0, screen_scale_2(4))
+	abilities_label:SizeToContents()
+
+	local abilities_panel = vgui.Create("DScrollPanel", left)
+	abilities_panel:Dock(FILL)
+	abilities_panel:DockMargin(0, 0, 0, screen_scale_2(6))
+	ctr_style_scrollbar(abilities_panel)
+
+	for _, section in ipairs(CTR_SECTIONS) do
+		if section.id == "abilities" then
+			for _, item in ipairs(section.items) do
+				ctr_create_item_button(self, abilities_panel, item)
+			end
+		end
+	end
+
+	local controls = vgui.Create("DPanel", left)
+	controls:Dock(BOTTOM)
+	controls:SetTall(screen_scale_2(26))
+	controls.Paint = function() end
+	local apply_btn = vgui.Create("DButton", controls)
+	apply_btn:Dock(FILL)
+	apply_btn:SetText("")
+	apply_btn.Paint = function(sel, w, h)
+		draw.RoundedBox(0, 0, 0, w, h, ColorAlpha(color_black, 205))
+		surface.SetDrawColor(CTR_ACCENT)
+		surface.DrawOutlinedRect(0, 0, w, h, 1)
+		ctr_draw_text("APPLY", "HomigradFontSmall", w / 2, h / 2 - screen_scale_2(6), color_white, TEXT_ALIGN_CENTER)
+	end
+	apply_btn.DoClick = function()
+		local selected = {}
+		for id, enabled in pairs(self.Selected or {}) do
+			if enabled then
+				selected[#selected + 1] = id
+			end
+		end
+		net.Start("HMCD(CTRApply)")
+		net.WriteString(self.Mode or "soe")
+		net.WriteUInt(#selected, 8)
+		for _, id in ipairs(selected) do
+			net.WriteString(id)
+		end
+		net.SendToServer()
+		self:Remove()
+	end
+
+	local right = vgui.Create("DPanel", body)
+	right:Dock(FILL)
+	right.Paint = function() end
+
+	local function build_items_section(parent, section, dock_mode, width)
+		local panel = vgui.Create("DPanel", parent)
+		panel:Dock(dock_mode or LEFT)
+		if width then
+			panel:SetWide(width)
+			panel:DockMargin(0, 0, screen_scale_2(10), 0)
+		end
+		panel.Paint = function() end
+
+		local section_label = vgui.Create("DLabel", panel)
+		section_label:Dock(TOP)
+		section_label:SetFont("HomigradFontMedium")
+		section_label:SetTextColor(color_white)
+		section_label:SetText(section.title)
+		section_label:DockMargin(0, 0, 0, screen_scale_2(6))
+		section_label:SizeToContents()
+
+		local scroll = vgui.Create("DScrollPanel", panel)
+		scroll:Dock(FILL)
+		ctr_style_scrollbar(scroll)
+
+		for _, item in ipairs(section.items) do
+			ctr_create_item_button(self, scroll, item)
+		end
+		return panel
+	end
+
+	for _, section in ipairs(CTR_SECTIONS) do
+		if section.id == "soe" then
+			self.SoeSection = build_items_section(right, section, FILL)
+		end
+	end
+
+	for _, section in ipairs(CTR_SECTIONS) do
+		if section.id == "std" then
+			self.StdSection = build_items_section(right, section, FILL)
+		end
+	end
+
+	self.UpdateModePanels = function()
+		if IsValid(self.SoeSection) then
+			self.SoeSection:SetVisible(self.Mode == "soe")
+		end
+		if IsValid(self.StdSection) then
+			self.StdSection:SetVisible(self.Mode == "std")
+		end
+	end
+
+	self:UpdateModePanels()
+	self:UpdatePoints()
+end
+
+function PANEL:UpdatePoints()
+	local used = ctr_calc_used(self.Selected)
+	local remaining = math.max(self.PointsMax - used, 0)
+	self.PointsText = "Points: " .. tostring(remaining) .. " / " .. tostring(self.PointsMax)
+end
+
+function PANEL:Paint()
+	draw.RoundedBox(0, 0, 0, self:GetWide(), self:GetTall(), CTR_PANEL_BG)
+	surface.SetDrawColor(CTR_ACCENT)
+	surface.DrawOutlinedRect(0, 0, self:GetWide(), self:GetTall(), 2)
+end
+
+derma.DefineControl("HMCD_CTRPanel", "", PANEL, "DPanel")
+
 --\\Manual Click detection
 local delta = 0
 hook.Add("CreateMove", "HMCD_RolePanelClick", function(cmd)

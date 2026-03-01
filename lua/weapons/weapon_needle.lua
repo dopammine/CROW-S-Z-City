@@ -31,6 +31,7 @@ SWEP.HolsterSnd = ""
 
 function SWEP:InitializeAdd()
 	self:SetHold(self.HoldType)
+
 	self.modeValues = {
 		[1] = 1
 	}
@@ -42,17 +43,43 @@ SWEP.modeValuesdef = {
 
 SWEP.showstats = false
 
+local hg_healanims = ConVarExists("hg_font") and GetConVar("hg_healanims") or CreateConVar("hg_healanims", 0, FCVAR_SERVER_CAN_EXECUTE, "Toggle heal/food animations", 0, 1)
+
+function SWEP:Think()
+	if not self:GetOwner():KeyDown(IN_ATTACK) and hg_healanims:GetBool() then
+		self:SetHolding(math.max(self:GetHolding() - 4, 0))
+	end
+end
+
 function SWEP:Animation()
 	local hold = self:GetHolding()
-    self:BoneSet("r_upperarm", vector_origin, Angle(0, (-55*hold/65) + hold / 2, 0))
-    self:BoneSet("r_forearm", vector_origin, Angle(-hold / 6, -hold / 0.8, (-20*hold/100)))
+    self:BoneSet("r_upperarm", vector_origin, Angle(0, -hold + (100 * (hold / 100)), 0))
+    self:BoneSet("r_forearm", vector_origin, Angle(-hold / 6, -hold * 2, -15))
+end
+
+function SWEP:OwnerChanged()
+	local owner = self:GetOwner()
+	if IsValid(owner) and owner:IsNPC() then
+		self:NPCHeal(owner, 0.1, "snd_jack_hmcd_bandage.wav")
+	end
 end
 
 if SERVER then
 	function SWEP:Heal(ent, mode)
+		if ent:IsNPC() then
+			self:NPCHeal(ent, 0.1, "snd_jack_hmcd_bandage.wav")
+		end
+
 		local org = ent.organism
 		if not org then return end
+
 		local owner = self:GetOwner()
+		if ent == hg.GetCurrentCharacter(owner) and hg_healanims:GetBool() then
+			self:SetHolding(math.min(self:GetHolding() + 4, 100))
+
+			if self:GetHolding() < 100 then return end
+		end
+
 		self:SetBodygroup(1, 1)
 		//if ((org.lungsL[2] + org.lungsR[2]) / 2 < 0.5) or org.needle then return end
 		
@@ -82,6 +109,7 @@ if SERVER then
 
 		if self.modeValues[1] == 0 then
 			owner:SelectWeapon("weapon_hands_sh")
+			self:SpawnGarbage(nil, nil, nil, nil, "2211")
 			self:Remove()
 		end
 	end

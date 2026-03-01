@@ -73,6 +73,9 @@ end)
 --//
 
 hook.Add("Think", "HMCD_SubRole_Abilities", function()
+	if(LocalPlayer().Ability_NeckBreak and LocalPlayer().Ability_Disarm)then
+		MODE.StopDisarmingOther(LocalPlayer())
+	end
 	if(BeingVictimOfNeckBreakResetTime and BeingVictimOfNeckBreakResetTime <= CurTime())then
 		BeingVictimOfNeckBreakResetTime = nil
 		LocalPlayer().BeingVictimOfNeckBreak = false

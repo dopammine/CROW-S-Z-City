@@ -646,6 +646,19 @@ function hg.SelectPlayerRole(role, mode)
 	end
 end
 
+function hg.OpenCTRMenu()
+	if IsValid(VGUI_HMCD_CTRPanel) then
+		VGUI_HMCD_CTRPanel:Remove()
+	end
+
+	VGUI_HMCD_CTRPanel = vgui.Create("HMCD_CTRPanel")
+	VGUI_HMCD_CTRPanel:SetSize(screen_scale_2(720), screen_scale_2(520))
+	VGUI_HMCD_CTRPanel:Center()
+	VGUI_HMCD_CTRPanel:InvalidateParent(false)
+	VGUI_HMCD_CTRPanel:Construct()
+	VGUI_HMCD_CTRPanel:MakePopup()
+end
+
 net.Receive("HMCD(EndPlayersRoleSelection)", function()
 	if(IsValid(VGUI_HMCD_RolePanelList))then
 		VGUI_HMCD_RolePanelList:Remove()
