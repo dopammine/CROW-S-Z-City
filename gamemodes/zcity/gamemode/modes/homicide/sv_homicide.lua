@@ -246,7 +246,7 @@ util.AddNetworkString("HMCD(SetSubRole)")
 util.AddNetworkString("hmcd_announce_traitor_lose")
 util.AddNetworkString("HMCD(CTRApply)")
 
-local CTR_TOTAL_POINTS = 20
+local CTR_TOTAL_POINTS = 30
 local CTR_ITEMS = {
 	["soe_walter_p22"] = {cost = 3, mode = "soe", exclusive = "soe_gun", give = function(ply)
 		local wep = ply:Give("weapon_p22")
