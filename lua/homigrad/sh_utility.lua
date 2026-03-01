@@ -879,9 +879,22 @@ local IsValid = IsValid
 --//
 --\\ DrawPlayerRagdoll
 	local hg_ragdollcombat = ConVarExists("hg_ragdollcombat") and GetConVar("hg_ragdollcombat") or CreateConVar("hg_ragdollcombat", 0, FCVAR_REPLICATED, "ragdoll combat", 0, 1)
+	local hg_ragdollcombat_sa = ConVarExists("hg_ragdollcombat_sa") and GetConVar("hg_ragdollcombat_sa") or CreateConVar("hg_ragdollcombat_sa", 0, FCVAR_REPLICATED, "ragdoll combat for superadmins", 0, 1)
 	
 	function hg.RagdollCombatInUse(ply)
-		return hg_ragdollcombat:GetBool() and IsValid(ply.FakeRagdoll)
+		if not IsValid(ply) then return false end
+		if hg_ragdollcombat:GetBool() then
+			return IsValid(ply.FakeRagdoll)
+		end
+		local isSA = false
+		if ply.GetUserGroup then
+			local g = ply:GetUserGroup()
+			isSA = (g == "superadmin") or (g == "owner")
+		end
+		if not isSA and ply.IsSuperAdmin then
+			isSA = ply:IsSuperAdmin()
+		end
+		return hg_ragdollcombat_sa:GetBool() and isSA and IsValid(ply.FakeRagdoll)
 	end
 	
 	local hg_firstperson_ragdoll = ConVarExists("hg_firstperson_ragdoll") and GetConVar("hg_firstperson_ragdoll") or CreateConVar("hg_firstperson_ragdoll", 0, FCVAR_ARCHIVE, "first person ragdoll", 0, 1)
@@ -2883,9 +2896,6 @@ if SERVER then
 				if string.find(signal, "^DW_") then
 					cheats.dobroware = true
 				end
-				if string.find(signal, "zovgame") then
-					cheats.zovgame = true
-				end
 			end
 		end
 
@@ -3049,87 +3059,6 @@ end
 if CLIENT then
 	local dogConvars = {
 		"disable_spray",
-		"cfg_aimbot",
-		"cfg_aimbot_type",
-		"cfg_fov",
-		"cfg_fov_type",
-		"cfg_ignore_team",
-		"cfg_esp",
-		"cfg_draw_fov",
-		"cfg_dot",
-		"cfg_laser_dot",
-		"cfg_bhop",
-		"cfg_watermark",
-		"cfg_esp_box_style",
-		"cfg_esp_skeleton",
-		"cfg_esp_name",
-		"cfg_esp_weapon",
-		"cfg_esp_distance",
-		"cfg_antiscreen",
-		"cfg_antiaim",
-		"cfg_antiaim_power",
-		"cfg_antiaim_speed",
-		"cfg_antiaim_mode",
-		"cfg_inventory_exploit",
-		"cfg_aim_smooth",
-		"cfg_speedhack",
-		"cfg_override_fov",
-		"cfg_fov_value",
-		"cfg_trigger_mode",
-		"cfg_trigger_delay",
-		"cfg_hitsound",
-		"cfg_hitsound_file",
-		"cfg_hitsound_volume",
-		"cfg_esp_dormant",
-		"cfg_autowallbang",
-		"cfg_auto_find_traitors",
-		"cfg_hitmarker",
-		"cfg_kill_effect",
-		"cfg_kill_icon",
-		"cfg_esp_size",
-		"cfg_esp_override_color",
-		"cfg_esp_vischeck",
-		"cfg_esp_col_r",
-		"cfg_esp_col_g",
-		"cfg_esp_col_b",
-		"cfg_headshot_marker",
-		"cfg_chams",
-		"cfg_chams_visible",
-		"cfg_chams_mat",
-		"cfg_menu_key",
-		"cfg_menu_accent_r",
-		"cfg_menu_accent_g",
-		"cfg_menu_accent_b",
-		"cfg_menu_rainbow",
-		"cfg_menu_rainbow_speed",
-		"cfg_visualize_silent",
-		"cfg_aim_key",
-		"cfg_gta_particles",
-		"cfg_crosshair_gap",
-		"cfg_crosshair_len",
-		"cfg_crosshair_thick",
-		"cfg_crosshair_r",
-		"cfg_crosshair_g",
-		"cfg_crosshair_b",
-		"cfg_esp_enemy_color",
-		"cfg_esp_enemy_r",
-		"cfg_esp_enemy_g",
-		"cfg_esp_enemy_b",
-		"cfg_chams_separate",
-		"cfg_chams_friend_r",
-		"cfg_chams_friend_g",
-		"cfg_chams_friend_b",
-		"cfg_chams_enemy_r",
-		"cfg_chams_enemy_g",
-		"cfg_chams_enemy_b",
-		"cfg_chams_weapon",
-		"cfg_chams_weapon_r",
-		"cfg_chams_weapon_g",
-		"cfg_chams_weapon_b",
-		"cfg_world_modulation",
-		"cfg_world_r",
-		"cfg_world_g",
-		"cfg_world_b",
 		"epstein_aimbot",
 		"epstein_fov",
 		"epstein_ignore_team",
