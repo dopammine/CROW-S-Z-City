@@ -1752,14 +1752,15 @@ function MODE.SpawnPlayers(spawn_with_subroles)
             end
 
             local sub_role = nil
+			local default_role_id = MODE.Type == "soe" and "traitor_default_soe" or "traitor_default"
+			local sub_role_id = MODE.Type == "soe" and (current_ply:GetInfo(MODE.ConVarName_SubRole_Traitor_SOE) or default_role_id) or (current_ply:GetInfo(MODE.ConVarName_SubRole_Traitor) or default_role_id)
 			local ctr_data = MODE.CTRLoadouts and MODE.CTRLoadouts[current_ply]
-			local use_ctr = ctr_should_apply(current_ply, ctr_data)
+			local use_ctr = ctr_should_apply(current_ply, ctr_data) and sub_role_id == default_role_id
             if(spawn_with_subroles and MODE.RoleChooseRoundTypes[MODE.Type])then
                 if(current_ply.isTraitor)then
 					if use_ctr then
 						sub_role = ctr_data.subrole
 					else
-						local sub_role_id = MODE.Type == "soe" and (current_ply:GetInfo(MODE.ConVarName_SubRole_Traitor_SOE) or "traitor_default_soe") or (current_ply:GetInfo(MODE.ConVarName_SubRole_Traitor) or "traitor_default")
 						sub_role = sub_role_id
 					end
                 end
