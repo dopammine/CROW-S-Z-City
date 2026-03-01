@@ -28,11 +28,12 @@ hg.Accessories = {
         name = "Bugeye Sunglasses"
     },
 
-	["Rew"] = {
+     ["Rew"] = {
         model = "models/zcity_community/rewrite_bandana.mdl",
         bone = "ValveBiped.Bip01_Head1",
-        malepos = {Vector(-1.4,-0.5,-0.0), Angle(0,-79,-90), 1}, 
-        fempos = {Vector(-1.4,-0.5,-0.0), Angle(0,-79,-90), 1}, 
+        malepos = {Vector(-1.4,-0.5,-0.0), Angle(0,-79,-90), 1},
+        fempos = {Vector(-1.4,-0.5,-0.0), Angle(0,-79,-90), 1},
+        skin = 0,
         placement = "face",
         norender = true,
         bPointShop = true,
