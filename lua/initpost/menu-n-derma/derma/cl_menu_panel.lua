@@ -44,26 +44,53 @@ local Selects = {
             self:SetX(self.x + ScreenScaleH(40) + self.HoverLerp * ScreenScaleH(50))
         end
 
-        local btn = vgui.Create( "DLabel", btn )
-        btn:SetText( "STD" )
-        btn:SetMouseInputEnabled( true )
-        btn:SizeToContents()
-        btn:SetFont( "ZCity_Small" )
-        btn:SetTall( ScreenScale( 15 ) )
-        btn:Dock(BOTTOM)
-        btn:DockMargin(0,ScreenScale(2),0,0)
-        btn:SetTextColor(Color(255,255,255))
-        btn:InvalidateParent()
-        btn.RColor = Color(225, 225, 225, 0)
-        btn.WColor = Color(225, 225, 225, 255)
-        btn.x = btn:GetX()
+        local btnStd = vgui.Create( "DLabel", btn )
+        btnStd:SetText( "STD" )
+        btnStd:SetMouseInputEnabled( true )
+        btnStd:SizeToContents()
+        btnStd:SetFont( "ZCity_Small" )
+        btnStd:SetTall( ScreenScale( 15 ) )
+        btnStd:Dock(BOTTOM)
+        btnStd:DockMargin(0,ScreenScale(2),0,0)
+        btnStd:SetTextColor(Color(255,255,255))
+        btnStd:InvalidateParent()
+        btnStd.RColor = Color(225, 225, 225, 0)
+        btnStd.WColor = Color(225, 225, 225, 255)
+        btnStd.x = btnStd:GetX()
 
-        function btn:DoClick()
+        function btnStd:DoClick()
             luaMenu:Close()
             hg.SelectPlayerRole(nil, "standard")
         end
     
-        function btn:Think()
+        function btnStd:Think()
+            self.HoverLerp = selfa.HoverLerp
+            self.HoverLerp2 = LerpFT(0.2, self.HoverLerp2 or 0, self:IsHovered() and 1 or 0)
+    
+            self:SetTextColor(self.RColor:Lerp(self.WColor:Lerp(red_select, self.HoverLerp2), self.HoverLerp))
+            self:SetX(self.x + ScreenScaleH(35))
+        end
+
+        local btnCtr = vgui.Create( "DLabel", btnStd )
+        btnCtr:SetText( "CTR" )
+        btnCtr:SetMouseInputEnabled( true )
+        btnCtr:SizeToContents()
+        btnCtr:SetFont( "ZCity_Small" )
+        btnCtr:SetTall( ScreenScale( 15 ) )
+        btnCtr:Dock(BOTTOM)
+        btnCtr:DockMargin(0,ScreenScale(2),0,0)
+        btnCtr:SetTextColor(Color(255,255,255))
+        btnCtr:InvalidateParent()
+        btnCtr.RColor = Color(225, 225, 225, 0)
+        btnCtr.WColor = Color(225, 225, 225, 255)
+        btnCtr.x = btnCtr:GetX()
+
+        function btnCtr:DoClick()
+            luaMenu:Close()
+            hg.OpenCTRMenu()
+        end
+    
+        function btnCtr:Think()
             self.HoverLerp = selfa.HoverLerp
             self.HoverLerp2 = LerpFT(0.2, self.HoverLerp2 or 0, self:IsHovered() and 1 or 0)
     
@@ -305,7 +332,16 @@ function PANEL:AddSelect( pParent, strTitle, tbl )
     end
 
     function btn:Think()
-        self.HoverLerp = LerpFT(0.2, self.HoverLerp or 0, (self:IsHovered() or (IsValid(self:GetChild(0)) and self:GetChild(0):IsHovered()) or (IsValid(self:GetChild(0)) and IsValid(self:GetChild(0):GetChild(0)) and self:GetChild(0):GetChild(0):IsHovered())) and 1 or 0)
+        local c0 = self:GetChild(0)
+        local c1 = IsValid(c0) and c0:GetChild(0)
+        local c2 = IsValid(c1) and c1:GetChild(0)
+        local c3 = IsValid(c2) and c2:GetChild(0)
+        local hovered = self:IsHovered()
+            or (IsValid(c0) and c0:IsHovered())
+            or (IsValid(c1) and c1:IsHovered())
+            or (IsValid(c2) and c2:IsHovered())
+            or (IsValid(c3) and c3:IsHovered())
+        self.HoverLerp = LerpFT(0.2, self.HoverLerp or 0, hovered and 1 or 0)
 
         local v = self.HoverLerp
 
