@@ -47,7 +47,7 @@ hg.Accessories = {
         fempos = {Vector(-6,-1.8,0),Angle(180,-80,-90), 1},
         skin = 0,
         norender = true,
-        placement = "head"
+        placement = "head",
         name = "Pluv Mask"
     },
 
