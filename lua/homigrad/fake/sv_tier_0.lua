@@ -1,4 +1,4 @@
-﻿local PLAYER = FindMetaTable("Player")
+local PLAYER = FindMetaTable("Player")
 if not HookGetRagdollEntity then HookGetRagdollEntity = PLAYER.GetRagdollEntity end
 function PLAYER:GetRagdollEntity()
 	local ent = self:GetNWEntity("RagdollDeath")
@@ -622,11 +622,20 @@ function hg.Fake(ply, huyragdoll, no_freemove, force)
 end
 
 local hg_ragdollcombat = ConVarExists("hg_ragdollcombat") and GetConVar("hg_ragdollcombat") or CreateConVar("hg_ragdollcombat", 0, FCVAR_REPLICATED, "ragdoll combat", 0, 1)
+local hg_ragdollcombat_sa = ConVarExists("hg_ragdollcombat_sa") and GetConVar("hg_ragdollcombat_sa") or CreateConVar("hg_ragdollcombat_sa", 0, FCVAR_REPLICATED, "ragdoll combat for superadmins", 0, 1)
 
 local veczero = Vector(0,0,0)
 function hg.SetFreemove(ply, set)
 	if set then
-		ply.lastFakeTime = hg_ragdollcombat:GetBool() and 9999 or 1
+		local isSA = false
+		if ply.GetUserGroup then
+			local g = ply:GetUserGroup()
+			isSA = (g == "superadmin") or (g == "owner")
+		end
+		if not isSA and ply.IsSuperAdmin then
+			isSA = ply:IsSuperAdmin()
+		end
+		ply.lastFakeTime = ((hg_ragdollcombat:GetBool()) or (hg_ragdollcombat_sa:GetBool() and isSA)) and 9999 or 1
 		ply.lastFake = CurTime() + ply.lastFakeTime
 		//ply:SetNetVar("lastFake", ply.lastFake)
 		ply:SetMoveType(MOVETYPE_WALK)
