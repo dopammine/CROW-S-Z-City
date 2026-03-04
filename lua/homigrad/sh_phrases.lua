@@ -140,9 +140,11 @@ contextPhrases = {
             "momishomeless.wav",
             "MEinMYROOM.wav",
             "ninja.wav",
-            "borgor.wav",
             "BINGUS.wav",
-            "jeffy.wav"
+            "jeffy.wav",
+			"wholefamily.wav",
+			"burgers.wav",
+			"fortnite.wav",
             },
 		["Someone died"] = {
 			"vo/episode_1/npc/male01/cit_buddykilled01.wav",
@@ -259,19 +261,6 @@ contextPhrases = {
 			"vo/episode_1/npc/female01/cit_evac_casualty11.wav",
 			"vo/episode_1/npc/female01/cit_runforit.wav",
 		},
-		["Funny"] = {
-            "joewiththeguy.wav",
-            "bbq.wav",
-            "fuckyou.wav",
-            "swordsword.wav",
-            "tomholland.wav",
-            "momishomeless.wav",
-            "MEinMYROOM.wav",
-            "ninja.wav",
-            "borgor.wav",
-            "BINGUS.wav",
-            "jeffy.wav"
-            },
 		["Someone died"] = {
 			"vo/episode_1/npc/female01/cit_buddykilled01.wav",
 			"vo/episode_1/npc/female01/cit_buddykilled07.wav",
