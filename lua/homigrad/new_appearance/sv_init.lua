@@ -186,8 +186,8 @@ function ApplyAppearanceRagdoll(ent, ply)
     end
 end
 
--- Sandbox applyApperance but for all gamemodes
-if engine.ActiveGamemode() ~= "zcity" then
+-- Sandbox applyApperance 
+if engine.ActiveGamemode() == "sandbox" then
     hook.Add("PlayerSpawn","SetAppearance",function(ply)
         if OverrideSpawn then return end
         timer.Simple(0,function()
