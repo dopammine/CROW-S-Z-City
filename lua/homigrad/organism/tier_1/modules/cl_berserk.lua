@@ -208,7 +208,7 @@ function META:IsBerserk()
 	if self:IsPlayer() and not self:Alive() then return false end
 
 	local org = self.organism
-	return org.berserkActive2 or false
+	return org and org.berserkActive2 or false
 end
 
 local META2 = FindMetaTable("Entity")
