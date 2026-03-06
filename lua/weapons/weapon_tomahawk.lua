@@ -100,6 +100,8 @@ function SWEP:CustomAttack2()
     ent.owner = ply
     ent.localshit = Vector(4,6,0)
     ent.damage = 25
+    ent.penetration = 5
+    ent.shouldntlodge = true
 
     local phys = ent:GetPhysicsObject()
     if IsValid(phys) then
@@ -133,7 +135,7 @@ SWEP.PenetrationSizePrimary = 2
 SWEP.PenetrationSizeSecondary = 3
 
 SWEP.StaminaPrimary = 20
-SWEP.StaminaSecondary = 20
+SWEP.StaminaSecondary = 60
 
 SWEP.AttackLen1 = 40
 SWEP.AttackLen2 = 30

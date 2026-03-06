@@ -359,7 +359,7 @@ hook.Add("Bones", "homigrad-lean-bone", function(ply, dtime)
 		hg.IsLocal(ply) and ( (left and right and 0) or (left and 1.3) or (right and -1.3) or 0) or ply:GetNWFloat("PlayerLean", 0)
 	)
 
-	if SERVER then
+	if SERVER and !IsValid(ply.FakeRagdoll) then
 		ply.takeOldLeanStamina = ply.takeOldLeanStamina or 0
 		local leanStamina = math.Round(ply.lean,2)
 

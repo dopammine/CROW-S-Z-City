@@ -69,6 +69,10 @@ module[2] = function(owner, org, timeValue)
 	stamina.sub = stamina.sub + stamina.subadd + (org.painkiller > 1.6 and (stamina[1] > 10 and 0.8 or 0) or 0) + (org.analgesia > 1.7 and (stamina[1] > 10 and 2 or 0) or 0)
 	stamina.sub = stamina.sub * (owner.StaminaExhaustMul or 1)
 	stamina.sub = stamina.sub / (1 + org.berserk)
+	
+	if org.o2[1] < 10 then
+		stamina.sub = 0
+	end
 
 	stamina.subadd = 0
 	stamina.weight = owner:IsPlayer() and math.Clamp((1 / hg.CalculateWeight(owner,250)) - 1,0,1) or 0

@@ -419,6 +419,8 @@ function hg.ExplodeHead(ent)
 	end)
 end
 
+local hg_bloodimpacts = ConVarExists("hg_bloodimpacts") and GetConVar("hg_bloodimpacts") or CreateConVar("hg_bloodimpacts", 0, FCVAR_ARCHIVE + FCVAR_REPLICATED, "Enable custom blood impact effects spray cool kill death", 0, 1)
+
 local net, math, hg, IsValid = net, math, hg, IsValid
 local takeRagdollDamage
 hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
@@ -656,24 +658,6 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	end
 	--//
 
-	if inputHole and #inputHole > 0 and dmgInfo:IsDamageType(DMG_BULLET+DMG_BUCKSHOT) then
-		ent.bloodamt2 = ent.bloodamt2 or 0
-		ent.bloodamt2 = ent.bloodamt2 + 1
-
-		timer.Simple(0, function()
-			timer.Create("Blood_burst_input"..ent:EntIndex(), 0.02, 1, function()
-				if not IsValid(ent) then return end
-				net.Start("hg_bloodimpact")
-				net.WriteVector(inputHole[1])
-				net.WriteVector(dir / 2)
-				net.WriteFloat(dmg)
-				net.WriteInt(ent.bloodamt2, 8)
-				net.Broadcast()
-				ent.bloodamt2 = 0
-			end)
-		end)
-	end
-
 	local att = dmgInfo:GetAttacker()
 	if true and outputHole and #outputHole > 0 and dmgInfo:IsDamageType(DMG_BULLET+DMG_BUCKSHOT) then
 		local bullet = inf.bullet
@@ -785,6 +769,25 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 			-- все уже привыкли
 		end
 	--end
+
+	if inputHole and #inputHole > 0 and dmgInfo:IsDamageType(DMG_BULLET+DMG_BUCKSHOT) then
+		ent.bloodamt2 = ent.bloodamt2 or 0
+		ent.bloodamt2 = ent.bloodamt2 + 1
+
+		timer.Simple(0, function()
+			timer.Create("Blood_burst_input"..ent:EntIndex(), 0.02, 1, function()
+				if not IsValid(ent) then return end
+				net.Start("hg_bloodimpact")
+				net.WriteVector(inputHole[1])
+				net.WriteVector(dir / 2)
+				net.WriteFloat(dmg)
+				net.WriteInt(ent.bloodamt2, 8)
+				net.Broadcast()
+				ent.bloodamt2 = 0
+			end)
+		end)
+	end
+
 	--print(dmg_before, 2)
 	local dmgBlood, dmgHurt, instaPain, immobilization = hg.organism.DamageTypeAffliction(dmg_before / 12, dmgInfo, ent, org)
 	

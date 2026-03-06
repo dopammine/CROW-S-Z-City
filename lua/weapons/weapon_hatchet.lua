@@ -93,7 +93,7 @@ SWEP.PenetrationSizePrimary = 2
 SWEP.PenetrationSizeSecondary = 3
 
 SWEP.StaminaPrimary = 30
-SWEP.StaminaSecondary = 10
+SWEP.StaminaSecondary = 60
 
 SWEP.AttackLen1 = 55
 SWEP.AttackLen2 = 30
@@ -126,6 +126,8 @@ function SWEP:CustomAttack2()
     ent.wep = self:GetClass()
     ent.owner = ply
     ent.damage = 25
+    ent.penetration = 5
+    ent.shouldntlodge = true
 
     local phys = ent:GetPhysicsObject()
 

@@ -350,15 +350,13 @@ function zb.AddCurrentModePlayed()
 	zb.AddModePlaytime(name, 1)
 end
 
-zb.ModesChances = zb.ModesChances or {}
-
 function zb.GetChance(name, addtbl)
 	local mode = zb:GetMode(name)
 	local tbl = zb.modes[mode]
 
 	local newtbl = tbl.Types and tbl.Types[name] or tbl
 
-	return newtbl.ChanceFunction and newtbl:ChanceFunction(addtbl or {}) or newtbl.Chance or 0.1
+	return newtbl.ChanceFunction and newtbl:ChanceFunction(addtbl or {}) or zb.ModesChances[name] or newtbl.Chance or 0.1
 end
 
 function zb.GetModesChances()
