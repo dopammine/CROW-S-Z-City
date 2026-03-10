@@ -302,6 +302,8 @@ local ang5 = Angle(0,0,0)
 
 local ang3 = Angle(0,0,180)
 local clamp = math.Clamp
+local rnc_ang_r = Angle(-90,0,220)
+local rnc_ang_l = Angle(-90,0,-30)
 
 function hg.handcuffedhands(ply)
 	local posi, ang = ply:GetBonePosition(0)
@@ -388,6 +390,8 @@ function SWEP:SetHandPos(noset)
 
 		hg.DragHandsToPos(ply, ply:GetActiveWeapon(), head, true, 2, ang:Forward(), ang4, ang5)
 	end
+	
+	-- choke hand IK removed
 
 	local ang = ply:EyeAngles()
 
@@ -436,6 +440,23 @@ function SWEP:SetHandPos(noset)
 
 				ply:SetBoneMatrix(ply_boneindex, ply_bonematrix)
 				--ply:SetBonePosition(ply_boneindex, bonepos, boneang)
+			end
+		end
+		
+		if SERVER then
+			if IsValid(self.CarryEnt) and self.CarryEnt:GetClass() == "prop_ragdoll" then
+				local boneName = self.CarryEnt:GetBoneName(self.CarryEnt:TranslatePhysBoneToBone(self.CarryBone))
+				local victimPly = RagdollOwner(self.CarryEnt)
+				if boneName == "ValveBiped.Bip01_Head1" and IsValid(victimPly) and ply:KeyDown(IN_USE) and ply:KeyDown(IN_DUCK) then
+					if victimPly.organism then
+						victimPly.organism.choking = true
+					end
+					self:SetChokeVictim(victimPly)
+				else
+					self:SetChokeVictim(NULL)
+				end
+			else
+				self:SetChokeVictim(NULL)
 			end
 		end
 
@@ -697,6 +718,7 @@ function SWEP:SetupDataTables()
 	self:NetworkVar("Bool", 5, "Blocking")
 	self:NetworkVar("Float", 6, "LastBlocked")
 	self:NetworkVar("Float", 7, "StartedBlocking")
+	self:NetworkVar("Entity", 0, "ChokeVictim")
 end
 
 function SWEP:Deploy()
@@ -772,23 +794,13 @@ function SWEP:SecondaryAttack()
 				maxs = trMaxsClaws,
 			})
 		else
-			tr = util.TraceLine({
+			tr = util.TraceHull({
 				start = pos,
 				endpos = pos + owner:GetAimVector() * self.ReachDistance,
 				filter = {ply, hg.GetCurrentCharacter(ply)},
 				mins = trMins,
 				maxs = trMaxs,
 			})
-
-			if !tr.Hit or tr.Entity:IsWorld() then
-				tr = util.TraceHull({
-					start = pos,
-					endpos = pos + owner:GetAimVector() * self.ReachDistance,
-					filter = {ply, hg.GetCurrentCharacter(ply)},
-					mins = trMins,
-					maxs = trMaxs,
-				})
-			end
 		end
 
 		--if (IsValid(tr.Entity) or game.GetWorld() == tr.Entity) and self:CanPickup(tr.Entity) and not tr.Entity:IsPlayer() then
@@ -840,6 +852,15 @@ SWEP.Checking = 0
 function SWEP:ApplyForce()
 	local ply = self:GetOwner()
 	local target = self:GetOwner():GetAimVector() * self.CarryDist + select(1, hg.eye(ply))
+	if IsValid(self.GetChokeVictim and self:GetChokeVictim()) then
+		local chestBone = ply:LookupBone("ValveBiped.Bip01_Spine2")
+		local chestMat = chestBone and ply:GetBoneMatrix(chestBone)
+		if chestMat then
+			local chestPos = chestMat:GetTranslation()
+			local eyeAng = ply:EyeAngles()
+			target = chestPos + eyeAng:Forward() * 6
+		end
+	end
 	if not IsValid(self.CarryEnt) then return end
 	local phys = self.CarryEnt:GetPhysicsObjectNum(self.CarryBone)
 
@@ -1015,12 +1036,11 @@ function SWEP:ApplyForce()
 
 				local tr = {}
 				tr.start = TargetPos
-				tr.endpos = TargetPos - vector_up * 32
-				tr.mask = MASK_SOLID
-				tr.filter = {self.CarryEnt, self, ply}
+				tr.endpos = TargetPos - vector_up * 16
+				tr.mask = MASK_SOLID_BRUSHONLY
 				local trace = util.TraceLine(tr)
-				
-				if bone != "ValveBiped.Bip01_Spine2" or !trace.Hit then
+
+				if bone != "ValveBiped.Bip01_Spine2" or not trace.Hit then
 					phys:ApplyForceCenter(ply:GetAimVector() * math.min(5000, phys:GetMass() * 800))
 					self:SetCarrying()
 				end
@@ -1293,6 +1313,30 @@ function SWEP:Think()
 			end
 		end
 		self:SetCarrying()
+	end
+	
+	if SERVER then
+		if IsValid(self.CarryEnt) and self.CarryEnt:GetClass() == "prop_ragdoll" then
+			local boneName = self.CarryEnt:GetBoneName(self.CarryEnt:TranslatePhysBoneToBone(self.CarryBone or 0))
+			local victimPly = RagdollOwner(self.CarryEnt)
+			if boneName == "ValveBiped.Bip01_Head1" and IsValid(victimPly) and owner:KeyDown(IN_USE) and owner:KeyDown(IN_DUCK) then
+				if victimPly.organism then
+					victimPly.organism.choking = true
+				end
+				self:SetChokeVictim(victimPly)
+			else
+				if IsValid(victimPly) and victimPly.organism then
+					victimPly.organism.choking = false
+				end
+				self:SetChokeVictim(NULL)
+			end
+		else
+			local currentVictim = self.GetChokeVictim and self:GetChokeVictim()
+			if IsValid(currentVictim) and currentVictim.organism then
+				currentVictim.organism.choking = false
+			end
+			self:SetChokeVictim(NULL)
+		end
 	end
 
 	if self:GetFists() and owner:KeyDown(IN_ATTACK2) and (self:GetNextSecondaryFire() < CurTime()) and owner.PlayerClassName ~= "sc_infiltrator" and owner.PlayerClassName ~= "headcrabzombie" then
@@ -1615,7 +1659,7 @@ function SWEP:AttackFront(special_attack, rand)
 		end
 
 		if owner.organism.superfighter then
-			Mul = Mul * 5 * self.Penetration
+		Mul = Mul * 1 * self.Penetration
 			if Ent.organism then
 				Ent.organism.immobilization = 10
 			end
@@ -1992,33 +2036,3 @@ function SWEP:Holster( wep )
 
 	return true
 end
-
--- hook.Add("IKPoleRightArm", "HandsPoles", function(ply, ent)
--- 	local wep = ply.GetActiveWeapon and ply:GetActiveWeapon() or false
--- 	if wep and IsValid(wep) then
--- 		local mdl = wep.GetWM and IsValid(wep:GetWM()) and wep:GetWM() or false
--- 		if mdl then
--- 			local rh = mdl:LookupBone("ValveBiped.Bip01_R_Forearm")
--- 			if not rh then return end
--- 			local rhmat = mdl:GetBoneMatrix(rh)
--- 			if rhmat then
--- 				return rhmat:GetTranslation()
--- 			end
--- 		end
--- 	end
--- end)
-
--- hook.Add("IKPoleLeftArm", "HandsPoles", function(ply, ent)
--- 	local wep = ply.GetActiveWeapon and ply:GetActiveWeapon() or false
--- 	if wep and IsValid(wep) then
--- 		local mdl = wep.GetWM and IsValid(wep:GetWM()) and wep:GetWM() or false
--- 		if mdl then
--- 			local lh = mdl:LookupBone("ValveBiped.Bip01_L_Forearm")
--- 			if not lh then return end
--- 			local lhmat = mdl:GetBoneMatrix(lh)
--- 			if lhmat then
--- 				return lhmat:GetTranslation()
--- 			end
--- 		end
--- 	end
--- end)
