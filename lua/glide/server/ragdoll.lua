@@ -409,6 +409,8 @@ end )
 
 hook.Add( "KeyPress", "Glide.LeaveRagdoll", function( ply, key )
     if ply.GlideRagdoll and CurTime() > ply.GlideRagdollTimeout and key ~= IN_USE then
+        if ply.organism and ply.organism.choking then return end
+        if ply:GetNWBool("held_as_human_shield", false) then return end
         Glide.UnRagdollPlayer( ply )
     end
 end )
