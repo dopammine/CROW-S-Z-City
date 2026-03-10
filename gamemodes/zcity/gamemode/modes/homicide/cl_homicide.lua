@@ -97,7 +97,7 @@ MODE.TypeNames = {
 }
 
 --local hg_coolvetica = ConVarExists("hg_coolvetica") and GetConVar("hg_coolvetica") or CreateClientConVar("hg_coolvetica", "0", true, false, "changes every text to coolvetica because its good", 0, 1)
-local hg_font = ConVarExists("hg_font") and GetConVar("hg_font") or CreateClientConVar("hg_font", "Bahnschrift", true, false, "Change UI text font")
+local hg_font = ConVarExists("hg_font") and GetConVar("hg_font") or CreateClientConVar("hg_font", "Bahnschrift", true, false, "change every text font to selected because ui customization is cool")
 local font = function() -- hg_coolvetica:GetBool() and "Coolvetica" or "Bahnschrift"
     local usefont = "Bahnschrift"
 
@@ -447,7 +447,7 @@ net.Receive("hmcd_announce_traitor_lose", function()
 	local traitor_alive = net.ReadBool()
 
 	if(IsValid(traitor))then
-		chat.AddText(color_white, (traitor_alive and "" or "Traitor "), traitor:GetPlayerColor():ToColor(), traitor:GetPlayerName() .. ", " .. traitor:Nick(), color_white, " was " .. (traitor_alive and "a Traitor." or "killed."))
+		chat.AddText(color_white, "Traitor ", traitor:GetPlayerColor():ToColor(), traitor:GetPlayerName() .. ", " .. traitor:Nick(), color_white, " was " .. (traitor_alive and "arrested." or "killed."))
 	end
 end)
 
@@ -644,6 +644,19 @@ function hg.SelectPlayerRole(role, mode)
 		VGUI_HMCD_RolePanelList:Construct()
 		VGUI_HMCD_RolePanelList:MakePopup()
 	end
+end
+
+function hg.OpenCTRMenu()
+	if IsValid(VGUI_HMCD_CTRPanel) then
+		VGUI_HMCD_CTRPanel:Remove()
+	end
+
+	VGUI_HMCD_CTRPanel = vgui.Create("HMCD_CTRPanel")
+	VGUI_HMCD_CTRPanel:SetSize(screen_scale_2(720), screen_scale_2(520))
+	VGUI_HMCD_CTRPanel:Center()
+	VGUI_HMCD_CTRPanel:InvalidateParent(false)
+	VGUI_HMCD_CTRPanel:Construct()
+	VGUI_HMCD_CTRPanel:MakePopup()
 end
 
 net.Receive("HMCD(EndPlayersRoleSelection)", function()

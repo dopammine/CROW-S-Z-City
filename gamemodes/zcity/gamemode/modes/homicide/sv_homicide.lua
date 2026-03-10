@@ -14,14 +14,8 @@ MODE.OverrideSpawn = true
 MODE.LootSpawn = true
 MODE.LootOnTime = true
 
-MODE.Chance = 0.2 -- this is mostly unused
+MODE.Chance = 0.05
 MODE.LootDivTime = 500
-
-function MODE:SetupChances()
-	for name, tbl in pairs(MODE.Types) do
-		zb.ModesChances[name] = zb.ModesChances[name] or tbl.Chance
-	end
-end
 
 MODE.LootTable = {
 	{40, {
@@ -250,12 +244,172 @@ util.AddNetworkString("HMCD(StartPlayersRoleSelection)")
 util.AddNetworkString("HMCD(EndPlayersRoleSelection)")
 util.AddNetworkString("HMCD(SetSubRole)")
 util.AddNetworkString("hmcd_announce_traitor_lose")
+util.AddNetworkString("HMCD(CTRApply)")
+
+local CTR_TOTAL_POINTS = 30
+local CTR_ITEMS = {
+	["soe_walter_p22"] = {cost = 3, mode = "soe", exclusive = "soe_gun", give = function(ply)
+		local wep = ply:Give("weapon_p22")
+		if IsValid(wep) then
+			ply:GiveAmmo(wep:GetMaxClip1(), wep:GetPrimaryAmmoType(), true)
+		end
+	end},
+	["soe_cyanide_capsule"] = {cost = 4, mode = "soe", give = "weapon_traitor_poison_consumable"},
+	["soe_cyanide_canister"] = {cost = 3, mode = "soe", give = "weapon_traitor_poison3"},
+	["soe_curare_vial"] = {cost = 4, mode = "soe", give = "weapon_traitor_poison4"},
+	["soe_tetrodotoxin_syringe"] = {cost = 2, mode = "soe", give = "weapon_traitor_poison1"},
+	["soe_shuriken"] = {cost = 2, mode = "soe", give = "weapon_hg_shuriken"},
+	["soe_sog_seal_2000"] = {cost = 2, mode = "soe", give = "weapon_sogknife"},
+	["soe_rgd_5"] = {cost = 5, mode = "soe", give = "weapon_hg_rgd_tpik"},
+	["soe_f1"] = {cost = 4, mode = "soe", give = "weapon_hg_f1_tpik"},
+	["soe_molotov"] = {cost = 3, mode = "soe", give = "weapon_hg_molotov_tpik"},
+	["soe_type59"] = {cost = 4, mode = "soe", give = "weapon_hg_type59_tpik"},
+	["soe_pipebomb"] = {cost = 3, mode = "soe", give = "weapon_hg_pipebomb_tpik"},
+	["soe_ied"] = {cost = 4, mode = "soe", give = "weapon_traitor_ied"},
+	["soe_beretta_m9"] = {cost = 4, mode = "soe", exclusive = "soe_gun", give = "weapon_m9beretta"},
+	["soe_glock_17"] = {cost = 6, mode = "soe", exclusive = "soe_gun", give = "weapon_glock17"},
+	["soe_explosive_belt"] = {cost = 9, mode = "soe", give = "weapon_bombvest"},
+	["std_zoraki_stalker_m906"] = {cost = 3, mode = "standard", exclusive = "std_gun", give = "weapon_zoraki"},
+	["std_buck_120_general"] = {cost = 2, mode = "standard", give = "weapon_buck200knife"},
+	["std_tranquilazier_gun"] = {cost = 5, mode = "standard", exclusive = "std_gun", give = "weapon_tranquilizer"},
+	["std_rgd_5"] = {cost = 4, mode = "standard", give = "weapon_hg_rgd_tpik"},
+	["std_flashbang"] = {cost = 3, mode = "standard", give = "weapon_hg_flashbang_tpik"},
+	["std_heavy_dragoon_pistol"] = {cost = 4, mode = "standard", exclusive = "std_gun", give = "weapon_flintlock"},
+	["std_ied"] = {cost = 4, mode = "standard", give = "weapon_traitor_ied"},
+	["std_cyanide_capsule"] = {cost = 3, mode = "standard", give = "weapon_traitor_poison_consumable"},
+	["std_cyanide_canister"] = {cost = 3, mode = "standard", give = "weapon_traitor_poison3"},
+	["std_curare_vial"] = {cost = 4, mode = "standard", give = "weapon_traitor_poison4"},
+	["std_tetrodotoxin_syringe"] = {cost = 2, mode = "standard", give = "weapon_traitor_poison1"},
+	["std_shuriken"] = {cost = 2, mode = "standard", give = "weapon_hg_shuriken"},
+	["std_f1"] = {cost = 4, mode = "standard", give = "weapon_hg_f1_tpik"},
+	["std_molotov"] = {cost = 3, mode = "standard", give = "weapon_hg_molotov_tpik"},
+	["std_type59"] = {cost = 4, mode = "standard", give = "weapon_hg_type59_tpik"},
+	["std_pipebomb"] = {cost = 3, mode = "standard", give = "weapon_hg_pipebomb_tpik"},
+	["ability_assassin"] = {cost = 13, group = "abilities", ability = "assassin"},
+	["ability_infiltraitor"] = {cost = 13, group = "abilities", ability = "infiltrator"},
+}
+
+local CTR_ABILITY_SUBROLE = {
+	assassin = {standard = "traitor_assasin", soe = "traitor_assasin_soe"},
+	infiltrator = {standard = "traitor_infiltrator", soe = "traitor_infiltrator_soe"},
+}
+
+local CTR_ABILITY_STATS = {
+	traitor_assasin = {stamina = 300, recoilmul = 0.6},
+	traitor_assasin_soe = {stamina = 300, recoilmul = 0.4},
+	traitor_infiltrator = {stamina = 220},
+	traitor_infiltrator_soe = {stamina = 220, recoilmul = 1},
+}
+
+MODE.CTRLoadouts = MODE.CTRLoadouts or {}
+
+local function ctr_normalize_mode(mode)
+	if mode == "soe" then return "soe" end
+	return "standard"
+end
+
+local function ctr_should_apply(ply, data)
+	if not data then return false end
+	if not ply.isTraitor or not ply.MainTraitor then return false end
+	if MODE.Type == "soe" then
+		return data.mode == "soe"
+	end
+	return data.mode == "standard"
+end
+
+function MODE.ApplyCTRLoadout(ply, data)
+	if not data then return end
+	local inv = ply:GetNetVar("Inventory") or {}
+	inv["Weapons"] = inv["Weapons"] or {}
+	inv["Weapons"]["hg_flashlight"] = true
+	ply:SetNetVar("Inventory", inv)
+
+	if data.subrole then
+		local stats = CTR_ABILITY_STATS[data.subrole]
+		if stats then
+			if stats.stamina and ply.organism and ply.organism.stamina then
+				ply.organism.stamina.max = stats.stamina
+			end
+			if stats.recoilmul and ply.organism then
+				ply.organism.recoilmul = stats.recoilmul
+			end
+		end
+	end
+
+	for id in pairs(data.items or {}) do
+		local def = CTR_ITEMS[id]
+		if def and def.give then
+			if isstring(def.give) then
+				ply:Give(def.give)
+			else
+				def.give(ply)
+			end
+		end
+	end
+end
+
+net.Receive("HMCD(CTRApply)", function(_, ply)
+	if not IsValid(ply) then return end
+	local mode = ctr_normalize_mode(net.ReadString())
+	local count = net.ReadUInt(8)
+	local items = {}
+	local used = 0
+	local ability = nil
+	local exclusive = {}
+
+	for i = 1, count do
+		local id = net.ReadString()
+		local def = CTR_ITEMS[id]
+		if def then
+			if def.mode and def.mode ~= mode then continue end
+			if def.group == "abilities" then
+				if not ability then
+					ability = def.ability
+					used = used + (def.cost or 0)
+				end
+			else
+				if def.exclusive and exclusive[def.exclusive] then continue end
+				if not items[id] then
+					items[id] = true
+					if def.exclusive then
+						exclusive[def.exclusive] = true
+					end
+					used = used + (def.cost or 0)
+				end
+			end
+		end
+	end
+
+	if used > CTR_TOTAL_POINTS then return end
+
+	local subrole = nil
+	if ability then
+		local map = CTR_ABILITY_SUBROLE[ability]
+		if map then
+			subrole = map[mode]
+		end
+	end
+
+	if not next(items) and not subrole then
+		MODE.CTRLoadouts[ply] = nil
+		return
+	end
+
+	MODE.CTRLoadouts[ply] = {
+		mode = mode,
+		items = items,
+		subrole = subrole,
+	}
+end)
+
+hook.Add("PlayerDisconnected", "HMCD_CTRLoadoutCleanup", function(ply)
+	MODE.CTRLoadouts[ply] = nil
+end)
 
 MODE.Type = MODE.Type or "standard"
 MODE.Types = MODE.Types or {}
 MODE.Types.standard = {
-	Chance = 0.2,
-	ChanceFunction = function() return (zb.GetWorldSize() < ZBATTLE_BIGMAP) and (zb.ModesChances["standard"] or zb.modes["hmcd"].Types.standard.Chance) or 0 end,
+	ChanceFunction = function() return (zb.GetWorldSize() < ZBATTLE_BIGMAP) and 0.4 or 0 end,
 	LootTable = MODE.LootTableStandard,
 	Messages = {
 		[3] = "Everyone died.",
@@ -330,8 +484,7 @@ MODE.Types.standard = {
 	end
 }
 MODE.Types.wildwest = {
-	Chance = 0.05,
-	ChanceFunction = function() return (zb.GetWorldSize() < ZBATTLE_BIGMAP) and (zb.ModesChances["wildwest"] or zb.modes["hmcd"].Types.wildwest.Chance) or 0 end,
+	ChanceFunction = function() return (zb.GetWorldSize() < ZBATTLE_BIGMAP) and 0.1 or 0 end,
 	LootTable = MODE.LootTableStandard,
 	Messages = {
 		[3] = "The dead silence fills the empty city...",
@@ -412,7 +565,7 @@ MODE.Types.wildwest = {
 					"weapon_doublebarrel_short"
 				}
 
-				local weapon = v:Give(guns[math.random(#guns)], true)
+				local weapon = v:Give(table.Random(guns), true)
 				weapon:SetClip1(weapon:GetMaxClip1())
 			end
 
@@ -466,8 +619,7 @@ MODE.Types.wildwest = {
 }
 
 MODE.Types.gunfreezone = {
-	Chance = 0.05,
-	ChanceFunction = function() return (zb.GetWorldSize() < ZBATTLE_BIGMAP) and (zb.ModesChances["gunfreezone"] or zb.modes["hmcd"].Types.gunfreezone.Chance) or 0 end,
+	ChanceFunction = function() return (zb.GetWorldSize() < ZBATTLE_BIGMAP) and 0.1 or 0 end,
 	LootTable = MODE.LootTableStandard,
 	Messages = {
 		[3] = "Everyone died.",
@@ -542,8 +694,7 @@ MODE.Types.gunfreezone = {
 }
 
 MODE.Types.soe = {
-	Chance = 0.2,
-	ChanceFunction = function() return (zb.GetWorldSize() >= ZBATTLE_BIGMAP) and (zb.ModesChances["soe"] or zb.modes["hmcd"].Types.soe.Chance) or 0 end,
+	ChanceFunction = function() return (zb.GetWorldSize() >= ZBATTLE_BIGMAP) and 0.4 or 0 end,
 	LootTable = MODE.LootTable,
 	Messages = {
 		[3] = "Everyone died.",
@@ -636,6 +787,8 @@ local modes = {
 	"gunfreezone",
 }
 
+local setmode = ConVarExists("homicide_setmode") and GetConVar("homicide_setmode") or CreateConVar( "homicide_setmode", "random", FCVAR_NONE, "sets hmcd mode" )
+
 util.AddNetworkString("HMCD_RoundStart")
 
 function MODE:GetPlySpawn(ply)
@@ -682,7 +835,7 @@ function MODE:Intermission()
 	if(MODE.ShouldStartRoleRound())then
 		traitors_needed = math.ceil(player_count / 9)
 		
-		if(player_count > 8 and math.random(1, 8) == 1)then
+		if(player_count > 12 and math.random(1, 9) == 1)then
 			traitors_needed = traitors_needed + 1
 		end
 	end
@@ -691,18 +844,14 @@ function MODE:Intermission()
 	local main_traitor = nil
 	local traitors = {}
 
-	-- local players = {}
-	-- for i, ply in player.Iterator() do
-	-- 	if ply.isTraitor or ply:Team() == TEAM_SPECTATOR then continue end
 
-	-- 	players[#players + 1] = {ply, ply.Karma}
-	-- end
+	-- Fair traitor selection system with history tracking
+	MODE.NextRoundMainTraitors = MODE.NextRoundMainTraitors or {}
 	
-	-- -- potom
-	
+	-- Phase 1: Handle manual traitor assignments first
 	for i, ply in RandomPairs(player.GetAll()) do
 		if ply.isTraitor or ply:Team() == TEAM_SPECTATOR then continue end
-		if math.random(100) > (ply.Karma or 100) then continue end
+		if not MODE.NextRoundMainTraitors[ply:SteamID()] then continue end
 
 		if traitors_needed > 0 then
 			ply.isTraitor = true
@@ -711,40 +860,102 @@ function MODE:Intermission()
 
 			main_traitor = ply
 			ply.MainTraitor = true
-		end
-	end
-
-	//MODE.NextRoundMainTraitors = MODE.NextRoundMainTraitors or {}
-	for i, ply in RandomPairs(player.GetAll()) do
-		if ply.isTraitor or ply:Team() == TEAM_SPECTATOR then continue end
-		//if not MODE.NextRoundMainTraitors[ply:SteamID()] then continue end
-
-		if traitors_needed > 0 then
-			ply.isTraitor = true
-			traitors_needed = traitors_needed - 1
-			traitors[#traitors + 1] = ply
+			MODE.NextRoundMainTraitors[ply:SteamID()] = nil
 			
-			if not main_traitor then
-				main_traitor = ply
-				ply.MainTraitor = true
-			end
+			-- Update traitor history
+			ply:SetPData("zb_hmcd_last_traitor_round", CurTime())
+			ply:SetPData("zb_hmcd_total_traitor_rounds", ply:GetPData("zb_hmcd_total_traitor_rounds", 0) + 1)
 		end
 	end
 
+	-- Phase 2: Fair selection for remaining traitor slots
 	if traitors_needed > 0 then
-		for i, ply in RandomPairs(player.GetAll()) do
+		-- Create weighted selection pool
+		local eligible_players = {}
+		local current_time = CurTime()
+		
+		for _, ply in ipairs(player.GetAll()) do
 			if ply.isTraitor or ply:Team() == TEAM_SPECTATOR then continue end
-
-			if traitors_needed > 0 then
-				ply.isTraitor = true
-				traitors_needed = traitors_needed - 1
-				traitors[#traitors + 1] = ply
-
-				if not main_traitor then
-					main_traitor = ply
-					ply.MainTraitor = true
+			
+			-- Calculate selection weight based on history and karma
+			local weight = 100 -- Base weight
+			
+			-- Reduce weight based on recent traitor activity
+			local last_traitor_time = tonumber(ply:GetPData("zb_hmcd_last_traitor_round", 0)) or 0
+			local time_since_traitor = current_time - last_traitor_time
+			
+			-- Cooldown system: reduce weight if player was traitor recently
+			if time_since_traitor < 1800 then -- 30 minutes cooldown
+				weight = weight * 0.3 -- Heavily reduce chance
+			elseif time_since_traitor < 3600 then -- 1 hour partial cooldown
+				weight = weight * 0.6 -- Moderately reduce chance
+			end
+			
+			-- Factor in total traitor rounds (players with fewer rounds get higher weight)
+			local total_rounds = tonumber(ply:GetPData("zb_hmcd_total_traitor_rounds", 0)) or 0
+			local avg_rounds = 5 -- Assume average player has been traitor 5 times
+			if total_rounds < avg_rounds then
+				weight = weight * (1 + (avg_rounds - total_rounds) * 0.2) -- Boost for underrepresented players
+			end
+			
+			-- Karma consideration (less restrictive than before)
+			local karma = ply.Karma or 100
+			if karma < 50 then
+				weight = weight * 0.7 -- Reduce but don't eliminate low karma players
+			elseif karma < 80 then
+				weight = weight * 0.9 -- Slight reduction for medium karma
+			end
+			
+			-- Ensure minimum weight so everyone has a chance
+			weight = math.max(weight, 10)
+			
+			table.insert(eligible_players, {player = ply, weight = weight})
+		end
+		
+		-- Sort by weight (highest first) for better distribution
+		table.sort(eligible_players, function(a, b) return a.weight > b.weight end)
+		
+		-- Select traitors using weighted random selection
+		while traitors_needed > 0 and #eligible_players > 0 do
+			-- Calculate total weight
+			local total_weight = 0
+			for _, entry in ipairs(eligible_players) do
+				total_weight = total_weight + entry.weight
+			end
+			
+			if total_weight <= 0 then break end
+			
+			-- Random selection based on weight
+			local random_value = math.random() * total_weight
+			local current_weight = 0
+			local selected_index = 1
+			
+			for i, entry in ipairs(eligible_players) do
+				current_weight = current_weight + entry.weight
+				if random_value <= current_weight then
+					selected_index = i
+					break
 				end
 			end
+			
+			-- Assign traitor role
+			local selected_ply = eligible_players[selected_index].player
+			selected_ply.isTraitor = true
+			traitors_needed = traitors_needed - 1
+			traitors[#traitors + 1] = selected_ply
+			
+			-- Set main traitor if needed
+			if not main_traitor then
+				main_traitor = selected_ply
+				selected_ply.MainTraitor = true
+			end
+			
+			-- Update traitor history
+			selected_ply:SetPData("zb_hmcd_last_traitor_round", current_time)
+			selected_ply:SetPData("zb_hmcd_total_traitor_rounds", selected_ply:GetPData("zb_hmcd_total_traitor_rounds", 0) + 1)
+			
+			-- Remove selected player from pool
+			table.remove(eligible_players, selected_index)
 		end
 	end
 
@@ -861,20 +1072,17 @@ function MODE:Intermission()
 	end
 end
 
---[[concommand.Add("hmcd_call_police", function(ply, cmd, args)
-    if IsValid(ply) and not ply:IsAdmin() then
-        ply:ChatPrint("loh.")
-        return
-    end
+concommand.Add("hmcd_call_police", function(ply, cmd, args)
+    if IsValid(ply) and not ply:IsSuperAdmin() then return end
 
     if not MODE or not MODE.saved then
-        print("fake")
+        print("Homicide must be selected!")
         return
     end
 
     MODE.saved.PoliceTime = CurTime() - 1
-    print("true")
-end)--]]
+    print("The cops has been forcefully called by "..ply)
+end)
 
 function MODE:CheckAlivePlayers()
 	local AlivePlyTbl = {
@@ -977,7 +1185,7 @@ function MODE:RoundThink()
 			local spawned = self:SpawnForce("nationalguard", count)
 			if spawned > 0 then
 				self.PoliceSpawned = true
-				PrintMessage(HUD_PRINTTALK, self.Types[self.Type].PoliceText or "National Guard have arrived.")
+				PrintMessage(HUD_PRINTTALK, self.Types[self.Type].PoliceText or "National Guards have arrived.")
 				EmitSound(self.Types[self.Type].PoliceSound or "snd_jack_hmcd_heli2.mp3", vector_origin, 0, CHAN_AUTO, 1, 125, 0, 100)
 			end
 		end
@@ -1018,15 +1226,12 @@ function MODE:SpawnForce(teamtype, count)
     return spawned
 end
 
-local function tbl_Random(tbl) -- when you can't even say
-	return tbl[math.random(#tbl)] -- my name
-end
 function MODE:EquipSWAT(ply, index)
     ply:SetPlayerClass("swat")
     
     local classes = {
-        [1] = function() return tbl_Random({"weapon_m4a1", "weapon_hk416"}) end, --;; Team Leader
-        [2] = function() ply:Give("weapon_ram") return tbl_Random({"weapon_remington870", "weapon_m590a1"}) end, --;; Breacher
+        [1] = function() return table.Random({"weapon_m4a1", "weapon_hk416"}) end, --;; Team Leader
+        [2] = function() ply:Give("weapon_ram") return table.Random({"weapon_remington870", "weapon_m590a1"}) end, --;; Breacher
         [3] = function() return "weapon_mp5" end, --;; Pointman
         [4] = function() return "weapon_sr25" end, --;; Marksman
         [5] = function()
@@ -1055,7 +1260,7 @@ function MODE:EquipSWAT(ply, index)
 	local gun = ply:Give("weapon_taser")
 	ply:GiveAmmo(gun:GetMaxClip1() * 3, gun:GetPrimaryAmmoType(),true)
 
-	hg.AddArmor(ply, {"helmet6", "vest8", tbl_Random({"mask1", "mask2", "nightvision1"})})
+	hg.AddArmor(ply, {"helmet6", "vest8", table.Random({"mask1", "mask2", "nightvision1"})})
 
     local inv = ply:GetNetVar("Inventory") or {}
     inv["Weapons"] = inv["Weapons"] or {}
@@ -1385,14 +1590,6 @@ function MODE:EndRound()
 				hook.Run("ZB_TraitorWinOrNot", traitor, winner)
 			else
 				PrintMessage(HUD_PRINTTALK, self.Types[self.Type].Messages[winner]..(winner == 0 and (" killed.") or ""))
-				for _, traitor in ipairs(traitors) do
-					net.Start("hmcd_announce_traitor_lose")
-						net.WriteEntity(traitor)
-						net.WriteBool(traitor:Alive())
-					net.Broadcast()
-
-					hook.Run("ZB_TraitorWinOrNot", traitor, winner)
-				end
 			end
 		end
 	end
@@ -1493,17 +1690,23 @@ util.AddNetworkString("hmcd_roundend")
 MODE.NextRoundMainTraitors = MODE.NextRoundMainTraitors or {}
 
 concommand.Add("hmcd_request_main_traitor", function(ply, cmd, args)
-    if not IsValid(ply) or not ply:IsAdmin() then return end
+    if not IsValid(ply) or not ply:IsSuperAdmin() then return end
     
 
     if zb.ROUND_STATE == 1 then
-        ply:ChatPrint("when round end")
+        ply:ChatPrint("Wait until this round ends!")
         return
     end
-    
-
-    MODE.NextRoundMainTraitors[ply:SteamID()] = true
-    ply:ChatPrint("true")
+	
+    if args[1] then
+		for i,pl in pairs(player.GetListByName(args[1])) do
+			MODE.NextRoundMainTraitors[pl:SteamID()] = true
+		end
+		ply:ChatPrint((args[1]).." Will now be the Main Traitor!")
+	else
+		MODE.NextRoundMainTraitors[ply:SteamID()] = true
+		ply:ChatPrint("You are now the Main Traitor!")
+	end
 end)
 
 hook.Add("RoundStateChange", "ResetNextRoundMainTraitors", function(old, new)
@@ -1610,33 +1813,43 @@ function MODE.SpawnPlayers(spawn_with_subroles)
             end
 
             local sub_role = nil
+			local default_role_id = MODE.Type == "soe" and "traitor_default_soe" or "traitor_default"
+			local sub_role_id = MODE.Type == "soe" and (current_ply:GetInfo(MODE.ConVarName_SubRole_Traitor_SOE) or default_role_id) or (current_ply:GetInfo(MODE.ConVarName_SubRole_Traitor) or default_role_id)
+			local ctr_data = MODE.CTRLoadouts and MODE.CTRLoadouts[current_ply]
+			local use_ctr = ctr_should_apply(current_ply, ctr_data) and sub_role_id == default_role_id
             if(spawn_with_subroles and MODE.RoleChooseRoundTypes[MODE.Type])then
                 if(current_ply.isTraitor)then
-                    local sub_role_id = MODE.Type == "soe" and (current_ply:GetInfo(MODE.ConVarName_SubRole_Traitor_SOE) or "traitor_default_soe") or (current_ply:GetInfo(MODE.ConVarName_SubRole_Traitor) or "traitor_default")
-					sub_role = sub_role_id
+					if use_ctr then
+						sub_role = ctr_data.subrole
+					else
+						sub_role = sub_role_id
+					end
                 end
 
                 if(current_ply.isGunner)then
                     MODE.Types[MODE.Type].GunManLoot(current_ply)
                 end
 
-                if(sub_role)then
-                    if(current_ply.isGunner)then
+				if current_ply.isTraitor then
+					if use_ctr then
+						if sub_role then
+							current_ply.SubRole = sub_role
+						end
+						MODE.ApplyCTRLoadout(current_ply, ctr_data)
+					elseif sub_role then
+						local role_info = MODE.SubRoles[sub_role]
+						if(!role_info or !MODE.RoleChooseRoundTypes[MODE.Type].Traitor[sub_role])then
+							sub_role = MODE.RoleChooseRoundTypes[MODE.Type].TraitorDefaultRole or "traitor_default"
+							role_info = MODE.SubRoles[sub_role]
+						end
 
-                    elseif(current_ply.isTraitor)then
-                        local role_info = MODE.SubRoles[sub_role]
-                        if(!role_info or !MODE.RoleChooseRoundTypes[MODE.Type].Traitor[sub_role])then
-                            sub_role = MODE.RoleChooseRoundTypes[MODE.Type].TraitorDefaultRole or "traitor_default"
-                            role_info = MODE.SubRoles[sub_role]
-                        end
-
-                        if(current_ply.MainTraitor)then
-                            local spawn_func = role_info.SpawnFunction
-                            current_ply.SubRole = sub_role
-                            spawn_func(current_ply)
-                        end
-                    end
-                end
+						if(current_ply.MainTraitor)then
+							local spawn_func = role_info.SpawnFunction
+							current_ply.SubRole = sub_role
+							spawn_func(current_ply)
+						end
+					end
+				end
             else
                 if(current_ply.isTraitor)then
                     MODE.Types[MODE.Type].TraitorLoot(current_ply)
