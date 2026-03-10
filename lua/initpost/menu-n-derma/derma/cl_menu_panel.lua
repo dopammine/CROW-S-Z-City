@@ -1,6 +1,6 @@
 local PANEL = {}
 local curent_panel 
-local red_select = Color(192,0,0)
+local red_select = Color(0,192,192)
 
 local Selects = {
     {Title = "Disconnect", Func = function(luaMenu) RunConsoleCommand("disconnect") end},
@@ -16,7 +16,7 @@ local Selects = {
         btn:SetFont( "ZCity_Small" )
         btn:SetTall( ScreenScale( 15 ) )
         btn:Dock(BOTTOM)
-        btn:DockMargin(ScreenScale(20),ScreenScale(10),0,0)
+        btn:DockMargin(0,ScreenScale(2),0,0)
         btn:SetTextColor(Color(255,255,255))
         btn:InvalidateParent()
         btn.RColor = Color(225, 225, 225, 0)
@@ -34,34 +34,61 @@ local Selects = {
             self.HoverLerp2 = LerpFT(0.2, self.HoverLerp2 or 0, self:IsHovered() and 1 or 0)
                 
             self:SetTextColor(self.RColor:Lerp(self.WColor:Lerp(red_select, self.HoverLerp2), self.HoverLerp))
-            self:SetX(self.x + ScreenScaleH(40) + self.HoverLerp * ScreenScaleH(50))
+            self:SetX(self.x + ScreenScaleH(45) + self.HoverLerp * ScreenScaleH(50))
         end
 
-        local btn = vgui.Create( "DLabel", btn )
-        btn:SetText( "STD" )
-        btn:SetMouseInputEnabled( true )
-        btn:SizeToContents()
-        btn:SetFont( "ZCity_Small" )
-        btn:SetTall( ScreenScale( 15 ) )
-        btn:Dock(BOTTOM)
-        btn:DockMargin(0,ScreenScale(2),0,0)
-        btn:SetTextColor(Color(255,255,255))
-        btn:InvalidateParent()
-        btn.RColor = Color(225, 225, 225, 0)
-        btn.WColor = Color(225, 225, 225, 255)
-        btn.x = btn:GetX()
+        local btnStd = vgui.Create( "DLabel", btn )
+        btnStd:SetText( "STD" )
+        btnStd:SetMouseInputEnabled( true )
+        btnStd:SizeToContents()
+        btnStd:SetFont( "ZCity_Small" )
+        btnStd:SetTall( ScreenScale( 15 ) )
+        btnStd:Dock(BOTTOM)
+        btnStd:DockMargin(0,ScreenScale(2),0,0)
+        btnStd:SetTextColor(Color(255,255,255))
+        btnStd:InvalidateParent()
+        btnStd.RColor = Color(225, 225, 225, 0)
+        btnStd.WColor = Color(225, 225, 225, 255)
+        btnStd.x = btnStd:GetX()
 
-        function btn:DoClick()
+        function btnStd:DoClick()
             luaMenu:Close()
             hg.SelectPlayerRole(nil, "standard")
         end
     
-        function btn:Think()
+        function btnStd:Think()
             self.HoverLerp = selfa.HoverLerp
             self.HoverLerp2 = LerpFT(0.2, self.HoverLerp2 or 0, self:IsHovered() and 1 or 0)
     
             self:SetTextColor(self.RColor:Lerp(self.WColor:Lerp(red_select, self.HoverLerp2), self.HoverLerp))
-            self:SetX(self.x + ScreenScaleH(35))
+            self:SetX(self.x + ScreenScaleH(40))
+        end
+
+        local btnCtr = vgui.Create( "DLabel", btnStd )
+        btnCtr:SetText( "CTR" )
+        btnCtr:SetMouseInputEnabled( true )
+        btnCtr:SizeToContents()
+        btnCtr:SetFont( "ZCity_Small" )
+        btnCtr:SetTall( ScreenScale( 15 ) )
+        btnCtr:Dock(BOTTOM)
+        btnCtr:DockMargin(0,ScreenScale(2),0,0)
+        btnCtr:SetTextColor(Color(255,255,255))
+        btnCtr:InvalidateParent()
+        btnCtr.RColor = Color(225, 225, 225, 0)
+        btnCtr.WColor = Color(225, 225, 225, 255)
+        btnCtr.x = btnCtr:GetX()
+
+        function btnCtr:DoClick()
+            luaMenu:Close()
+            hg.OpenCTRMenu()
+        end
+    
+        function btnCtr:Think()
+            self.HoverLerp = selfa.HoverLerp
+            self.HoverLerp2 = LerpFT(0.2, self.HoverLerp2 or 0, self:IsHovered() and 1 or 0)
+    
+            self:SetTextColor(self.RColor:Lerp(self.WColor:Lerp(red_select, self.HoverLerp2), self.HoverLerp))
+            self:SetX(self.x + ScreenScaleH(40))
         end
     end,
     Func = function(luaMenu)
@@ -79,27 +106,30 @@ local Selects = {
 }
 
 local splasheh = {
-    'LIKE HOMICIDED',
-    'PLUV PLUV PLUVISKI',
-    'LULU IS NOT DEAD | !PLUV',
-    'THE TRAITOR WAS KILLED',
-    'NAB HOMICIDE SERVER',
-    'ALSO TRY MODDED HOMICIDE 2',
-    'HOP ON Z-CITY',
-    'JOHN Z-CITY',
-    ':pluvrare:',
-    'SAW51 IS REAL',
-    'MORE SMALLTOWN',
-    'MORE CLUE2022',
-    'BACKROOMS == CLUE',
-    'HELL IS NEAR',
-    'I WISH YOU GOOD HEALTH, JASON STATHAM'
+    'LIKE Z-CITY BUT BETTER',
+    'THE NIGHT BEFORE PLUV',
+    'DO YOU LIKE MY SWORD SWORD?',
+    'JOE WITH THE GUY NAMED JOE?',
+    '5+ HOURS FALL ASLEEP OG SML',
+    '"I THOUGHT YOU SAID PAIR OF SHOES!"',
+    'HOP ON CROWS HOMIGRAD',
+    'BLUE IS LOVE, BLUE IS LIFE',
+    '"WHATS 9 + 10?"',
+    'JOHN HOMIGRAD CRUST',
+    '800 TO 8',
+    '"THIS ONES NOT A CAKEWALK!"',
+    'zb_pluvtown 1',
+    'hg_aprilfools 1',
+    '@GROK IS THIS TRUE?',
+    'WHO LET THE DOGS OUT?',
+    'SHOUTOUT GRANDMA',
+    'THE CROW FILES',
 }
 
 --print(string.upper('I wish you good health, Jason Statham'))
 surface.CreateFont("ZC_MM_Title", {
     font = "Bahnschrift",
-    size = ScreenScale(40),
+    size = ScreenScale(26),
     weight = 800,
     antialias = true
 })
@@ -116,18 +146,18 @@ function PANEL:InitializeMarkup()
 	local gm = splasheh[math.random(#splasheh)] .. " | " .. string.NiceName(mapname) 
 
     if hg.PluvTown.Active then
-        local text = "<font=ZC_MM_Title><colour=199,2,2>    </colour>City</font>\n<font=ZCity_Tiny><colour=105,105,105>" .. gm .. "</colour></font>"
+        local text = "<font=ZC_MM_Title><colour=15,235,235,255>      'S </colour><colour=205,2,2,255>Z</colour>-City</font>\n<font=ZCity_Tiny><colour=105,105,105>" .. gm .. "</colour></font>"
 
         self.SelectedPluv = table.Random(hg.PluvTown.PluvMats)
 
         return markup.Parse(text)
     end
 
-    local text = "<font=ZC_MM_Title><colour=199,2,2,255>Z</colour>-City</font>\n<font=ZCity_Tiny><colour=105,105,105>" .. gm .. "</colour></font>"
+    local text = "<font=ZC_MM_Title><colour=15,235,235,255>CROW'S </colour><colour=205,2,2,255>Z</colour>-City</font>\n<font=ZCity_Tiny><colour=105,105,105>" .. gm .. "</colour></font>"
     return markup.Parse(text)
 end
 
-local color_red = Color(255,25,25,45)
+local color_red = Color(25,195,255,45)
 local clr_gray = Color(255,255,255,25)
 local clr_verygray = Color(10,10,19,235)
 
@@ -154,7 +184,7 @@ function PANEL:Init()
     local lDock = self.lDock
     lDock:Dock(LEFT)
     lDock:SetSize(ScrW() / 4, ScrH())
-    lDock:DockMargin(ScreenScale(0), ScreenScaleH(90), ScreenScale(10), ScreenScaleH(90))
+    lDock:DockMargin(ScreenScale(0), ScreenScaleH(90), ScreenScale(20), ScreenScaleH(90))
     lDock.Paint = function(this, w, h)
         if hg.PluvTown.Active then
             surface.SetDrawColor(color_white)
@@ -209,7 +239,7 @@ function PANEL:Init()
     zteam:DockMargin(ScreenScale(10), 0, 0, 0)
     zteam:SetFont("ZCity_Tiny")
     zteam:SetTextColor(clr_gray)
-    zteam:SetText("Authors: uzelezz, Sadsalat, \nMr.Point, Zac90, Deka, Mannytko")
+    zteam:SetText("Contributors: CROW, chillin' fella, \nGrandpa, Greg, Kliv")
     zteam:SetContentAlignment(4)
     zteam:SizeToContents()
 end
@@ -222,7 +252,7 @@ local gradient_d = surface.GetTextureID("vgui/gradient-d")
 local gradient_r = surface.GetTextureID("vgui/gradient-u")
 local gradient_l = surface.GetTextureID("vgui/gradient-l")
 
-local clr_1 = Color(102,0,0,35)
+local clr_1 = Color(0,0,102,35)
 function PANEL:Paint(w,h)
     draw.RoundedBox( 0, 0, 0, w, h, self.ColorBG )
     hg.DrawBlur(self, 5)
@@ -289,7 +319,16 @@ function PANEL:AddSelect( pParent, strTitle, tbl )
     end
 
     function btn:Think()
-        self.HoverLerp = LerpFT(0.2, self.HoverLerp or 0, (self:IsHovered() or (IsValid(self:GetChild(0)) and self:GetChild(0):IsHovered()) or (IsValid(self:GetChild(0)) and IsValid(self:GetChild(0):GetChild(0)) and self:GetChild(0):GetChild(0):IsHovered())) and 1 or 0)
+        local c0 = self:GetChild(0)
+        local c1 = IsValid(c0) and c0:GetChild(0)
+        local c2 = IsValid(c1) and c1:GetChild(0)
+        local c3 = IsValid(c2) and c2:GetChild(0)
+        local hovered = self:IsHovered()
+            or (IsValid(c0) and c0:IsHovered())
+            or (IsValid(c1) and c1:IsHovered())
+            or (IsValid(c2) and c2:IsHovered())
+            or (IsValid(c3) and c3:IsHovered())
+        self.HoverLerp = LerpFT(0.2, self.HoverLerp or 0, hovered and 1 or 0)
 
         local v = self.HoverLerp
         self:SetTextColor(self.RColor:Lerp(red_select, v))
@@ -327,7 +366,7 @@ vgui.Register( "ZMainMenu", PANEL, "ZFrame")
 
 hook.Add("OnPauseMenuShow","OpenMainMenu",function()
     local run = hook.Run("OnShowZCityPause")
-    if run != nil then
+    if run then
         return run
     end
 

@@ -51,7 +51,7 @@ hg.settings:AddOpt("Gameplay","hg_old_notificate", "Old Notifications")
 hg.settings:AddOpt("Gameplay","hg_cheats", "Enable Cheats")
 hg.settings:AddOpt("Gameplay","hg_showthoughts", "Show thoughts")
 hg.settings:AddOpt("Gameplay","hg_hints", "Show hints")
-hg.settings:AddOpt("Gameplay","hg_gary", "HG GARY")
+hg.settings:AddOpt("Gameplay","hg_gary", "Gary")
 hg.settings:AddOpt("Gameplay","hg_deathfadeout", "Death fade out")
 --hg_gary
 --hg_deathfadeout
@@ -64,8 +64,6 @@ if not game.IsDedicated() then
 	hg.settings:AddOpt("Serverside gameplay","hg_furcity", "Furcity")
 	hg.settings:AddOpt("Serverside gameplay","hg_appearance_access_for_all", "Appearance full access for all", nil, nil, "bool")
 	hg.settings:AddOpt("Serverside gameplay","hg_healanims", "Heal & food animations")
-	hg.settings:AddOpt("Serverside gameplay","hg_aimtoshoot", "DarkRP-like shoot system (aim to shoot)")
-	hg.settings:AddOpt("Serverside gameplay","hg_slings", "Sling system")
 end
 --hg_appearance_access_for_all
 --hg_furcity
@@ -93,13 +91,12 @@ hg.settings:AddOpt("UI","hg_font", "Change Custom Font", false, true)
 hg.settings:AddOpt("Weapons","hg_weaponshotblur_enable", "Shooting Blur")
 hg.settings:AddOpt("Weapons","hg_dynamic_mags", "Dynamic Ammo Inspect")
 hg.settings:AddOpt("Weapons","hg_zoomsensitivity", "Scope sensitivity")
-hg.settings:AddOpt("Weapons","hg_highpitchgunfire", "Toggle high pitched gunfire sounds inside buildings")
+hg.settings:AddOpt("Weapons","hg_aiminganim","Aiming anim")
 
 hg.settings:AddOpt("View","hg_firstperson_death", "First-Person Death")
 hg.settings:AddOpt("View","hg_fov", "Field Of View")
 hg.settings:AddOpt("View","hg_newspectate", "Smooth Spectator Camera")
 hg.settings:AddOpt("View","hg_cshs_fake", "C'sHS Ragdoll Camera")
-hg.settings:AddOpt("View","hg_gun_cam", "Gun Camera (ADMIN ONLY)")
 hg.settings:AddOpt("View","hg_nofovzoom", "Disable/Enable FOV Zoom")
 hg.settings:AddOpt("View","hg_realismcam", "Realism camera (shitty)")
 hg.settings:AddOpt("View","hg_gopro", "GoPro camera")
@@ -148,30 +145,11 @@ function hg.GetConVarType(convar)
 
     return "string"
 end
-
-local function SetConVarValue(convar, value)
-    if not convar then
-        return
-    end
-
-    local name = convar.GetName and convar:GetName()
-    if not name or name == "" then
-        return
-    end
-
-    if isbool(value) then
-        RunConsoleCommand(name, value and "1" or "0")
-        return
-    end
-
-    RunConsoleCommand(name, tostring(value))
-end
-
 local clr_1 = Color(255,255,255,104)
 local clr_2 = Color(122,122,122,104)
 local clr_3 = Color(28,28,28)
 local clr_4 = Color(0, 0, 0, 30)
-local clr_5 = Color(30, 29, 29, 30)
+local clr_5 = Color(29, 29, 30, 30)
 local clr_6 = Color(255, 255, 255, 100)
 local clr_7 = Color(255, 255, 255, 200)
 local clr_8 = Color(70, 130, 180)
@@ -240,11 +218,10 @@ function hg.CreateButton(buttonData, convarName, ParentPanel, yPos)
         
         function toggle:DoClick()
             if convar then
-                local newValue = not convar:GetBool()
-                SetConVarValue(convar, newValue)
+                convar:SetBool(not convar:GetBool())
 
                 surface.PlaySound('glide/headlights_on.wav')
-                targetProgress = newValue and 1 or 0
+                targetProgress = convar:GetBool() and 1 or 0
             end
         end
         
@@ -261,11 +238,11 @@ function hg.CreateButton(buttonData, convarName, ParentPanel, yPos)
         slider:SetMin(min)
         slider:SetMax(max)
         slider:SetDecimals(decimals)
-        slider:SetValue(decimals > 0 and convar:GetFloat() or convar:GetInt())
+        slider:SetValue(convar:GetInt())
         
         function slider:OnValueChanged(val)
             if convar then
-                SetConVarValue(convar, decimals > 0 and math.Round(val, decimals) or math.Round(val))
+                convar:SetInt(math.Round(val))
             end
         end
         
@@ -302,7 +279,7 @@ function hg.CreateButton(buttonData, convarName, ParentPanel, yPos)
         
         function textEntry:OnValueChange(val)
             if convar then
-                SetConVarValue(convar, val)
+                convar:SetString(val)
             end
         end
     end
