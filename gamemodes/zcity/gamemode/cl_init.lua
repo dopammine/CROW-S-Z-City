@@ -46,6 +46,67 @@ net.Receive("updtime",function()
 	zb.ROUND_BEGIN = time3
 end)
 
+local zb_roundstart_media_url = CreateClientConVar("zb_roundstart_media_url", "", true, false)
+local zb_roundstart_media_seconds = CreateClientConVar("zb_roundstart_media_seconds", "0", true, false)
+local zb_roundstart_sound = CreateClientConVar("zb_roundstart_sound", "", true, false)
+
+function zb.PlayRoundStartMedia(urlFromServer, secondsFromServer, soundFromServer)
+	local soundPath = zb_roundstart_sound:GetString()
+	if soundPath == "" then soundPath = soundFromServer or "" end
+	if soundPath != "" then surface.PlaySound(soundPath) end
+
+	local url = zb_roundstart_media_url:GetString()
+	if url == "" then url = urlFromServer or "" end
+	if url == "" then return end
+
+	local seconds = zb_roundstart_media_seconds:GetFloat()
+	if seconds <= 0 then seconds = secondsFromServer or 0 end
+	seconds = math.Clamp(seconds, 0, 60)
+	if seconds <= 0 then return end
+
+	timer.Remove("zb_roundstart_media_hide")
+	if IsValid(zb.roundStartMediaPanel) then
+		zb.roundStartMediaPanel:Remove()
+	end
+
+	local pnl = vgui.Create("DHTML")
+	pnl:SetSize(ScrW(), ScrH())
+	pnl:SetPos(0, 0)
+	pnl:SetZPos(32767)
+	pnl:SetMouseInputEnabled(false)
+	pnl:SetKeyboardInputEnabled(false)
+	pnl:SetAllowLua(false)
+
+	zb.roundStartMediaPanel = pnl
+
+	local lowerUrl = string.lower(url)
+	local safeUrl = url:gsub("\"", "&quot;")
+
+	if string.EndsWith(lowerUrl, ".mp4") or string.EndsWith(lowerUrl, ".webm") then
+		pnl:SetHTML([[<html><body style="margin:0;overflow:hidden;background:#000;"><video src="]] .. safeUrl .. [[" autoplay muted playsinline style="width:100%;height:100%;object-fit:contain;"></video></body></html>]])
+	elseif string.EndsWith(lowerUrl, ".gif") or string.EndsWith(lowerUrl, ".png") or string.EndsWith(lowerUrl, ".jpg") or string.EndsWith(lowerUrl, ".jpeg") or string.EndsWith(lowerUrl, ".webp") then
+		pnl:SetHTML([[<html><body style="margin:0;overflow:hidden;background:transparent;"><img src="]] .. safeUrl .. [[" style="width:100%;height:100%;object-fit:contain;"/></body></html>]])
+	else
+		pnl:OpenURL(url)
+	end
+
+	timer.Create("zb_roundstart_media_hide", seconds, 1, function()
+		if IsValid(pnl) then
+			pnl:Remove()
+		end
+		if zb.roundStartMediaPanel == pnl then
+			zb.roundStartMediaPanel = nil
+		end
+	end)
+end
+
+net.Receive("ZB_RoundStartMedia", function()
+	local url = net.ReadString()
+	local seconds = net.ReadFloat()
+	local soundPath = net.ReadString()
+	zb.PlayRoundStartMedia(url, seconds, soundPath)
+end)
+
 local blur = Material("pp/blurscreen")
 local blur2 = Material("effects/shaders/zb_blur" )
 local blursettings = {}
