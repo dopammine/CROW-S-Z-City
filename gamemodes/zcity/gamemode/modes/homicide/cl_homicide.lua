@@ -7,6 +7,53 @@ local function screen_scale_2(num)
 end
 --//
 
+local killEffectEndTime = 0
+local killEffectDuration = 1
+local killEffectColor = 1
+
+function TriggerKillEffect()
+	killEffectEndTime = CurTime() + killEffectDuration
+end
+
+net.Receive("HMCD_TriggerKillEffect", function()
+	killEffectColor = net.ReadUInt(2)
+	TriggerKillEffect()
+end)
+
+hook.Add("HUDPaint", "HMCD_KillEffect", function()
+	if killEffectEndTime <= CurTime() then return end
+
+	local w = math.Clamp((killEffectEndTime - CurTime()) / killEffectDuration, 0, 1)
+	local sw, sh = ScrW(), ScrH()
+
+	local r, g, b = 255, 255, 255
+	if killEffectColor == 1 then
+		r, g, b = 180, 30, 30
+	elseif killEffectColor == 2 then
+		r, g, b = 120, 0, 0
+	end
+
+	surface.SetDrawColor(r, g, b, 55 * w)
+	surface.DrawRect(0, 0, sw, sh)
+
+	local lines = math.floor(10 + 30 * w)
+	for i = 1, lines do
+		local y = math.random(0, sh - 2)
+		local h = math.random(1, 2)
+		local x = math.random(0, sw - 10)
+		local ww = math.random(20, math.min(260, sw - x))
+		surface.SetDrawColor(255, 255, 255, math.random(8, 28) * w)
+		surface.DrawRect(x, y, ww, h)
+	end
+
+	local pixels = math.floor(120 + 320 * w)
+	for i = 1, pixels do
+		local bright = math.random(0, 255)
+		surface.SetDrawColor(bright, bright, bright, 10 * w)
+		surface.DrawRect(math.random(0, sw), math.random(0, sh), 1, 1)
+	end
+end)
+
 MODE.TypeSounds = {
 	["standard"] = {"snd_jack_hmcd_psycho.mp3","snd_jack_hmcd_shining.mp3"},
 	["soe"] = "snd_jack_hmcd_disaster.mp3",
@@ -288,6 +335,13 @@ function MODE:RenderScreenspaceEffects()
 
 		surface.SetDrawColor(0, 0, 0, 255 * fade)
 		surface.DrawRect(-1, -1, ScrW() + 1, ScrH() + 1 )
+	end
+
+	if killEffectEndTime > CurTime() then
+		local w = math.Clamp((killEffectEndTime - CurTime()) / killEffectDuration, 0, 1)
+		DrawMotionBlur(0.08 * w, 0.9 * w, 0.01)
+		DrawToyTown(2.5 * w, 1.5 * ScrH())
+		DrawSharpen(1.5 * w, 1)
 	end
 end
 
