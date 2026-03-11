@@ -41,7 +41,7 @@ local bulletHit
 --local hg_bulletholes = GetConVar("hg_bulletholes") or CreateClientConVar("hg_bulletholes", "150", true, false, "0-500, amount of bullet hole effects (r6s-like)", 0, 500)
 local timer, util, math, IsValid, WorldToLocal, Vector, sound, EffectData, game = timer, util, math, IsValid, WorldToLocal, Vector, sound, EffectData, game
 
-local function callbackBullet(self, tr, dmg, force, bullet, penetration)
+local function callbackBullet(self, tr, dmg, force, bullet)
 	if CLIENT then return end
 	if not bullet then return end
 	bullet.limit_ricochet = bullet.limit_ricochet or 0
@@ -57,7 +57,7 @@ local function callbackBullet(self, tr, dmg, force, bullet, penetration)
 	
 	-- all the way through
 	--print(ApproachAngle > MaxRicAngle * 0.7  )
-	if ApproachAngle > MaxRicAngle * 1 or tr.Entity:IsVehicle() then
+	if ApproachAngle > MaxRicAngle * 1 then--or tr.Entity:IsVehicle() then
 		local Pen = (bullet.Penetration or 5) * 3 or dmg
 		local MaxDist, SearchPos, SearchDist, Penetrated = math.min(Pen / hardness * 0.4, 100), hitPos, 5, false
 		
@@ -75,11 +75,7 @@ local function callbackBullet(self, tr, dmg, force, bullet, penetration)
 				SearchDist = SearchDist + 5
 			end
 		end
-
-		if tr.Entity:IsVehicle() then
-			Penetrated = penetration
-		end
-
+		
 		if CLIENT then
 			if Penetrated then				
 				local ent = IsValid(tr.Entity) and tr.Entity or Entity(0)
@@ -96,8 +92,26 @@ local function callbackBullet(self, tr, dmg, force, bullet, penetration)
 			end
 			--return false
 		end
-
-		if Penetrated then
+		
+		--print(Penetrated)
+		if Penetrated then--or tr.Entity:IsVehicle() then
+			--[[self:FireLuaBullets({
+				Attacker = self:GetOwner(),
+				Damage = 0,
+				Force = 0,
+				Num = 1,
+				Tracer = 0,
+				TracerName = "nil",
+				Dir = -dir,
+				Spread = Vector(0, 0, 0),
+				Src = SearchPos + dir,
+				DisableLagComp = true,
+				Filter = {},
+				Distance = SearchPos
+				--Penetration = bullet.Penetration,
+				--Diameter = bullet.Diameter 
+				--Callback = bulletHit
+			},true)--]]
 			util.Decal("Impact.Concrete",SearchPos + dir*5, SearchPos - dir*15)
 			timer.Simple(0.15,function()
 				if effect[tr.MatType] then
@@ -108,18 +122,6 @@ local function callbackBullet(self, tr, dmg, force, bullet, penetration)
 					util.Effect("zippy_impact_"..effect[tr.MatType][1],effectdata2)
 				end
 			end)
-
-			local filter = {}
-			if tr.Entity:IsVehicle() then
-				filter = {tr.Entity}
-
-				if tr.Entity.seats then
-					for i, seat in pairs(tr.Entity.seats) do
-						table.insert(filter, seat)
-					end
-				end
-			end
-
 			local tBullet = {
 				Attacker = IsValid(self) and IsValid(self:GetOwner()) and self:GetOwner() or self,
 				Damage = dmg * 0.65,
@@ -129,10 +131,10 @@ local function callbackBullet(self, tr, dmg, force, bullet, penetration)
 				TracerName = "nil",
 				Dir = dir,
 				Spread = vector_origin,
-				Src = tr.Entity:IsVehicle() and hitPos or (SearchPos + dir),
+				Src = SearchPos + dir,
 				Callback = bulletHit,
 				DisableLagComp = true,
-				Filter = filter,
+				Filter = {},
 				Penetration = bullet.Penetration,
 				Diameter = bullet.Diameter,
 				penetrated = bullet.penetrated + 1,
@@ -231,12 +233,24 @@ end
 
 local hg_potatopc
 
-local shootDecals, shootDecalRand = {}, 1
-for i = 1, 5 do
-	local mat = "decals/zcity/powder_impact_" .. i
-	table.insert(shootDecals, mat)
-	game.AddDecal("Impact.ShootAdd" .. i, mat)
+local hands = {
+	[2] = true,
+	[3] = true,
+	[4] = true,
+	[5] = true,
+	[6] = true,
+	[7] = true,
+}
 
+local shootDecals, shootDecalRand = {
+	"decals/metal/shot6",
+	"decals/metal/shot7",
+	"decals/bigshot2",
+	"decals/bigshot4",
+	"decals/bigshot5",
+}, 1
+for i, decal in ipairs(shootDecals) do
+	game.AddDecal("Impact.ShootAdd" .. i, decal)
 	shootDecalRand = i
 end
 
@@ -246,17 +260,12 @@ local ipairs, ents = ipairs, ents
 local ents_FindInCone = ents.FindInCone
 local vectorup = Vector(0, 0, 25)
 local ang = math.cos( math.rad( 125 ) )
-local function gasInertia(pos, force, dir, self, tr)
-	--if force >= 150 then return end
+local function gasInertia(pos, force, dir)
+	if force >= 150 then return end
 	for _, ent in ipairs(ents_FindInCone(pos, dir, force, ang)) do
 		--print(ent)
 		if IsValid(ent) and not ent:IsNPC() and not ent:IsPlayer() then
 			local phys = ent:GetPhysicsObject()
-
-			if (ent:GetClass() == "func_breakable_surf") and !tr.HitPos then
-				--ent:Fire("Shatter", "0.5 0.5 100", 0, self, self)
-			end
-
 			if IsValid(phys) then
 				if phys:GetMass() > 5 then continue end
 				local entpos = ent:GetPos()
@@ -270,6 +279,7 @@ local function gasInertia(pos, force, dir, self, tr)
 	end
 end
 
+local powderMat, powderClr, world = Material("decals/burn01a"), Color(255, 255, 255, 150), game.GetWorld()
 local allowedMats = {
 	[MAT_CONCRETE] = true,
 	[MAT_METAL] = true
@@ -279,34 +289,43 @@ bulletHit = function(ply, tr, dmgInfo, bullet, Weapon)
 	local inflictor = IsValid(ply) and not ply:IsNPC() and ply.GetActiveWeapon and ply:GetActiveWeapon() or dmgInfo:GetInflictor()
 	local dmg, force = dmgInfo:GetDamage(), dmgInfo:GetDamage()--dmgInfo:GetDamageForce():Length()
 
+	if IsValid(ply) and IsValid(ply.FakeRagdoll) and tr.Entity == ply.FakeRagdoll and hands[hg.realPhysNum(ply.FakeRagdoll, tr.PhysicsBone)] then
+		return false, false
+	end
+
+	--// uncomment to use default impact effects
+	--[[local effectdata = EffectData()
+	effectdata:SetOrigin( tr.HitPos )
+	effectdata:SetEntity( tr.Entity )
+	effectdata:SetStart( tr.StartPos )
+	effectdata:SetSurfaceProp( tr.SurfaceProps )
+	effectdata:SetDamageType( dmgInfo:GetDamageType() )
+	effectdata:SetHitBox( tr.HitBox )
+	util.Effect( "Impact", effectdata )]]
+
 	local trPos, trNormal, trStart = tr.HitPos, tr.HitNormal, tr.StartPos
-	
 	if tr.MatType == MAT_FLESH then
 		util.Decal("Impact.Flesh", trPos + trNormal, trPos - trNormal)
 	end
 
-	local dist = trStart:DistToSqr(trPos)
-	if dist <= 160000 and (math.random(3) == 2 or force >= 35) and tr.Entity:IsWorld() and allowedMats[tr.MatType] then
-		util.Decal("Impact.ShootAdd" .. math.random(shootDecalRand), trPos + trNormal, trPos - trNormal)
-	end
-	
-	if force >= 35 and dist <= 1400000 and (math.random(3) == 2 or force >= 45) and !tr.Entity:IsRagdoll() then
-		util.Decal("Impact.ShootPowderAdd", trPos + trNormal, trPos - trNormal)
-	end
+	--local force = bullet.Force
+	if force >= 20 then
+		local dist = trStart:DistToSqr(trPos)
+		if dist <= 160000 and (math.random(3) == 2 or force >= 30) and tr.Entity:IsWorld() and allowedMats[tr.MatType] then
+			util.Decal("Impact.ShootAdd" .. math.random(shootDecalRand), trPos + trNormal, trPos - trNormal)
+		end
+		if force >= 30 and dist <= 1400000 and (math.random(3) == 2 or force >= 45) then
+			util.Decal("Impact.ShootPowderAdd", trPos + trNormal, trPos - trNormal)
+			--util.DecalEx(powderMat, world, trPos, trNormal, powderClr, 1, 1) uzelezz said that DecalEx crashing the game..
+		end
 
-	gasInertia(trPos, force * 3, -tr.Normal, Weapon, tr)
-	gasInertia(trStart, force * 3, tr.Normal, Weapon, tr)
-
-	local penetration, dmgmul
-	if tr.Entity:IsVehicle() then
-		penetration, dmgmul = hg.VehiclePenetration(tr.Entity, tr, bullet)
-		
-		dmgInfo:SetDamage(dmgInfo:GetDamage() * dmgmul)
+		gasInertia(trPos, force * 3, -tr.Normal)
+		gasInertia(trStart, force * 3, tr.Normal)
 	end
 
 	timer.Simple(0,function()
 		if not bullet then return end
-		callbackBullet(Weapon or inflictor, tr, dmg, force, bullet, penetration, penmul)
+		callbackBullet(Weapon or inflictor, tr, dmg, force, bullet)
 	end)
 end
 
@@ -445,7 +464,7 @@ function SWEP:GetTrace(bCacheTrace, desiredPos, desiredAng, NoTrace, closeanim)
 	local fake = CLIENT and owner.FakeRagdoll or nil
 	tr.start = pos
 	tr.endpos = pos + dir * 8000
-	tr.filter = {self, gun, not owner.suiciding and owner or NULL, not owner.suiciding and fake}
+	tr.filter = {gun, not owner.suiciding and owner or NULL,fake}
 
 	local trace = util_TraceLine(tr)
 	if bCacheTrace then
@@ -454,12 +473,7 @@ function SWEP:GetTrace(bCacheTrace, desiredPos, desiredAng, NoTrace, closeanim)
 		self.cache_trace[2] = pos
 		self.cache_trace[3] = ang
 	end
-
-	if IsValid(owner) and owner.IsSuperAdmin and owner:IsSuperAdmin() then
-		-- debugoverlay.Line(pos, pos + ang:Forward() * 1000, 0.1, SERVER and Color(255, 0, 0) or Color(0, 0, 255))
-		-- debugoverlay.Sphere(trace.HitPos, 1, SERVER and 5 or 0.1, SERVER and Color(255, 0, 0) or Color(0, 255, 0))
-	end
-
+	--debugoverlay.Sphere(trace.HitPos, 1, 1, SERVER and Color(255, 0, 0) or Color(0, 255, 0))
 	return trace, pos, ang
 end
 
@@ -518,7 +532,7 @@ end*/
 function SWEP:FireBullet()
     local gun = self:GetWeaponEntity()
     local owner = self:GetOwner()
-	local isply = IsValid(owner) and owner:IsPlayer()
+	local isply = IsValid(owner) and owner:IsPlayer() and !owner.suiciding
 	local isnpc = IsValid(owner) and owner:IsNPC()
 	local ent = owner
 
@@ -579,13 +593,6 @@ function SWEP:FireBullet()
 		if IsValid(phys) then
 			phys:ApplyForceOffset(-dir * self.Primary.Force * 5, pos)
 		end
-	else
-		local char = hg.GetCurrentCharacter(owner)
-		local phys = char:GetPhysicsObjectNum(0)
-		
-		if IsValid(phys) then
-			phys:ApplyForceCenter(-dir * math.min(self.Primary.Force, 70) * 40 * (self.NumBullet or 1))
-		end
 	end
 
 	--[[local enta = ents.Create("prop_physics")
@@ -595,11 +602,12 @@ function SWEP:FireBullet()
 	enta:SetSolidFlags(FSOLID_NOT_SOLID)
 	enta:GetPhysicsObject():EnableMotion(false)--]]
 
-	local headpos, headang
-
-	if isply then
-		owner:LagCompensation(true)
+	local standing = false
+	if ent ~= owner then
+		standing = (owner:GetNetVar("lastFake",0) - CurTime() + 5) > 0
 	end
+
+	local headpos, headang
 
 	if CLIENT then
 		if IsValid(ent) then
@@ -612,23 +620,21 @@ function SWEP:FireBullet()
 			end
 		end
 	else
-		--[[if IsValid(ent) then
-			headpos, headang = ent:GetBonePosition(ent:LookupBone("ValveBiped.Bip01_Head1"))
-			headpos = headpos + headang:Forward() * 3-- - dir * 10
-		end]]
 		if IsValid(ent) then
-			local head = ent:GetBoneMatrix(ent:LookupBone("ValveBiped.Bip01_Head1"))
-
-			if head then
-				headpos, headang = head:GetTranslation(), head:GetAngles()
-			else
-				headpos, headang = ent:GetPos(), ent:GetAngles()
-			end
+			--headpos, headang = ent:GetBoneMatrix(ent:LookupBone("ValveBiped.Bip01_Spine2")):GetTranslation(), ent:GetBoneMatrix(ent:LookupBone("ValveBiped.Bip01_Head1")):GetAngles()--ent:GetBonePosition(ent:LookupBone("ValveBiped.Bip01_Head1"))
+			--headpos, headang = ent:GetBoneMatrix(ent:LookupBone("ValveBiped.Bip01_Head1")):GetTranslation(), ent:GetBoneMatrix(ent:LookupBone("ValveBiped.Bip01_Head1")):GetAngles()--ent:GetBonePosition(ent:LookupBone("ValveBiped.Bip01_Head1"))
+			headpos, headang = ent:GetBonePosition(ent:LookupBone("ValveBiped.Bip01_Head1"))
+			headpos = headpos + headang:Forward() * 3-- - dir * 5
 		end
-	end
-	
-	if isply then
-		owner:LagCompensation(false)
+		--[[local ent = ents.Create("prop_physics")
+		ent:SetModel("models/props_junk/PopCan01a.mdl")
+		ent:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE)
+		ent:SetPos(headpos)
+		ent:Spawn()
+		if IsValid(ent:GetPhysicsObject()) then
+			ent:GetPhysicsObject():EnableMotion(false)
+		end
+		do return end--]]
 	end
 
 	local willsuicide = IsValid(owner) and owner:GetNWFloat("willsuicide", 0) != 0 and owner:GetNWFloat("willsuicide", 0) or ((owner.startsuicide or CurTime()) + 1) or CurTime() + 1
@@ -642,12 +648,6 @@ function SWEP:FireBullet()
     bullet.Src = (willsuicidereal and headpos or (trace and (trace.HitPos - trace.Normal) or pos))
 	bullet.Dir = dir
 	bullet.Attacker = owner
-	
-	if IsValid(owner) and owner.IsSuperAdmin and owner:IsSuperAdmin() then
-    	--debugoverlay.Line(bullet.Src, bullet.Src + bullet.Dir * 1000, 5, SERVER and Color(255, 0, 0) or Color(0, 0, 255))
-    	--debugoverlay.Sphere(bullet.Src, 10, 5, SERVER and Color(255, 0, 0) or Color(0, 0, 255))
-    	--debugoverlay.Sphere(headpos, 10, 5, SERVER and Color(255, 0, 0) or Color(0, 0, 255))
-	end
 
 	if isnpc and CLIENT then
 		local npcYawOffset = math.Remap( owner:GetPoseParameter("aim_yaw"),0,1,-60,60 )
@@ -667,38 +667,23 @@ function SWEP:FireBullet()
     bullet.IgnoreEntity = nil
     bullet.Callback = bulletHit
 
-	local filter = {self, self.worldModel}
-	if IsValid(owner) and owner.InVehicle and owner:InVehicle() then
-		local veh = owner:GetVehicle()
-		
-		table.insert(filter, veh)
-		table.insert(filter, veh:GetParent())
-
-		if veh.seats then
-			for i, seat in pairs(veh.seats) do
-				table.insert(filter, seat)
-			end
-		end
-	end
-
     bullet.Speed = ammotype.Speed
 	bullet.Distance = ammotype.Distance or 56756
-	bullet.Filter = filter
+	bullet.Filter = {self, self.worldModel}
 
 	bullet.noricochet = ammotype.noricochet
 	
-	local f1 = not owner.suiciding and owner or nil
+	local f1 = owner--not owner.suiciding and owner or nil
 	local f2 = owner:IsPlayer() and owner:InVehicle() and owner:GetVehicle() or nil
 	local f3 = owner:IsPlayer() and owner.GetSimfphys and IsValid(owner:GetSimfphys()) and owner:GetSimfphys() or nil
 	local f4 = owner:IsPlayer() and owner:InVehicle() and owner.FakeRagdoll
-	local f5 = IsValid(owner.OldRagdoll) and owner.OldRagdoll or nil
-	
+	local f5 = standing and ent or nil
 	if IsValid(f1) then table.insert(bullet.Filter, 1, f1) end
 	if IsValid(f2) then table.insert(bullet.Filter, 1, f2) end
 	if IsValid(f3) then table.insert(bullet.Filter, 1, f3) end
 	if IsValid(f4) then table.insert(bullet.Filter, 1, f4) end
 	if IsValid(f5) then table.insert(bullet.Filter, 1, f5) end
-
+	
 	bullet.Inflictor = self
 	bullet.DontUsePhysBullets = self.DontUsePhysBullets
 	if isnpc then

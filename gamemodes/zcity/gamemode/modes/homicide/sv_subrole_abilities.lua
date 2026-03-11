@@ -26,6 +26,9 @@ hook.Add("PlayerPostThink", "HMCD_SubRoles_Abilities", function(ply)
 	if(MODE.RoleChooseRoundTypes[MODE.Type])then
 		if(ply:Alive() and ply.organism and not ply.organism.otrub)then
 			if(ply.SubRole == "traitor_infiltrator" or ply.SubRole == "traitor_infiltrator_soe")then
+				if(ply.Ability_Disarm)then
+					MODE.StopDisarmingOther(ply)
+				end
 				if(ply:KeyDown(IN_WALK))then
 					if(ply:KeyPressed(IN_RELOAD))then
 						local aim_ent, other_ply = hg.eyeTrace(ply,85).Entity
@@ -87,6 +90,9 @@ hook.Add("PlayerPostThink", "HMCD_SubRoles_Abilities", function(ply)
 			end
 			
 			if(ply.SubRole == "traitor_assasin" or ply.SubRole == "traitor_assasin_soe")then
+				if(ply.Ability_NeckBreak)then
+					MODE.StopBreakingOtherNeck(ply)
+				end
 				if(ply:KeyDown(IN_WALK))then
 					if(ply:KeyPressed(IN_USE))then
 						local aim_ent, other_ply, trace = MODE.GetPlayerTraceToOther(ply, nil, MODE.DisarmReach)

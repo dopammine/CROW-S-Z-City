@@ -124,7 +124,7 @@ function SWEP:DoRT()
 	localPos:Set(self.localScopePos)
 	localPos:Rotate(ang)
 	pos:Add(localPos)
-	--debugoverlay.Cross(pos,5,1)
+	
 	local view = render.GetViewSetup(true)
 	local diff, point = util.DistanceToLine(view.origin, view.origin + ang:Forward() * 50, pos)
 	local scope_pos = WorldToLocal(point, angle_zero, pos, view.angles)
@@ -162,19 +162,19 @@ function SWEP:DoRT()
 		w = rtsize,
 		h = rtsize,
 		angles = ang2 + angle_difference2 * -0,
-		origin = owner:InVehicle() and pos2 or tr.HitPos - (pos2 - owner:EyePos()):GetNormalized() * 5,
+		origin = tr.HitPos - (pos2 - owner:EyePos()):GetNormalized() * 5,
 		drawviewmodel = false,
 		fov = math.max(self.ZoomFOV,0.5) / dist * 12,
 		znear = 1,
 		zfar = zfar,
 		bloomtone = false
 	}
-	--debugoverlay.Axis(rt.origin,rt.angles,5,1)
+	
 	--render.RenderView(rt)
 
 	local scr1 = pos:ToScreen()
 	local scr2 = point:ToScreen()
-	local diffa = Vector((scr1.x-scr2.x) / scrw,(scr1.y-scr2.y) / scrh)
+	local diffa = Vector((scr1.x-scr2.x)/scrw,(scr1.y-scr2.y)/scrh)
 
 	render.PushRenderTarget(rtmat, 0, 0, rtsize, rtsize)
 	RENDERING_SCOPE = self
@@ -449,7 +449,7 @@ hook.Add("PostDrawTranslucentRenderables","stencil-test-holo2",function()
 			local size = 18
 			local distToSight = IsValid(mdl) and mdl:GetPos():Distance(view.origin) or 1
 			--print(distToSight)
-			size = size * math.Remap(view.fov,0,100,1.8,1)
+			size = size * math.Remap(view.fov,75,100,1.8,1)
 			size = size * math.Remap(distToSight,6,14,1.2,0.9)
 			--size = size * 
 			--render.OverrideBlend( true,BLEND_DST_COLOR,BLEND_ONE,BLENDFUNC_ADD )

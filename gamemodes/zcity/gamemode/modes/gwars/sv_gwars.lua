@@ -32,7 +32,29 @@ function MODE:Intermission()
 	for i, ply in player.Iterator() do
 		ply:SetupTeam(ply:Team())
 	end
-
+	
+	for k, v in ipairs(zb.Points["HMCD_GWARS_BCAR"].Points or {}) do
+        if zb.GetWorldSize() < ZBATTLE_BIGMAP then return end
+			local bloodz_car = ents.Create(self.Vehicles[math.random(#self.Vehicles)])
+			if not IsValid(bloodz_car) then print("WTF?? (bloodz car invalid)") return end
+			bloodz_car:SetPos(v.pos)
+			bloodz_car:SetAngles(v.ang)
+			bloodz_car:Spawn()
+			bloodz_car:Activate()
+			bloodz_car:SetColor(Color(185, 0, 0))
+    end
+	
+	for k, v in ipairs(zb.Points["HMCD_GWARS_GCAR"].Points or {}) do
+        if zb.GetWorldSize() < ZBATTLE_BIGMAP then return end
+			local groove_car = ents.Create(self.Vehicles[math.random(#self.Vehicles)])
+			if not IsValid(groove_car) then print("WTF?? (groove car invalid)") return end
+			groove_car:SetPos(v.pos)
+			groove_car:SetAngles(v.ang)
+			groove_car:Spawn()
+			groove_car:Activate()
+			groove_car:SetColor(Color(0, 185, 0))
+    end
+	
 	net.Start("gwars_start")
 	net.Broadcast()
 end
@@ -70,25 +92,16 @@ local tblweps = {
 		"weapon_p22",
 		"weapon_doublebarrel_short",
 		"weapon_skorpion",
-		//"weapon_uzi",
+		"weapon_m45",
 		"weapon_mac11",
-		//"weapon_draco",
-		//"weapon_ar_pistol",
+		"weapon_ab10",
+		"weapon_ar_pistol",
 	},
 	[1] = {
-		"weapon_cz75",
-		"weapon_deagle",
-		"weapon_glock17",
-		"weapon_glock18c",
-		"weapon_revolver2",
-		"weapon_hk_usp",
-		"weapon_p22",
-		"weapon_doublebarrel_short",
-		"weapon_skorpion",
-		//"weapon_uzi",
-		"weapon_mac11",
-		//"weapon_draco",
-		//"weapon_ar_pistol",
+		"weapon_ar15",
+		"weapon_tmp",
+		"weapon_sg552",
+		"weapon_xm1014",
 	}
 }
 
@@ -137,7 +150,7 @@ function MODE:GiveEquipment()
 				ply:SetNetVar("CurPluv", "pluvgreen")
 			end
 
-			local tbl = tblweps[ply:Team()]
+			local tbl = tblweps[0]
 			local wep = ply:Give(tbl[math.random(#tbl)])
 			ply:GiveAmmo(wep:GetMaxClip1() * 3, wep:GetPrimaryAmmoType())
 
@@ -149,6 +162,7 @@ function MODE:GiveEquipment()
 			ply:Give("weapon_bandage_sh")
 			ply:Give("weapon_tourniquet")
 			ply:Give("weapon_fentanyl")
+			ply:Give("weapon_pocketknife")
 
 			local hands = ply:Give("weapon_hands_sh")
 			ply:SelectWeapon("weapon_hands_sh")
@@ -177,7 +191,6 @@ function MODE:RoundThink()
 		for i = 1, math.min(4, #deadPlayers) do
             local ply = deadPlayers[i]
 
-            //if self.TPoints and #self.TPoints > 0 then
                 ply:Spawn()
 				ply:SetTeam(2)
 				if !startpos then
@@ -185,13 +198,15 @@ function MODE:RoundThink()
 				else
 					hg.tpPlayer(startpos, ply, i, 0)
 				end
-
+				
                 ply:SetPlayerClass("swat")
 				zb.GiveRole(ply, "SWAT", Color(0,0,122))
-				local gun = ply:Give("weapon_ar15")
+				local swattbl = tblweps[1]
+				local gun = ply:Give(swattbl[math.random(#swattbl)])
                 ply:GiveAmmo(gun:GetMaxClip1() * 3, gun:GetPrimaryAmmoType(), true)
                 ply:Give("weapon_medkit_sh")
                 ply:Give("weapon_tourniquet")
+				ply:Give("weapon_melee")
                 ply:Give("weapon_walkie_talkie")
                 ply:Give("weapon_hg_flashbang_tpik")
                 hg.AddArmor(ply, "ent_armor_helmet1")
@@ -199,9 +214,17 @@ function MODE:RoundThink()
 
                 local hands = ply:Give("weapon_hands_sh")
                 ply:SelectWeapon("weapon_hands_sh")
-            //end
-        end
-
+            end
+		for k, v in ipairs(zb.Points["HMCD_GWARS_BCAR"].Points or {}) do
+        if zb.GetWorldSize() < ZBATTLE_BIGMAP then return end
+			local police_car = ents.Create("gtav_police_cruiser")
+			if not IsValid(police_car) then print("WTF?? (police car invalid)") return end
+			police_car:SetPos(v.pos)
+			police_car:SetAngles(v.ang)
+			police_car:Spawn()
+			police_car:Activate()
+			police_car:SetColor(Color(255, 255, 255))
+    end
         swatSpawned = true
     end
 end

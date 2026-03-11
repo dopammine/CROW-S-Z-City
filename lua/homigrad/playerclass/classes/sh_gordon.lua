@@ -13,7 +13,6 @@ end
 
 CLASS.NoFreeze = true
 CLASS.NoGloves = true
-CLASS.CanEmitRNDSound = false
 
 local model = "models/gfreakman/gordonf_highpoly.mdl"
 
@@ -143,8 +142,8 @@ function CLASS.On(self, data)
         end
         self:SyncArmor()
         hevchanged(self)
-
-        --print("JOOOPAAAA")
+        
+        print("JOOOPAAAA")
     end
 end
 
@@ -280,12 +279,6 @@ hook.Add("WeaponEquip","pickuplom",function(wep,ply)
 	end
 end)
 
-hook.Add("HG_CanThoughts", "GordonCantDumat", function(ply)
-	if ply.PlayerClassName == "Gordon" then
-		return false
-	end
-end)
-
 hook.Add("PlayerCanPickupItem","hevsuit",function(ply, ent)
     local entclass = ent:GetClass()
     if entclass == "item_suit" then
@@ -403,7 +396,7 @@ if CLIENT then
     local color_glow_ar = Color(255,155,0,0)
     local color_glow_ammo = Color(255,155,0,0)
     local color_bld = Color(255,155,0)
-    local color_sight = Color(255,155,0,220) -- Color(240,240,240,255) uncomment for real hl2 crosshair
+    local color_sight = Color(255,155,0,220)
     local armorTxt = 0
     local hpTxt = 0
     local BloodTxt = 0
@@ -463,13 +456,6 @@ if CLIENT then
             local tr = wep:GetTrace(true)
             posSight = LerpVector(FRT*5, posSight, Vector(tr.HitPos:ToScreen().x,tr.HitPos:ToScreen().y,0) )
             color_sight.a = Lerp(FRT*5,color_sight.a, lply:KeyDown(IN_ATTACK2) and 0 or 255)
-			--[[ uncomment for real hl2 crosshair
-				draw.RoundedBox(0, posSight.x - 1, posSight.y - 1, 1, 1, color_sight)
-				draw.RoundedBox(0, posSight.x - 1, posSight.y + 6, 1, 1, color_sight)
-				draw.RoundedBox(0, posSight.x - 1, posSight.y - 8, 1, 1, color_sight)
-				draw.RoundedBox(0, posSight.x + 8, posSight.y - 1, 1, 1, color_sight)
-				draw.RoundedBox(0, posSight.x - 10, posSight.y - 1, 1, 1, color_sight)
-			]]
             draw.RoundedBox(0, posSight.x - 1, posSight.y + 2, 2, 6, color_sight)
             draw.RoundedBox(0, posSight.x - 1, posSight.y - 8, 2, 6, color_sight)
             draw.RoundedBox(0, posSight.x + 2, posSight.y - 1, 6, 2, color_sight)
@@ -592,19 +578,15 @@ elseif SERVER then
     }
 
     local hev_color = Color(255,125,0)
-    local dead_color = Color(255,0,0)
 
     hook.Add("Org Think","gordon_healing",function(ply, org, timeValue)
 
-        if org.HEV and not org.alive and not org.emitflatline then
-            org.emitflatline = true
-            hg.GetCurrentCharacter(ply):EmitSound("hl1/fvox/flatline.wav")
-
-            if CurrentRound and CurrentRound().name == "coop" then
-                if zChatPrint then
-                    zChatPrint(dead_color, phrases[math.random(#phrases)])
-                else
-                    PrintMessage(HUD_PRINTTALK, phrases[math.random(#phrases)])
+        if org.HEV then
+            if not org.alive and not org.emitflatline then
+                org.emitflatline = true
+                hg.GetCurrentCharacter(ply):EmitSound("hl1/fvox/flatline.wav")
+                if CurrentRound and CurrentRound().name == "coop" then
+                    PrintMessage(HUD_PRINTTALK,"<c=155,0,0>"..phrases[math.random(#phrases)].."</c>")
                 end
             end
         end

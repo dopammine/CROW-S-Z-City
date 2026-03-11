@@ -8,7 +8,7 @@ SWEP.Primary.Wait = 1
 SWEP.Primary.Next = 0
 SWEP.HoldType = "slam"
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/gibs/hgibs_spine.mdl"
+SWEP.WorldModel = "models/props/pluv.mdl"
 if CLIENT then
 	SWEP.WepSelectIcon = Material("pluv/pluv.png")
 	SWEP.IconOverride = "pluv/pluv.png"
@@ -29,9 +29,9 @@ SWEP.ofsA = Angle(90,-90,90)
 
 function SWEP:InitializeAdd()
 	self:SetHold(self.HoldType)
-	self:SetModel("models/gibs/hgibs_spine.mdl")
-	self:SetCurModel("models/gibs/hgibs_spine.mdl")
-	self.WorldModel = "models/gibs/hgibs_spine.mdl"
+	self:SetModel("models/props/pluv.mdl")
+	self:SetCurModel("models/props/pluv.mdl")
+	self.WorldModel = "models/props/pluv.mdl"
 
 	if SERVER then
 		self:PhysicsInit(SOLID_VPHYSICS)
@@ -42,7 +42,6 @@ function SWEP:InitializeAdd()
 end
 
 function SWEP:DrawWorldModel2()
-	render.SetColorModulation(0.5,0,0)
 	self.model = IsValid(self.model) and self.model or ClientsideModel( self:GetCurModel() )
 	self.model:SetNoDraw(true)
 	local WorldModel = self.model
@@ -53,7 +52,7 @@ function SWEP:DrawWorldModel2()
 
 	--WorldModel:SetMaterial("phoenix_storms/gear")
 	--WorldModel:SetColor(Color(255, 84, 58))
-	WorldModel:SetModelScale(math.max(math.abs(math.sin(CurTime()*2)),0)+0.4)
+	WorldModel:SetModelScale(0.75 + math.abs(math.sin(CurTime() * 2)) * 0.15)
 	
 	if IsValid(owner) then
 		local offsetVec = self.offsetVec
@@ -63,8 +62,29 @@ function SWEP:DrawWorldModel2()
 		local matrix = owner:GetBoneMatrix(boneid)
 		if not matrix then return end
 		local newPos, newAng = LocalToWorld(offsetVec, offsetAng, matrix:GetTranslation(), matrix:GetAngles())
+		local targetPly = owner
+		local targetPos = owner:EyePos()
+		local nearestDistSqr = math.huge
+		local searchRadius = 200
+		local searchRadiusSqr = searchRadius * searchRadius
+		for _, ply in ipairs(player.GetAll()) do
+			if ply == owner or not ply:Alive() then continue end
+			local head = ply:LookupBone("ValveBiped.Bip01_Head1")
+			local headPos = head and ply:GetBonePosition(head) or ply:EyePos()
+			local distSqr = headPos:DistToSqr(newPos)
+			if distSqr <= searchRadiusSqr and distSqr < nearestDistSqr then
+				nearestDistSqr = distSqr
+				targetPly = ply
+				targetPos = headPos
+			end
+		end
+		local lookAng = (targetPos - newPos):Angle()
+		lookAng:RotateAroundAxis(lookAng:Right(), offsetAng[1])
+		lookAng:RotateAroundAxis(lookAng:Up(), offsetAng[2])
+		lookAng:RotateAroundAxis(lookAng:Forward(), offsetAng[3] + 180)
+		self.pluvLookAng = LerpAngle(FrameTime() * 8, self.pluvLookAng or lookAng, lookAng)
 		WorldModel:SetPos(newPos)
-		WorldModel:SetAngles(newAng)
+		WorldModel:SetAngles(self.pluvLookAng)
 		WorldModel:SetupBones()
 	else
 		WorldModel:SetPos(self:GetPos())
@@ -72,7 +92,6 @@ function SWEP:DrawWorldModel2()
 	end
 	
 		WorldModel:DrawModel()
-	render.SetColorModulation(1,1,1)
 end
 
 if SERVER then

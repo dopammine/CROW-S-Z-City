@@ -1,4 +1,4 @@
-﻿if SERVER then AddCSLuaFile() end
+if SERVER then AddCSLuaFile() end
 SWEP.Base = "weapon_melee"
 SWEP.PrintName = "Fire Extinguisher"
 SWEP.Instructions = "This is a hand-held cylindrical pressure vessel containing an agent that can be discharged to extinguish a fire.\n\nLMB to attack.\nR to change mode.\nRMB to block."
@@ -39,6 +39,9 @@ SWEP.basebone = 93
 
 SWEP.weaponPos = Vector(0,2,0.3)
 SWEP.weaponAng = Angle(0,0,0)
+SWEP.HitPauseDelay = 0.52
+SWEP.HitPauseDuration = 0.2
+SWEP.HitReverseDuration = 0.4
 
 SWEP.DamageType = DMG_CLUB
 SWEP.DamagePrimary = 38
@@ -111,16 +114,6 @@ hook.Add("OnNetVarSet", "AsdGuilt",function(index, key, var)
         self.AnimList["deploy"] = self:GetNetVar("extinguishermode") and "HoseEquip" or "Draw"
     end
 end)
-
-function SWEP:ModelAnimAdd(model, pos, ang)
-    self.CustomLerpMode = LerpFT(0.1,self.CustomLerpMode or 0, self:GetNetVar("extinguishermode") and 1 or 0)
-    pos = pos + ((ang:Up() * -14 + ang:Forward() * -5 + ang:Right() * 3) * self.CustomLerpMode)
-    ang:RotateAroundAxis(ang:Forward(), -5 * self.CustomLerpMode)
-    ang:RotateAroundAxis(ang:Up(), 3 * self.CustomLerpMode)
-    ang:RotateAroundAxis(ang:Right(), 10 * self.CustomLerpMode)
-
-    return pos, ang
-end
 
 function SWEP:CanSecondaryAttack()
     self.DamageType = DMG_CLUB

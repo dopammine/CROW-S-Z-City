@@ -44,7 +44,7 @@ SWEP.HolsterSnd = ""
 
 SWEP.showstats = false
 
-local hg_healanims = ConVarExists("hg_healanims") and GetConVar("hg_healanims") or CreateConVar("hg_healanims", 0, FCVAR_SERVER_CAN_EXECUTE + FCVAR_ARCHIVE, "Toggle heal/food animations", 0, 1)
+local hg_healanims = ConVarExists("hg_font") and GetConVar("hg_healanims") or CreateConVar("hg_healanims", 0, FCVAR_SERVER_CAN_EXECUTE, "Toggle heal/food animations", 0, 1)
 
 function SWEP:Think()
 	if not self:GetOwner():KeyDown(IN_ATTACK) and hg_healanims:GetBool() then
@@ -83,6 +83,7 @@ if SERVER then
 			if self:GetHolding() < 100 then return end
 		end
 
+		self:SetBodygroup(1, 1)
 		local owner = self:GetOwner()
 		local entOwner = IsValid(org.owner.FakeRagdoll) and org.owner.FakeRagdoll or org.owner
 		entOwner:EmitSound("snd_jack_hmcd_needleprick.wav", 60, math.random(95, 105))

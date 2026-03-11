@@ -470,8 +470,11 @@ if SERVER then
 	
 	function SWEP:PostHeal(ent, mode)
 		local org = ent.organism
+		if not zb then return end 
+		if not zb.modes then return end
+		local mode_hmcd = zb.modes["hmcd"]
 		
-		if(org and IsValid(org.owner))then
+		if(org and IsValid(org.owner) and mode_hmcd)then
 			local organism_owner = org.owner
 			
 			if(organism_owner.SubRole == "traitor_chemist")then
@@ -480,13 +483,13 @@ if SERVER then
 				end
 				
 				if((self.ConsumePoisoned_KCN or 0) > 0)then
-					local ply_kcn_accumulated = AddChemicalToPlayer(organism_owner, "KCN", 50 * (self.ConsumePoisoned_KCN or 0))
+					local ply_kcn_accumulated = mode_hmcd.AddChemicalToPlayer(organism_owner, "KCN", 50 * (self.ConsumePoisoned_KCN or 0))
 					
 					if(ply_kcn_accumulated > 100)then
 						self:PoisonKCNOrganism(org)
 					end
 					
-					NetworkChemicalResistanceOfPlayer(organism_owner)
+					mode_hmcd.NetworkChemicalResistanceOfPlayer(organism_owner)
 					
 					organism_owner.PassiveAbility_ChemicalAccumulation_NextNetworkTime = CurTime() + 1
 				end

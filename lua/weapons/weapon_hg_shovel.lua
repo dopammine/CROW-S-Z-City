@@ -73,8 +73,6 @@ SWEP.setlh = true
 SWEP.setrh = true
 SWEP.TwoHanded = true
 
-SWEP.AnimAlwaysBack = true
-
 SWEP.AttackHit = "SolidMetal.ImpactHard"
 SWEP.Attack2Hit = "SolidMetal.ImpactHard"
 SWEP.AttackHitFlesh = "Flesh.ImpactHard"
@@ -89,7 +87,7 @@ function SWEP:CanSecondaryAttack()
 end
 
 function SWEP:CanPrimaryAttack()
-    self.DamageType = DMG_CLUB
+    self.DamageType = DMG_SLASH
     return true
 end
 

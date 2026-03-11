@@ -1,4 +1,4 @@
-﻿if SERVER then AddCSLuaFile() end
+if SERVER then AddCSLuaFile() end
 SWEP.Base = "weapon_melee"
 SWEP.PrintName = "Sledgehammer"
 SWEP.Instructions = "The Sledgehammer is a two-handed tool which can be used as a melee weapon.\n\nLMB to attack.\nRMB to block."
@@ -20,7 +20,7 @@ SWEP.weight = 3.5
 SWEP.HoldPos = Vector(-14,-2,1)
 SWEP.HoldAng = Angle(0,0,0)
 
-SWEP.AttackTime = 0.43
+SWEP.AttackTime = 0.4
 SWEP.AnimTime1 = 1.9
 SWEP.WaitTime1 = 1.3
 SWEP.ViewPunch1 = Angle(1,2,0)
@@ -37,6 +37,9 @@ SWEP.basebone = 94
 
 SWEP.weaponPos = Vector(0,0,0)
 SWEP.weaponAng = Angle(0,-90,0)
+SWEP.HitPauseDelay = 0.5
+SWEP.HitPauseDuration = 0.3
+SWEP.HitReverseDuration = 0.6
 
 SWEP.DamagePrimary = 74
 SWEP.DamageSecondary = 34

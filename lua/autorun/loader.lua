@@ -1,7 +1,7 @@
 hg = hg or {}
-hg.Version = "Release 1.4.1"
-hg.GitHub_ReposOwner = "mrboyplayz"
-hg.GitHub_ReposName = "CROW-S-Z-City" -- please add your real git fork!
+hg.Version = "Release 1.06"
+hg.GitHub_ReposOwner = "uzelezz123"
+hg.GitHub_ReposName = "Z-City" -- please add your real git fork!
 
 if SERVER then
 	resource.AddWorkshop("3657285193") -- main addon
@@ -9,6 +9,7 @@ if SERVER then
 	resource.AddWorkshop("3657294321") -- first content addon
 	resource.AddWorkshop("3544105055") -- second content addon
 	resource.AddWorkshop("3257937532") -- distac content
+    resource.AddWorkshop("3601264102") -- crow's custom content
 end
 -- if hg.GitHub_ReposOwner and hg.GitHub_ReposOwner != "" then
 -- 	http.Fetch( "https://api.github.com/repos/" .. hg.GitHub_ReposOwner .. "/" .. hg.GitHub_ReposName .. "/commits?sha=" .. hg.GitHub_Branch .. "&per_page=1",
@@ -90,15 +91,8 @@ end)
 if initpost then Run() end
 Run()
 
-timer.Simple(5, function()
-	if not istable(ulx) then
-		for i = 1, 6 do
-			MsgC(Color(255, 0, 0), "WARNING: Server doesn't have ULX & ULib installed! Z-City will not work properly without it!\n")
-		end
+if not istable(ulx) then
+	for i = 1, 3 do
+		MsgC(Color(255, 0, 0), "WARNING: Server doesn't have ULX & ULib installed! Z-City will not work properly without it!\n")
 	end
-	if game.SinglePlayer() then
-		for i = 1, 3 do
-			MsgC(Color(255, 0, 0), "WARNING: Game started in singleplayer! Z-City may not work properly until you start multiplayer game!\n")
-		end
-	end
-end)
+end

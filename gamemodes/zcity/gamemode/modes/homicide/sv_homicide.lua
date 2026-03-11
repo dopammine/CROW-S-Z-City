@@ -835,7 +835,7 @@ function MODE:Intermission()
 	if(MODE.ShouldStartRoleRound())then
 		traitors_needed = math.ceil(player_count / 9)
 		
-		if(player_count > 12 and math.random(1, 9) == 1)then
+		if(player_count > 8 and math.random(1, 8) == 1)then
 			traitors_needed = traitors_needed + 1
 		end
 	end
@@ -844,14 +844,18 @@ function MODE:Intermission()
 	local main_traitor = nil
 	local traitors = {}
 
+	-- local players = {}
+	-- for i, ply in player.Iterator() do
+	-- 	if ply.isTraitor or ply:Team() == TEAM_SPECTATOR then continue end
 
-	-- Fair traitor selection system with history tracking
-	MODE.NextRoundMainTraitors = MODE.NextRoundMainTraitors or {}
+	-- 	players[#players + 1] = {ply, ply.Karma}
+	-- end
 	
-	-- Phase 1: Handle manual traitor assignments first
+	-- -- potom
+	
 	for i, ply in RandomPairs(player.GetAll()) do
 		if ply.isTraitor or ply:Team() == TEAM_SPECTATOR then continue end
-		if not MODE.NextRoundMainTraitors[ply:SteamID()] then continue end
+		if math.random(100) > (ply.Karma or 100) then continue end
 
 		if traitors_needed > 0 then
 			ply.isTraitor = true
@@ -860,102 +864,40 @@ function MODE:Intermission()
 
 			main_traitor = ply
 			ply.MainTraitor = true
-			MODE.NextRoundMainTraitors[ply:SteamID()] = nil
-			
-			-- Update traitor history
-			ply:SetPData("zb_hmcd_last_traitor_round", CurTime())
-			ply:SetPData("zb_hmcd_total_traitor_rounds", ply:GetPData("zb_hmcd_total_traitor_rounds", 0) + 1)
 		end
 	end
 
-	-- Phase 2: Fair selection for remaining traitor slots
-	if traitors_needed > 0 then
-		-- Create weighted selection pool
-		local eligible_players = {}
-		local current_time = CurTime()
-		
-		for _, ply in ipairs(player.GetAll()) do
-			if ply.isTraitor or ply:Team() == TEAM_SPECTATOR then continue end
+	//MODE.NextRoundMainTraitors = MODE.NextRoundMainTraitors or {}
+	for i, ply in RandomPairs(player.GetAll()) do
+		if ply.isTraitor or ply:Team() == TEAM_SPECTATOR then continue end
+		//if not MODE.NextRoundMainTraitors[ply:SteamID()] then continue end
+
+		if traitors_needed > 0 then
+			ply.isTraitor = true
+			traitors_needed = traitors_needed - 1
+			traitors[#traitors + 1] = ply
 			
-			-- Calculate selection weight based on history and karma
-			local weight = 100 -- Base weight
-			
-			-- Reduce weight based on recent traitor activity
-			local last_traitor_time = tonumber(ply:GetPData("zb_hmcd_last_traitor_round", 0)) or 0
-			local time_since_traitor = current_time - last_traitor_time
-			
-			-- Cooldown system: reduce weight if player was traitor recently
-			if time_since_traitor < 1800 then -- 30 minutes cooldown
-				weight = weight * 0.3 -- Heavily reduce chance
-			elseif time_since_traitor < 3600 then -- 1 hour partial cooldown
-				weight = weight * 0.6 -- Moderately reduce chance
+			if not main_traitor then
+				main_traitor = ply
+				ply.MainTraitor = true
 			end
-			
-			-- Factor in total traitor rounds (players with fewer rounds get higher weight)
-			local total_rounds = tonumber(ply:GetPData("zb_hmcd_total_traitor_rounds", 0)) or 0
-			local avg_rounds = 5 -- Assume average player has been traitor 5 times
-			if total_rounds < avg_rounds then
-				weight = weight * (1 + (avg_rounds - total_rounds) * 0.2) -- Boost for underrepresented players
-			end
-			
-			-- Karma consideration (less restrictive than before)
-			local karma = ply.Karma or 100
-			if karma < 50 then
-				weight = weight * 0.7 -- Reduce but don't eliminate low karma players
-			elseif karma < 80 then
-				weight = weight * 0.9 -- Slight reduction for medium karma
-			end
-			
-			-- Ensure minimum weight so everyone has a chance
-			weight = math.max(weight, 10)
-			
-			table.insert(eligible_players, {player = ply, weight = weight})
 		end
-		
-		-- Sort by weight (highest first) for better distribution
-		table.sort(eligible_players, function(a, b) return a.weight > b.weight end)
-		
-		-- Select traitors using weighted random selection
-		while traitors_needed > 0 and #eligible_players > 0 do
-			-- Calculate total weight
-			local total_weight = 0
-			for _, entry in ipairs(eligible_players) do
-				total_weight = total_weight + entry.weight
-			end
-			
-			if total_weight <= 0 then break end
-			
-			-- Random selection based on weight
-			local random_value = math.random() * total_weight
-			local current_weight = 0
-			local selected_index = 1
-			
-			for i, entry in ipairs(eligible_players) do
-				current_weight = current_weight + entry.weight
-				if random_value <= current_weight then
-					selected_index = i
-					break
+	end
+
+	if traitors_needed > 0 then
+		for i, ply in RandomPairs(player.GetAll()) do
+			if ply.isTraitor or ply:Team() == TEAM_SPECTATOR then continue end
+
+			if traitors_needed > 0 then
+				ply.isTraitor = true
+				traitors_needed = traitors_needed - 1
+				traitors[#traitors + 1] = ply
+
+				if not main_traitor then
+					main_traitor = ply
+					ply.MainTraitor = true
 				end
 			end
-			
-			-- Assign traitor role
-			local selected_ply = eligible_players[selected_index].player
-			selected_ply.isTraitor = true
-			traitors_needed = traitors_needed - 1
-			traitors[#traitors + 1] = selected_ply
-			
-			-- Set main traitor if needed
-			if not main_traitor then
-				main_traitor = selected_ply
-				selected_ply.MainTraitor = true
-			end
-			
-			-- Update traitor history
-			selected_ply:SetPData("zb_hmcd_last_traitor_round", current_time)
-			selected_ply:SetPData("zb_hmcd_total_traitor_rounds", selected_ply:GetPData("zb_hmcd_total_traitor_rounds", 0) + 1)
-			
-			-- Remove selected player from pool
-			table.remove(eligible_players, selected_index)
 		end
 	end
 
@@ -1072,17 +1014,20 @@ function MODE:Intermission()
 	end
 end
 
-concommand.Add("hmcd_call_police", function(ply, cmd, args)
-    if IsValid(ply) and not ply:IsSuperAdmin() then return end
+--[[concommand.Add("hmcd_call_police", function(ply, cmd, args)
+    if IsValid(ply) and not ply:IsAdmin() then
+        ply:ChatPrint("loh.")
+        return
+    end
 
     if not MODE or not MODE.saved then
-        print("Homicide must be selected!")
+        print("fake")
         return
     end
 
     MODE.saved.PoliceTime = CurTime() - 1
-    print("The cops has been forcefully called by "..ply)
-end)
+    print("true")
+end)--]]
 
 function MODE:CheckAlivePlayers()
 	local AlivePlyTbl = {
@@ -1185,7 +1130,7 @@ function MODE:RoundThink()
 			local spawned = self:SpawnForce("nationalguard", count)
 			if spawned > 0 then
 				self.PoliceSpawned = true
-				PrintMessage(HUD_PRINTTALK, self.Types[self.Type].PoliceText or "National Guards have arrived.")
+				PrintMessage(HUD_PRINTTALK, self.Types[self.Type].PoliceText or "National Guard have arrived.")
 				EmitSound(self.Types[self.Type].PoliceSound or "snd_jack_hmcd_heli2.mp3", vector_origin, 0, CHAN_AUTO, 1, 125, 0, 100)
 			end
 		end
@@ -1690,23 +1635,17 @@ util.AddNetworkString("hmcd_roundend")
 MODE.NextRoundMainTraitors = MODE.NextRoundMainTraitors or {}
 
 concommand.Add("hmcd_request_main_traitor", function(ply, cmd, args)
-    if not IsValid(ply) or not ply:IsSuperAdmin() then return end
+    if not IsValid(ply) or not ply:IsAdmin() then return end
     
 
     if zb.ROUND_STATE == 1 then
-        ply:ChatPrint("Wait until this round ends!")
+        ply:ChatPrint("when round end")
         return
     end
-	
-    if args[1] then
-		for i,pl in pairs(player.GetListByName(args[1])) do
-			MODE.NextRoundMainTraitors[pl:SteamID()] = true
-		end
-		ply:ChatPrint((args[1]).." Will now be the Main Traitor!")
-	else
-		MODE.NextRoundMainTraitors[ply:SteamID()] = true
-		ply:ChatPrint("You are now the Main Traitor!")
-	end
+    
+
+    MODE.NextRoundMainTraitors[ply:SteamID()] = true
+    ply:ChatPrint("true")
 end)
 
 hook.Add("RoundStateChange", "ResetNextRoundMainTraitors", function(old, new)

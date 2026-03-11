@@ -250,6 +250,35 @@ if SERVER then
 		end
 	end)
 
+	local tableModels = {
+		["models/props_c17/furnituretable001a.mdl"] = true,
+		["models/props_c17/furnituretable002a.mdl"] = true,
+		["models/props_c17/furnituretable003a.mdl"] = true,
+		["models/props_interiors/furniture_table01a.mdl"] = true,
+		["models/props_interiors/furniture_table02a.mdl"] = true,
+		["models/props_interiors/furniture_table03a.mdl"] = true
+	}
+
+	local function isTableModel(model)
+		if not model then return false end
+		model = string.lower(model)
+		return tableModels[model] or string.find(model, "furnituretable", 1, true) or string.find(model, "furniture_table", 1, true)
+	end
+
+	hook.Add("PropBreak", "TableLegDrop", function(attacker, prop)
+		if not IsValid(prop) or prop.tableLegDropped then return end
+		if not isTableModel(prop:GetModel()) then return end
+
+		prop.tableLegDropped = true
+		local leg = ents.Create("weapon_table_leg")
+		if not IsValid(leg) then return end
+		leg:SetPos(prop:LocalToWorld(prop:OBBCenter()))
+		leg:SetAngles(AngleRand())
+		leg.IsSpawned = true
+		leg.init = true
+		leg:Spawn()
+	end)
+
 
 
 

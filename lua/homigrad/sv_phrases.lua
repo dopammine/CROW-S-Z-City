@@ -212,6 +212,8 @@ local swat_phrases = {
 	}
 }
 
+
+
 local laugh = {
 	"zbattle/laugh/laugh1.ogg",
 	"zbattle/laugh/laugh2.ogg",
@@ -337,7 +339,7 @@ net.Receive("hg_phrase", function(len, ply)
 	local pitch = nil
 
 	-- overrides
-	local override_ply, override_phrase, override_muffed, override_pitch = hook.Run("HG_ReplacePhrase", ply, phrase, muffed, pitch) -- pitch means pitched effect, not exact sound pitch
+	local override_ply, override_phrase, override_muffed, override_pitch = hook.Run("HG_ReplacePhrase", ply, phrase, muffed, pitch)
 	if override_ply ~= nil then
 		phrase, muffed, pitch = override_phrase, override_muffed, override_pitch
 	end

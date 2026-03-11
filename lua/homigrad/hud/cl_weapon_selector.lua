@@ -48,11 +48,11 @@ end
 
 local scrW, scrH = ScrW(), ScrH()
 
-local AcsentColor = Color(0,0,155)
+local AcsentColor = Color(40,120,220)
 local gradient_u = Material("vgui/gradient-d")
 
 function WS.WeaponSelectorDraw( ply )
-    if not IsValid( ply ) or not ply:Alive() or GetGlobalBool("RadialInventory", false) then return end
+    if not IsValid( ply ) or not ply:Alive() then return end
     if WS.Show < CurTime() then 
         WS.SelectedSlot = WS.LastSelectedSlot 
         WS.SelectedSlotPos = -1
@@ -118,11 +118,11 @@ function WS.WeaponSelectorDraw( ply )
                 2, 
                 ColorAlpha(color_black,WS.Transparent*205) 
             )
-            surface.SetDrawColor( 0, 0, 155, WS.Transparent*( SelectedWep == wep and 200 or 0 )  )
+            surface.SetDrawColor( 40, 120, 220, WS.Transparent*( SelectedWep == wep and 200 or 0 )  )
             surface.SetMaterial( gradient_u )
             surface.DrawTexturedRect( position, (scrH * 0.025) * (Ammout) + (scrH * 0.05) + lastPos, sizeX, sizeH )
             if SelectedWep == wep then
-                surface.SetDrawColor( 0, 0, 255, WS.Transparent*155 )
+                surface.SetDrawColor( 80, 180, 255, WS.Transparent*155 )
 	            surface.DrawOutlinedRect( position, (scrH * 0.025) * (Ammout) + (scrH * 0.05) + lastPos, sizeX, sizeH, 2 )
             end
             local sizeHi = (scrH *0.025) * (Ammout) + (scrH * 0.05) + lastPos
@@ -185,6 +185,7 @@ local function GetUpper(Weapons)
     if Weapons[WS.SelectedSlot] == nil or Weapons[WS.SelectedSlot][WS.SelectedSlotPos] == nil then
         GetUpper(Weapons)
     end
+
 end
 
 local function GetDown(Weapons)
@@ -197,6 +198,7 @@ local function GetDown(Weapons)
     if Weapons[WS.SelectedSlot] == nil or Weapons[WS.SelectedSlot][WS.SelectedSlotPos] == nil then
         GetDown(Weapons)
     end
+
 end
 
 local LastSelected = 0
@@ -214,11 +216,11 @@ local function canUseSelector(ply)
         return true
     end
 
-    return IsAiming(ply) or (IsValid(wep) and wep:GetClass() == "weapon_physgun" and ply:KeyDown(IN_ATTACK)) or (lply.organism and lply.organism.pain and lply.organism.pain > 100) or GetGlobalBool("RadialInventory", false)
+    return IsAiming(ply) or (IsValid(wep) and wep:GetClass() == "weapon_physgun" and ply:KeyDown(IN_ATTACK)) or (lply.organism and lply.organism.pain and lply.organism.pain > 100)
 end
 
 function WS.ChangeSelectionWep( ply, key )
-    if not IsValid( ply ) or not ply:Alive() or GetGlobalBool("RadialInventory", false) then return end
+    if not IsValid( ply ) or not ply:Alive() then return end
     if ply.organism and ply.organism.otrub then return end
     if canUseSelector( ply ) then return end
     --print(canUseSelector( ply ))
@@ -268,7 +270,7 @@ function WS.ChangeSelectionWep( ply, key )
 end
 
 function WS.SetActuallyWeapon( ply, cmd )
-    if not IsValid( ply ) or not ply:Alive() or GetGlobalBool("RadialInventory", false) then return end
+    if not IsValid( ply ) or not ply:Alive() then return end
     if (cmd:KeyDown( IN_ATTACK ) or cmd:KeyDown( IN_ATTACK2 )) and WS.Show > CurTime() then
 
         if WS.Selected and WS.Selected > CurTime() then 

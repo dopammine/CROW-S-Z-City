@@ -4,9 +4,25 @@
     -- Ну и все | 
 --]]
 
+local karmaLossThreshold = 30
+local karmaLossNoticeStart = 0
+local karmaLossNoticeEnd = 0
+local karmaLossNoticeDuration = 4
+local karmaLossAmount = 0
+
 hook.Add("OnNetVarSet", "Guilt",function(index, key, var)
     if key == "Karma" then
-        Entity(index).Karma = var
+        local ent = Entity(index)
+        local prev = ent.Karma
+        ent.Karma = var
+        if ent == LocalPlayer() and prev then
+            local loss = prev - var
+            if loss >= karmaLossThreshold then
+                karmaLossAmount = loss
+                karmaLossNoticeStart = CurTime()
+                karmaLossNoticeEnd = karmaLossNoticeStart + karmaLossNoticeDuration
+            end
+        end
     end
 end)
 
@@ -49,6 +65,37 @@ end)
 
 local colGray = Color(122,122,122,255)
 local BlurBackground = hg.BlurBackground
+local sqrt3 = 1.7320508075688772
+
+local function drawLineThick(x1, y1, x2, y2, color)
+    surface.SetDrawColor(color)
+    surface.DrawLine(x1, y1, x2, y2)
+    surface.DrawLine(x1 + 1, y1 + 1, x2 + 1, y2 + 1)
+end
+
+local function drawTriangleOutline(p1, p2, p3, color)
+    drawLineThick(p1.x, p1.y, p2.x, p2.y, color)
+    drawLineThick(p2.x, p2.y, p3.x, p3.y, color)
+    drawLineThick(p3.x, p3.y, p1.x, p1.y, color)
+end
+
+local function drawStarOfDavid(x, y, size, color)
+    local r = size
+    local rx = r * sqrt3 / 2
+    local ry = r / 2
+    drawTriangleOutline(
+        {x = x, y = y - r},
+        {x = x - rx, y = y + ry},
+        {x = x + rx, y = y + ry},
+        color
+    )
+    drawTriangleOutline(
+        {x = x, y = y + r},
+        {x = x - rx, y = y - ry},
+        {x = x + rx, y = y - ry},
+        color
+    )
+end
 
 local function harmdone(harm)
     if harm >= 9 then
@@ -95,6 +142,35 @@ hook.Add("HUDPaint","shownotification",function()
     else
         pressed = nil
     end
+end)
+
+hook.Add("HUDPaint","guilt_karmaloss_notice",function()
+    if karmaLossNoticeEnd <= CurTime() then return end
+    if karmaLossAmount < karmaLossThreshold then return end
+
+    local elapsed = CurTime() - karmaLossNoticeStart
+    local remaining = karmaLossNoticeEnd - CurTime()
+    local fadeTime = 0.5
+    local alpha = 1
+    if elapsed < fadeTime then
+        alpha = elapsed / fadeTime
+    end
+    if remaining < fadeTime then
+        alpha = math.min(alpha, remaining / fadeTime)
+    end
+    local a = math.Clamp(math.floor(alpha * 255), 0, 255)
+
+    local w, h = ScrW(), ScrH()
+    local x, y = w / 2, h / 25 * 22.5
+    local txt = "Your actions anger Israel..."
+    surface.SetFont( "HomigradFontBig" )
+    surface.SetTextColor(255,255,255,a)
+    local tw, th = surface.GetTextSize(txt)
+    local symbolSize = th * 0.75
+    local symbolPad = th * 0.4
+    drawStarOfDavid(x, y - th / 2 - symbolPad - symbolSize, symbolSize, Color(255,255,255,a))
+    surface.SetTextPos(x - tw / 2, y - th / 2)
+    surface.DrawText(txt)
 end)
 
 OpenMenu = function(tbl)

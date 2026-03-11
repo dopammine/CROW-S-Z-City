@@ -1,4 +1,4 @@
-﻿if SERVER then AddCSLuaFile() end
+if SERVER then AddCSLuaFile() end
 SWEP.PrintName = "Combat Knife"
 SWEP.Instructions = "A military grade combat knife designed to neutralize the enemy during combat operations and special operations."
 SWEP.Category = "Weapons - Melee"
@@ -24,7 +24,6 @@ SWEP.WorldModelReal = "models/weapons/combatknife/tactical_knife_iw7_vm.mdl"
 SWEP.WorldModelExchange = false
 SWEP.ViewModel = ""
 SWEP.HoldType = "knife"
-SWEP.weight = 0.4
 
 function SWEP:CanPrimaryAttack()
 	return true
@@ -78,6 +77,13 @@ SWEP.AttackSize = 5
 
 SWEP.weaponPos = Vector(2,0.1,-0.8)
 SWEP.weaponAng = Angle(180,90,90)
+SWEP.HitPauseDelay = 0.34
+SWEP.HitPauseDuration = 0.2
+SWEP.HitReverseDuration = 0.4
+SWEP.HitPauseShakePos = 0.2
+SWEP.HitPauseShakeAng = 0.8
+SWEP.HitPauseShakeCam = 0.35
+SWEP.HitPauseAllowSharp = false
 
 SWEP.AnimList = {
     ["idle"] = "vm_knifeonly_idle",
@@ -239,21 +245,43 @@ if CLIENT then
 
         if IsValid(owner) then
             if not self.cycling then
-                local dtime = SysTime() - (self.lasthuyhuy or SysTime())
-                self.lasthuyhuy = SysTime()
-                
-                if self.stopanim and self.stopanim > 0 then
-                    self.animtime = self.animtime + dtime * game.GetTimeScale()
-                    self.stopanim = self.stopanim - dtime * game.GetTimeScale()
-                else
-                    self.stopanim = nil
+                local timing
+                if self.hitPauseDelayUntil and CurTime() >= self.hitPauseDelayUntil and not self.hitPauseUntil then
+                    self.hitPauseUntil = CurTime() + (self.HitPauseDuration or 0.2)
+                    self.hitPauseDelayUntil = nil
+                    self.hitPauseCycle = self:GetCurrentCycle()
                 end
-
-                local timing = (1 - math.Clamp((self.animtime - CurTime()) / self.animspeed, 0, 1))
-                timing = self.reverseanim and (1 - timing) or timing
-				timing = self.CustomTiming and self:CustomTiming() or timing
-                
-                WorldModel:SetCycle(timing)
+                if self.hitPauseUntil and CurTime() < self.hitPauseUntil then
+                    timing = self.hitPauseCycle or 0.5
+                    WorldModel:SetCycle(timing)
+                elseif self.hitReverseStart then
+                    local frac = math.Clamp((CurTime() - self.hitReverseStart) / self.hitReverseDuration, 0, 1)
+                    timing = Lerp(frac, self.hitPauseCycle or 0.5, 0)
+                    WorldModel:SetCycle(timing)
+                    if frac >= 1 then
+                        self.hitReverseStart = nil
+                        self.hitReverseDuration = nil
+                        self.hitPauseCycle = nil
+                        self.hitPauseTriggered = nil
+                        self.hitPauseDelayUntil = nil
+                        self.hitPauseUntil = nil
+                        self.hitPauseDone = nil
+                        if self.pendingIdle then
+                            local pending = self.pendingIdle
+                            self.pendingIdle = nil
+                            self:PlayAnim("idle", pending.time, pending.cycling, pending.callback, pending.reverse)
+                        end
+                    end
+                else
+                    if self.hitPauseUntil and not self.hitPauseDone then
+                        self.hitReverseDuration = self.HitReverseDuration or self.HitPauseDuration or 0.5
+                        self.hitReverseStart = CurTime()
+                        self.hitPauseDone = true
+                    end
+                    timing = (1 - math.Clamp((self.animtime - CurTime()) / self.animspeed, 0, 1))
+                    timing = self.reverseanim and (1 - timing) or timing
+                    WorldModel:SetCycle(timing)
+                end
                 --PrintTable( WorldModel:GetSequenceList() )
                 
                 if self.callback and timing == ((not self.reverseanim) and 1 or 0) then
@@ -392,7 +420,7 @@ function SWEP:ModelAnim(model, pos, ang)
     if !IsValid(owner) or !owner:IsPlayer() then return end
 
     local ent = hg.GetCurrentCharacter(owner)
-    local tr = hg.eyeTrace(owner, 40, ent)
+    local tr = hg.eyeTrace(owner, 20, ent)
     local eyeAng = owner:EyeAngles()
 
     local vel = ent:GetVelocity()
@@ -442,7 +470,7 @@ function SWEP:ModelAnim(model, pos, ang)
        addAngLerp.p = addAngLerp.p - math.min(math.abs(math.max(eyeAng.p,0)),25)
     end
 
-    addPosLerp.x = addPosLerp.x - 20 * math.max(0.5 - tr.Fraction, 0)
+    addPosLerp.x = addPosLerp.x - 20 * math.max(0.5 - tr.Fraction,0)
 
     if self.CanSuicide and owner.suiciding then
         addPosLerp:Set(self.SuicidePos)
@@ -477,6 +505,14 @@ function SWEP:ModelAnim(model, pos, ang)
         //addAng.p = addAng.p + math.cos(CurTime() * 2) * 1
     end
 
+    if self.hitPauseUntil and CurTime() < self.hitPauseUntil then
+        local t = CurTime() * 45
+        local posShake = self.HitPauseShakePos or 0.2
+        local angShake = self.HitPauseShakeAng or 0.8
+        addPos:Add(Vector(math.sin(t) * posShake, math.cos(t * 1.3) * posShake, math.sin(t * 0.7) * posShake))
+        addAng:Add(Angle(math.sin(t * 0.9) * angShake, math.cos(t * 1.1) * angShake, math.sin(t * 1.5) * angShake))
+    end
+
     self.lastAddPos = addPos
 
     //local inattack1 = self:GetAttackType() == 1 and math.max(self:GetLastAttack() - CurTime(),0) / self.AttackTime > 0 or false
@@ -506,10 +542,6 @@ function SWEP:ModelAnim(model, pos, ang)
     local pos, ang = LocalToWorld(hpos + addPos + self.lerpedAddPos, hang + addAng + self.lerpedAddAng, tr.StartPos + self.velocityAdd, eyeAng)
 
 	self.timetick2 = SysTime()
-
-    if self.ModelAnimAdd then
-        return self:ModelAnimAdd(model,pos,ang)
-    end
 
     return pos, ang
 end
@@ -773,7 +805,7 @@ function SWEP:MultiplyDMG(owner, ent, vellen, mul)
     mul = mul * (owner.MeleeDamageMul or 1)
 
     if owner.organism.superfighter then
-        mul = mul * 5
+		mul = mul * 1
     end
 
     if owner:IsBerserk() then
@@ -829,7 +861,7 @@ function SWEP:Attack(owner, ent, vellen, attacktype, inattackLength)
     //ent:Spawn()
     //ent:SetMoveType(MOVETYPE_NONE)
     //ent:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
-    --if self:IsEntSoft(eyetr.Entity) then return eyetr end
+    if self:IsEntSoft(eyetr.Entity) then return eyetr end
     
     local trace
 
@@ -847,7 +879,7 @@ function SWEP:Attack(owner, ent, vellen, attacktype, inattackLength)
         local tr = {}
 
         tr.start = eyetr.StartPos
-        tr.endpos = eyetr.StartPos + normal:Forward() * (attacktype and 1 or math.max(0.5, 1 - math.abs((0.5 - inattackLength) * 2))) * (self:GetAttackLength() + vellen)
+        tr.endpos = eyetr.StartPos + normal:Forward() * (self:GetAttackLength() + vellen)
         tr.filter = self.MultiDmg1 and {owner, ent} or self.HitEnts
 
         local size = 0.15
@@ -864,29 +896,17 @@ function SWEP:Attack(owner, ent, vellen, attacktype, inattackLength)
         //    owner:SetVelocity(vec)
         //end
 
-        if self:IsEntSoft(trace.Entity) then
-			break
-		end
+        if self:IsEntSoft(trace.Entity) then break end
     end
-
+    
     return trace
-end
-
-local bluntDecals, bluntDecalsRand = {}, 1
-for i = 1, 4 do
-	local mat = "decals/zcity/blunt_impact" .. i
-	table.insert(bluntDecals, mat)
-	game.AddDecal("Impact.BluntAdd" .. i, mat)
-
-	list.Add("PaintMaterials", "Impact.BluntAdd" .. i)
-	bluntDecalsRand = i
 end
 
 function SWEP:PlayEffects(trace, attacktype)
     local owner = self:GetOwner()
     
     if self:IsEntSoft(trace.Entity) then
-        owner:EmitSound(attacktype and self.Attack2HitFlesh or self.AttackHitFlesh, 50)
+        owner:EmitSound(attacktype and self.Attack2HitFlesh or self.AttackHitFlesh,50)
 
         if self.DamageType == DMG_SLASH then
             util.Decal( "Blood", trace.HitPos + trace.HitNormal * 15, trace.HitPos - trace.HitNormal * 15, owner )
@@ -895,12 +915,55 @@ function SWEP:PlayEffects(trace, attacktype)
     elseif not self.AttackHitPlayed then
         self.AttackHitPlayed = true
 
-        owner:EmitSound(self.AttackHit, 50)
+        owner:EmitSound(self.AttackHit,50)
+    end
+end
 
-		if self.weight >= 1.5 and self.DamageType ~= DMG_SLASH and trace.MatType ~= MAT_GLASS and not attacktype then
-			util.Decal("Impact.BluntAdd" .. math.random(bluntDecalsRand), trace.HitPos + trace.HitNormal, trace.HitPos - trace.HitNormal, owner)
-			owner:ScreenShake(trace.HitPos, 35, 10, 0.5, 150, false)
-		end
+function SWEP:GetCurrentCycle()
+    if self.cycling then
+        return ((CurTime() - (self.animtime - self.animspeed)) % self.animspeed) / self.animspeed
+    end
+    local timing = (1 - math.Clamp((self.animtime - CurTime()) / self.animspeed, 0, 1))
+    timing = self.reverseanim and (1 - timing) or timing
+    return timing
+end
+
+function SWEP:TriggerHitPause()
+    if self.hitPauseTriggered then return end
+    self.hitPauseTriggered = true
+    local delay = self.HitPauseDelay or 0
+    local start = self.lastAttackAnimStart or CurTime()
+    self.hitPauseDelayUntil = start + delay
+    self.hitPauseUntil = nil
+    self.hitPauseDone = nil
+    self.hitReverseStart = nil
+    self.hitReverseDuration = nil
+    self.hitPauseCycle = nil
+end
+
+function SWEP:ShouldHitPause(attacktype)
+    if attacktype ~= 1 then return false end
+    if self.HitPauseDisabled then return false end
+    if self.DamageType == DMG_SLASH and not self.HitPauseAllowSharp then return false end
+    local owner = self:GetOwner()
+    if IsValid(owner) and owner.organism and owner.organism.stamina and owner.organism.stamina[1] then
+        local stamina = owner.organism.stamina[1]
+        local maxStamina = owner.organism.stamina.max or 100
+        local minStamina = self.HitPauseMinStamina or 0.35
+        if stamina < maxStamina * minStamina then return false end
+    end
+    return true
+end
+
+function SWEP:HandleHitPause()
+    if self.hitPauseTriggered then return end
+    if SERVER then
+        self.hitPauseTriggered = true
+        net.Start("melee_hit_pause")
+        net.WriteEntity(self)
+        net.SendPVS(self:GetPos())
+    else
+        self:TriggerHitPause()
     end
 end
 
@@ -1023,12 +1086,6 @@ function SWEP:AddDecal()
     net.SendPVS(self:GetPos())
 end
 
-local hg_nomeleestop
-
-if CLIENT then
-    hg_nomeleestop = ConVarExists("hg_nomeleestop") and GetConVar("hg_nomeleestop") or CreateConVar("hg_nomeleestop", 0, FCVAR_ARCHIVE, "Toggle melee stop-on-hit animation feature", 0, 1)
-end
-
 function SWEP:CustomThink()
     local owner = self:GetOwner()
     local actwep = owner.GetActiveWeapon and owner:GetActiveWeapon()
@@ -1101,6 +1158,12 @@ function SWEP:CustomThink()
     
     if CLIENT and owner ~= lply then return end
 
+    if CLIENT and self.hitPauseUntil and CurTime() < self.hitPauseUntil then
+        local t = CurTime() * 45
+        local camShake = self.HitPauseShakeCam or 0.35
+        owner:ViewPunch(Angle(math.sin(t * 0.9) * camShake, math.cos(t * 1.1) * camShake, math.sin(t * 1.5) * camShake))
+    end
+
     //if SERVER then
         local oldblocking = self:GetBlocking()
         local blocking = ((CurTime() - self:GetStartedBlocking()) > 1 or oldblocking) and owner.organism and owner.organism.stamina[1] > 90 and !self:GetInAttack() and (self:GetAttackTime() - CurTime() - 0) < 0 and ((self:GetLastBlocked() + 3) < CurTime()) and self:CanBlock() and hg.KeyDown(owner, IN_ATTACK2)
@@ -1158,61 +1221,16 @@ function SWEP:CustomThink()
 
             local dmg = math.random(self.DamagePrimary - 3, self.DamagePrimary + 3)
 
-            local soft = self:IsEntSoft(ent)
             if !shouldhit then
                 goto meleeskip1
             end
-
-            --self:SetInAttack(false)
-            if SERVER and soft and self.HitEnts[#self.HitEnts] ~= ent then
-                self:AddDecal()
+            if self:ShouldHitPause(1) then
+                self:HandleHitPause()
             end
 
-			if CLIENT and IsFirstTimePredicted() and self.weight > 0.4 and (!self.stopanim or (!soft and !self.HitWorld)) and !hg_nomeleestop:GetBool() then
-				if !soft or self.AnimAlwaysBack or self.HitWorld then   
-                    local mul = 5
-                    self.animspeed = self.animspeed * mul
-
-                    self.animtime = CurTime() - (self.animtime - CurTime()) * mul + self.animspeed - 0.1
-                    
-                    timer.Simple(0.4, function()
-                        if !IsValid(self) then return end
-
-                        local timing = (1 - math.Clamp((self.animtime - CurTime()) / self.animspeed, 0, 1))
-                        local mul = 0.25
-                        
-                        self.animtime = CurTime() - timing * self.animspeed * mul + self.animspeed * mul
-                        self.animspeed = self.animspeed * mul
-                    end)
-
-                    util.ScreenShake(self:GetPos(), 35, 1, 1, 100)
-
-                    self.stopanim = 0.2
-					self.reverseanim = true
-                    self.HitWorld = true
-				else
-                    local timing = (1 - math.Clamp((self.animtime - CurTime()) / self.animspeed, 0, 1))
-                    local mul = 5
-                    
-                    self.animtime = CurTime() - timing * self.animspeed * mul + self.animspeed * mul
-                    self.animspeed = self.animspeed * mul
-                    
-                    timer.Simple(0.1, function()
-                        if !IsValid(self) then return end
-
-                        local timing = (1 - math.Clamp((self.animtime - CurTime()) / self.animspeed, 0, 1))
-                        local mul = 0.3
-                        
-                        self.animtime = CurTime() - timing * self.animspeed * mul + self.animspeed * mul
-                        self.animspeed = self.animspeed * mul
-                    end)
-
-                    util.ScreenShake(self:GetPos(), 35, 1, 1, 100)
-
-                    self.stopanim = 0.2
-					--self.reverseanim = true
-				end
-			end
+            if SERVER and self:IsEntSoft(ent) and self.HitEnts[#self.HitEnts] ~= ent then
+                self:AddDecal()
+            end
 
             if CLIENT then goto meleeskip1 end
 
@@ -1301,6 +1319,7 @@ function SWEP:CustomThink()
             if !shouldhit then
                 goto meleeskip2
             end
+            
 
             if SERVER and self:IsEntSoft(ent) and self.DamageType == DMG_SLASH and self.HitEnts[#self.HitEnts] ~= ent then
                 self:AddDecal()
@@ -1428,15 +1447,17 @@ function SWEP:PrimaryAttack()
 
     if !self:InUse() then return end
     if (self:GetLastAttack() + self:GetAttackWait()) > CurTime() then return end
-    if self.lastattack and (self.lastattack + self.attackwait) > CurTime() then return end
-
+    
     local mul = 1 / math.Clamp((180 - self:GetOwner().organism.stamina[1]) / 90, 1, 2)
 
     
     self.HitEnts = nil
     self.FirstAttackTick = false
     self.AttackHitPlayed = false
-    self.HitWorld = false
+    self.hitPauseTriggered = nil
+    self.hitPauseDelayUntil = nil
+    self.hitPauseUntil = nil
+    self.hitPauseDone = nil
     self:PlayAnim("attack", self.AnimTime1 / mul,false,nil,false,false)
     self:SetAttackType(1)
     self:SetLastAttack(CurTime() + self.AttackTime / mul)
@@ -1444,8 +1465,7 @@ function SWEP:PrimaryAttack()
     self:SetAttackLength(self.AttackLen1)
     self:SetAttackWait(self.WaitTime1 / mul)
     self:SetInAttack(true)
-    self.lastattack = CurTime() + self.Attack2Time / mul
-    self.attackwait = self.WaitTime2 / mul
+
     if CLIENT and not self:IsLocal() and ply.AnimRestartGesture then
         self:GetOwner():AnimRestartGesture(GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_HL2MP_GESTURE_RANGE_ATTACK_SLAM, true)
     end
@@ -1528,7 +1548,7 @@ function SWEP:SecondaryAttack(override)
         
         return
     end
-    
+
     if not game.SinglePlayer() and not IsFirstTimePredicted() then return end
 
     local ent = hg.GetCurrentCharacter(ply)
@@ -1536,24 +1556,24 @@ function SWEP:SecondaryAttack(override)
     if !self:InUse() then return end
     if (hg.KeyDown(ply, IN_USE) and not IsValid(ply.FakeRagdoll)) then return end
     if (self:GetLastAttack() + self:GetAttackWait()) > CurTime() then return end
-    if self.lastattack and (self.lastattack + self.attackwait) > CurTime() then return end
 
     local mul = 1 / math.Clamp((180 - ply.organism.stamina[1]) / 90, 1, 2)
-    
+
     self.HitEnts = nil
     self.FirstAttackTick = false
     self.AttackHitPlayed = false
-    self.HitWorld = false
+    self.hitPauseTriggered = nil
+    self.hitPauseDelayUntil = nil
+    self.hitPauseUntil = nil
+    self.hitPauseDone = nil
     self:PlayAnim("attack2",self.AnimTime2 / mul,false,nil,false,false)
     self:SetAttackType(2)
     self:SetLastAttack(CurTime() + self.Attack2Time / mul)
-    self:SetAttackTime(self:GetLastAttack() + (self.Attack2TimeLength / mul) )
+    self:SetAttackTime( self:GetLastAttack() + (self.Attack2TimeLength / mul) )
     self:SetAttackLength(self.AttackLen2)
     self:SetAttackWait(self.WaitTime2 / mul)
     self:SetInAttack(true)
-    self.lastattack = CurTime() + self.Attack2Time / mul
-    self.attackwait = self.WaitTime2 / mul
-
+    
     if CLIENT and not self:IsLocal() and ply.AnimRestartGesture then
         ply:AnimRestartGesture(GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_HL2MP_GESTURE_RANGE_ATTACK_SLAM, true)
     end
@@ -1655,20 +1675,27 @@ SWEP.tries = 10
 
 if SERVER then
     util.AddNetworkString("melee_attack")
+    util.AddNetworkString("melee_hit_pause")
 elseif CLIENT then
     net.Receive("melee_attack",function()
         local tbl = net.ReadTable()
         local ent = net.ReadEntity()
         local sendtoclient = net.ReadBool()
 
-        if ent.IsLocal and !ent:IsLocal() then
-            if IsValid(ent) and ent.PlayAnim then
-                ent:PlayAnim(tbl.anim,tbl.time,tbl.cycling,tbl.callback,tbl.reverse)
-                
-                if (tbl.anim == "attack" or tbl.anim == "attack2") and ent:GetOwner().AnimRestartGesture and IsValid(ent:GetOwner()) and not ent:GetOwner():IsWorld() then
+        if IsValid(ent) and ent.PlayAnim then
+            ent:PlayAnim(tbl.anim,tbl.time,tbl.cycling,tbl.callback,tbl.reverse)
+
+            if (tbl.anim == "attack" or tbl.anim == "attack2") and ent:GetOwner().AnimRestartGesture and IsValid(ent:GetOwner()) and not ent:GetOwner():IsWorld() then
+                if !ent:IsLocal() then
                     ent:GetOwner():AnimRestartGesture(GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_HL2MP_GESTURE_RANGE_ATTACK_SLAM, true)
                 end
             end
+        end
+    end)
+    net.Receive("melee_hit_pause", function()
+        local ent = net.ReadEntity()
+        if IsValid(ent) and ent.TriggerHitPause then
+            ent:TriggerHitPause()
         end
     end)
 end
@@ -1701,6 +1728,16 @@ function SWEP:PlayAnim(anim, time, cycling, callback, reverse, sendtoclient)
 	end
     self.tries = 10
 
+    if anim == "idle" and (self.hitPauseTriggered or self.hitPauseDelayUntil or self.hitPauseUntil or self.hitReverseStart) then
+        self.pendingIdle = {
+            time = time,
+            cycling = cycling,
+            callback = callback,
+            reverse = reverse
+        }
+        return
+    end
+
     if self:GetWM():GetModel() ~= self.WorldModelReal then self:GetWM():SetModel(self.WorldModelReal) end
     
     self:GetWM():SetSequence(self.AnimList[anim] or anim)
@@ -1708,6 +1745,9 @@ function SWEP:PlayAnim(anim, time, cycling, callback, reverse, sendtoclient)
     self.animspeed = time
     self.cycling = cycling
     self.reverseanim = reverse
+    if anim == "attack" or anim == "attack2" then
+        self.lastAttackAnimStart = CurTime()
+    end
     if callback then
         self.callback = callback
     end
@@ -1757,8 +1797,6 @@ end
 
 function SWEP:NPCThink()
     local npc = self:GetOwner()
-    if not IsValid(npc) or not npc:IsNPC() then return end
-
     self:SetWeaponHoldType("melee")
     
     if npc:GetClass() == "npc_metropolice" then
@@ -1772,7 +1810,7 @@ function SWEP:NPCThink()
     end
     
     local enemy = npc:GetEnemy()
-    if not IsValid(enemy) then return end
+    if not enemy then return end
 
     local dist = enemy:GetPos():Distance(npc:GetPos())
 
@@ -2013,9 +2051,6 @@ function SWEP:SetupWeaponHoldTypeForAI( t )
 	end
 end
 
-function SWEP:CanBePickedUpByNPCs()
-	return true
-end
 
 --[[function SWEP:CustomAttack2() -- prikol
     local ent = ents.Create("ent_throwable")

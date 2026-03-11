@@ -444,11 +444,28 @@ function SWEP:SetCarrying(ent, bone, pos, dist)
 				owner:SetNetVar("carrybone",nil)
 				owner:SetNetVar("carrymass",nil)
 				owner:SetNetVar("carrypos",nil)
+				if IsValid(self.CarryEnt) and self.CarryEnt:GetClass() == "prop_ragdoll" then
+					local victim = RagdollOwner(self.CarryEnt) or self.CarryEnt
+					if IsValid(victim) and victim:IsPlayer() then
+						victim:SetNWBool("held_as_human_shield", false)
+						victim:SetNWEntity("human_shield_attacker", NULL)
+						owner:SetNWEntity("human_shield_victim", NULL)
+					end
+				end
 			end)
 
 			owner:SetNetVar("carrymass",self.CarryEnt:GetPhysicsObjectNum(self.CarryBone):GetMass())
 		end
 	else
+		local prev = self.CarryEnt or owner:GetNetVar("carryent")
+		if IsValid(prev) and prev:GetClass() == "prop_ragdoll" then
+			local victim = RagdollOwner(prev) or prev
+			if IsValid(victim) and victim:IsPlayer() then
+				victim:SetNWBool("held_as_human_shield", false)
+				victim:SetNWEntity("human_shield_attacker", NULL)
+				owner:SetNWEntity("human_shield_victim", NULL)
+			end
+		end
 		if IsValid(self.CarryEnt) and self.CarryEnt:GetCustomCollisionCheck() then
 			self.CarryEnt:CollisionRulesChanged()
 			owner:CollisionRulesChanged()

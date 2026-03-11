@@ -73,6 +73,9 @@ end)
 --//
 
 hook.Add("Think", "HMCD_SubRole_Abilities", function()
+	if(LocalPlayer().Ability_NeckBreak and LocalPlayer().Ability_Disarm)then
+		MODE.StopDisarmingOther(LocalPlayer())
+	end
 	if(BeingVictimOfNeckBreakResetTime and BeingVictimOfNeckBreakResetTime <= CurTime())then
 		BeingVictimOfNeckBreakResetTime = nil
 		LocalPlayer().BeingVictimOfNeckBreak = false
@@ -105,7 +108,7 @@ hook.Add("InputMouseApply", "HMCD_SubRole_Abilities", function(cmd, mouse_x, mou
 	-- end
 end)
 ]]
-hook.Add("hg_AdjustMouseSensitivity", "HMCD_SubRole_Abilities", function(sensitivity)
+hook.Add("AdjustMouseSensitivity", "HMCD_SubRole_Abilities", function(sensitivity)
 	if(LocalPlayer().BeingVictimOfNeckBreak)then
 		return 0.1
 	end

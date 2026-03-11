@@ -145,15 +145,15 @@ if CLIENT then
 				local model = ply.modelArmor[armor]
 				model:SetNoDraw(true)
 				model:SetModelScale( (fem and armorData.femscale) or armorData.scale or 1 )
-				local fallback_mat = istable(armorData.material) and armorData.material[1] or armorData.material
-				if model.materialset != ply:GetNWString("ArmorMaterials" .. armor, fallback_mat) then
-					model.materialset = ply:GetNWString("ArmorMaterials" .. armor, fallback_mat)
-					model:SetSubMaterial(0, ply:GetNWString("ArmorMaterials" .. armor, fallback_mat))
+				--if armorData.material and not model.materialset then model.materialset = true model:SetSubMaterial(0, armorData.material) end
+				if ent:GetNWString("ArmorMaterials" .. armor) and not model.materialset then 
+					model.materialset = true
+					model:SetSubMaterial(0, ply:GetNWString("ArmorMaterials" .. armor))
 				end
 
-				if ent:GetNWInt("ArmorSkins" .. armor, 0) and not model.skinset then
+				if ent:GetNWInt("ArmorSkins" .. armor) and not model.skinset then 
 					model.skinset = true
-					model:SetSkin(ply:GetNWInt("ArmorSkins" .. armor, 0))
+					model:SetSkin(ply:GetNWInt("ArmorSkins" .. armor))
 				end
 				if not armorData.nobonemerge then
 					model:AddEffects(EF_BONEMERGE)
@@ -272,7 +272,6 @@ if CLIENT then
 	local white = Material("color/white")
 	local brainhemorrhage = Material( "overlays/brainhemorrhageoverlay.png" )
 
-	local hg_gopro = ConVarExists("hg_gopro") and GetConVar("hg_gopro") or CreateClientConVar("hg_gopro", "0", true, false, "Toggle GoPro-like first-person camera view", 0, 1)
 	hook.Add("Post Pre Post Processing", "renderHelmetThingy", function()
 		cam.IgnoreZ(true)
 		//cam.Start2D()
@@ -311,7 +310,7 @@ if CLIENT then
 				CustomSndPlayed = true
 			end
 
-			if hg.armor.face[armors["face"]].viewmaterial and !hg_gopro:GetBool() then
+			if hg.armor.face[armors["face"]].viewmaterial then
 				local custommat = hg.armor.face[armors["face"]].viewmaterial
 
 				surface.SetDrawColor(255,255,255,255)

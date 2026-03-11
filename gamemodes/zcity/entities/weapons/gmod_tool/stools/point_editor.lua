@@ -112,7 +112,7 @@ function TOOL.BuildCPanel(CPanel)
 	dlist:SetTall(ScreenScale(100))
 	dlist:AddColumn("Point Name")
 
-	for k, _ in SortedPairs(zb.Points) do
+	for k, _ in pairs(zb.Points) do
 		dlist:AddLine(k)
 	end
 

@@ -9,7 +9,7 @@ zb.HarmAttacked = zb.HarmAttacked or {}
 zb.GuiltSQL = zb.GuiltSQL or {}
 zb.GuiltSQL.PlayerInstances = zb.GuiltSQL.PlayerInstances or {}
 
-local hg_developer = ConVarExists("hg_developer") and GetConVar("hg_developer") or CreateConVar("hg_developer",0,FCVAR_SERVER_CAN_EXECUTE,"Toggle developer mode (enables damage traces)",0,1)
+local hg_developer = ConVarExists("hg_developer") and GetConVar("hg_developer") or CreateConVar("hg_developer",0,FCVAR_SERVER_CAN_EXECUTE,"enable developer mode (enables damage traces)",0,1)
 
 hook.Add("DatabaseConnected", "GuiltCreateData", function()
 	local query
@@ -143,10 +143,6 @@ hook.Add("HomigradDamage", "GuiltReg", function(ply, dmgInfo, hitgroup, ent, har
     if amt > 0.2 or newharm / maxharm > 0.8 then
         --print("Player "..Attacker:Name().." harmed player "..(Victim:IsPlayer() and Victim:Name() or (tostring(Victim))).." with "..harm.." points.")
         --print("They contributed a total of "..math.Round(newharm / maxharm * 100, 0).."% of "..(Victim:IsPlayer() and Victim:Name() or (tostring(Victim))).."'s death")
-    end
-
-    if zb and zb.hostage and Victim == zb.hostage then
-        zb.hostageLastTouched = Attacker
     end
 
     local attackerTeam = dmgInfo:GetInflictor().team or (Attacker:IsPlayer() and Attacker:Team()) or Attacker.team
@@ -363,13 +359,13 @@ hook.Add("Org Think", "Its_Karma_Bro",function(owner, org, timeValue)
 end)
 
 hook.Add("ZB_EndRound","savevalues",function()
-    for i,ply in player.Iterator() do
+    for i,ply in ipairs(player.GetAll()) do
         ply:guilt_SetValue( ply.Karma or 100 )
     end
 end)
 
 hook.Add("ZB_StartRound","NO_HARM",function()
-    for i,ply in player.Iterator() do
+    for i,ply in ipairs(player.GetAll()) do
         if (ply.Guilt or 0) < 1 then
             ply.KarmaGain = math.Clamp((ply.KarmaGain or 0.75) + 0.25, 0.75, 1.5)
         else
@@ -389,7 +385,7 @@ net.Receive("get_karma",function(len, ply)
 
     local tbl = {}
 
-    for i,pl in player.Iterator() do
+    for i,pl in ipairs(player.GetAll()) do
         tbl[pl:UserID()] = pl.Karma
     end
 
@@ -404,8 +400,11 @@ concommand.Add("hg_setkarma",function(ply,cmd,args)
     local lenargs = #args
     local newply = player.GetListByName(lenargs > 1 and args[1] or ply:Name())[1]
 
-    newply.Karma = tonumber(lenargs > 1 and args[2] or args[1])
-    newply:SetNetVar("Karma",ply.Karma)
+    if not IsValid(newply) then return end
+    local newkarma = tonumber(lenargs > 1 and args[2] or args[1])
+    if not newkarma then return end
+    newply.Karma = math.Clamp(newkarma, -60, zb.MaxKarma)
+    newply:SetNetVar("Karma", newply.Karma)
     //newply:guilt_SetValue( ply.Karma or 100 )
 end)
 

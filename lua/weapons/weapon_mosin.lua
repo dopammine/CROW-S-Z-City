@@ -10,12 +10,12 @@ SWEP.SlotPos = 10
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/weapons/w_snip_scout.mdl"
 SWEP.WorldModelFake = "models/weapons/zcity/c_mosin.mdl"
-SWEP.FakeScale = 1.15
---SWEP.GetDebug = true -- USE THIS SHIT TO CORRECTLY PLACE FAKE MODELS INTO REAL WORLDMODELS
-SWEP.FakePos = Vector(-18, 2, 9)
+SWEP.FakeScale = 1
+
+SWEP.FakePos = Vector(-7, 2.7, 6)
 SWEP.FakeAng = Angle(0.25, 0, 0)
 
-SWEP.FakeAttachment = "shell"
+SWEP.FakeAttachment = "muzzle"
 SWEP.AttachmentPos = Vector(-0.1,-0.3,2)
 SWEP.AttachmentAng = Angle(90,0,0)
 SWEP.FakeBodyGroups = "000000000"
@@ -35,7 +35,7 @@ SWEP.WepSelectIcon2 = Material("vgui/hud/tfa_ins2_i_mosin")
 SWEP.WepSelectIcon2box = false
 SWEP.IconOverride = "entities/arc9_eft_mosin_infantry.png"
 
-SWEP.LocalMuzzlePos = Vector(15, -0.1, 6.9)
+SWEP.LocalMuzzlePos = Vector(27, 0.5, 4)
 SWEP.LocalMuzzleAng = Angle(.3,0,0)
 SWEP.WeaponEyeAngles = Angle(-0.7,0.1,0)
 
@@ -71,18 +71,16 @@ SWEP.Primary.Sound = {"Mosin-Nagant_Shoot", 80, 90, 110}
 SWEP.SupressedSound = {"mosin/mosin_suppressed_fp.wav", 80, 90, 100}
 SWEP.availableAttachments = {
 	barrel = {
-		[1] = {"supressor1", Vector(25.55,1,-0.5), {}},
-		--[2] = {"supressor6", Vector(22.55,1,-0.5), {}},
-		[2] = {"supressor7", Vector(26.5,0.4,-0.8), {}},
-		["mountAngle"]=Angle(0,0,37.5),
+		[1] = {"supressor1", Vector(-4.7,1,0), {}},
+		[2] = {"supressor6", Vector(-2.2,1.3,0), {}},
+		[3] = {"supressor7", Vector(-3.7,0.4,0), {}},
 	},
 	sight = {
 		["mountType"] = "kar98mount",
-		["mountAngle"] = Angle(0,0,35),
-		["mount"] = Vector(5, 1.5, 0.125),
+		["mount"] = Vector(-20, 5, 0.1),
 	},
 }
-SWEP.RHPos = Vector(0, -11, 2)
+
 SWEP.Primary.Wait = 0.25
 SWEP.NumBullet = 1
 SWEP.AnimShootMul = 1
@@ -90,12 +88,12 @@ SWEP.AnimShootHandMul = 1
 SWEP.DeploySnd = {"homigrad/weapons/draw_hmg.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/hmg_holster.mp3", 55, 100, 110}
 SWEP.HoldType = "rpg"
-SWEP.ZoomPos = Vector(0, -0.3624, 7.6536) -- use hg_setzoompos to set correct zoompos
+SWEP.ZoomPos = Vector(0, 0.6288, 4.8672)
 SWEP.RHandPos = Vector(0, 0, -1)
 SWEP.LHandPos = Vector(7, 0, -2)
 SWEP.Ergonomics = 0.9
 SWEP.Penetration = 7
-SWEP.WorldPos = Vector(15.2, -0.5, -3)
+SWEP.WorldPos = Vector(0.2, -0.5, 0)
 SWEP.WorldAng = Angle(0.7, -0.1, 0)
 SWEP.UseCustomWorldModel = true
 SWEP.attPos = Vector(0.4, -0.15, 0)

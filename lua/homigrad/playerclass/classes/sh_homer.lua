@@ -44,17 +44,17 @@ function CLASS.On(self)
     if self.organism then
         self.organism.recoilmul = 0.5
         self.organism.meleespeed = 1.5
-        self.organism.breakmul = 0.7
+        self.organism.breakmul = 0.6
         local s = self.organism.stamina
         if s then
             s.regen = (s.regen or 1) * 1.5
             s.range = (s.range or 180) * 1.5
             s.max = (s.max or s.range) * 1.5
         end
-        self.organism.berserk = math.max(self.organism.berserk or 0, 2.5)
+        self.organism.berserk = math.max(self.organism.berserk or 0, 2)
     end
 
-    self.MeleeDamageMul = 2.5
+    self.MeleeDamageMul = 2.2
 
     if Appearance and Appearance.AName then
         self:SetNWString("PlayerName","Homer " .. Appearance.AName)

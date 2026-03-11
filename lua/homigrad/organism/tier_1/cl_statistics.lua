@@ -1,5 +1,3 @@
-hg.organism_ents = hg.organism_ents or {}
-
 net.Receive("organism_send", function()
 	local org = net.ReadTable()
 	local force = net.ReadBool()
@@ -8,10 +6,6 @@ net.Receive("organism_send", function()
 	local add = net.ReadBool()
 	local ply = org.owner
 	
-	if ply:IsNPC() then
-		hg.organism_ents[ply] = true
-	end
-
 	if add and org.owner.organism and org.owner.new_organism then
 		hook.Run("HG_OrganismChanged", org.owner.organism, org)
 		
@@ -68,15 +62,12 @@ local black = Color(0, 0, 0, 200)
 local list = {
 	"owner",
 	"superfighter",
-	"berserkActive2",
 	"temperature",
 	"tempchanging",
 	"heatbuff",
-	"blindness",
 	"fear",
 	"assimilated",
 	"berserk",
-	"noradrenaline",
 	"fearadd",
 	{"blood", 5000}, 
 	{"bleed", 100, true}, 

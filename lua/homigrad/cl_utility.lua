@@ -142,9 +142,6 @@ hg.ConVars = hg.ConVars or {}
 	end
 
 	hook.Add("PostCleanupMap","fuckclientsidemodels",hg.ClearClientsideModels)
-	hook.Add("PostCleanupMap","remove_this_stupid_clside_ragdolls",function()
-		for k,v in ipairs(ents.FindByClass('class C_ClientRagdoll')) do v:Remove() end
-	end)
 --//
 
 --\\ Fake status info for scare mode
@@ -262,16 +259,10 @@ players : 1 humans, 0 bots (20 max)
 			if not lply:Alive() then return end
 			if not IsValid(lply) or not lply:IsPlayer() then return end
 			if !lply:Alive() or !lply.organism or lply.organism.otrub then return end
-			local CustomAmmoType = false
-			if hg.ammotypeshuy[bullet.AmmoType] then
-				CustomAmmoType = hg.ammotypeshuy[bullet.AmmoType]
-			end
-			local subsonic = !(CustomAmmoType and CustomAmmoType.BulletSettings and CustomAmmoType.BulletSettings.Speed and CustomAmmoType.BulletSettings.Speed > 340)
-			
 			local tr = bullet.Trace
 			local mr = math.random(17)
 			local view = render.GetViewSetup(true)
-			if tr.StartPos:Distance( tr.HitPos ) > 5000 and !subsonic then
+			if tr.StartPos:Distance( tr.HitPos ) > 5000 then
 				local time = view.origin:Distance(tr.StartPos+tr.HitPos/2) / 17836
 				timer.Simple(time,function()
 					EmitSound("cracks/distant/dist_crack_" .. ( mr < 9 and "0" or "") .. mr .. ".ogg", tr.StartPos+tr.HitPos*0.35, 0, CHAN_AUTO, 1,SNDLVL_140dB)
@@ -281,11 +272,12 @@ players : 1 humans, 0 bots (20 max)
 			local self = ent
 			if tr.Entity == hg.GetCurrentCharacter(lply) then
 
-				Suppress( 10 )
+				Suppress((10))
 				return
 			end
 
 			if not IsValid(self) or self:GetOwner() == lply:GetViewEntity() then return end
+
 			local eyePos = view.origin
 			local dis, pos = util.DistanceToLine(tr.StartPos, tr.HitPos, eyePos)
 			local isVisible = not util.TraceLine({
@@ -302,21 +294,10 @@ players : 1 humans, 0 bots (20 max)
 			local mr = math.random(9)
 
 			if shooterdist < 200 and not IsLookingAt(self:GetOwner(),eyePos) then return end
-			local SND = subsonic and "weapons/bullets/fx/subsonic_0" .. mr .. ".wav"
-				or bullet.Damage >= 50 and "cracks/" .. "heavy/heav" .. "_crack_0" .. mr .. ".ogg"
-				or bullet.Damage >= 30 and "cracks/" .. "medium/med" .. "_crack_0" .. mr .. ".ogg"
-				or "cracks/" .. "light/light" .. "_crack_0" .. mr .. ".ogg"
-
-			if dist < 180 then
-				timer.Simple(0.01,function()
-					EmitSound("weapons/bullets/fx/subsonic_0" .. mr .. ".wav", pos - tr.Normal * 25, 0, CHAN_AUTO, 1, 55)
-				end)
-				-- EmitSound(SND, pos - tr.Normal * 25, 0, CHAN_AUTO, 1, 65) 
-			end
+			if dist < 180 then EmitSound("cracks/heavy/heav_crack_0" .. mr .. ".ogg", pos, 0, CHAN_AUTO, 1,65) end
 			if dist > 120 then return end
-			if !subsonic then
-				EmitSound(SND, pos - tr.Normal * 25, 0, CHAN_AUTO, 1, 75)
-			end
+
+			EmitSound("cracks/heavy/heav_crack_0" .. mr .. ".ogg", pos, 0, CHAN_AUTO, 1,85)
 
 			dist = dist / math.abs((tr.HitPos - tr.StartPos):GetNormalized():Dot((tr.StartPos - eyePos):GetNormalized()))
 			dist = math.Clamp(1 / dist, 0.05,0.25)
@@ -356,7 +337,7 @@ players : 1 humans, 0 bots (20 max)
 			[ "$pp_colour_mulb" ] = 0
 		}
 
-		local hg_potatopc = GetConVar("hg_potatopc") or CreateClientConVar("hg_potatopc", "0", true, false, "Toggle potato (low-end pc) mode", 0, 1)
+		local hg_potatopc = GetConVar("hg_potatopc") or CreateClientConVar("hg_potatopc", "0", true, false, "enable this if you are noob", 0, 1)
 
 		hg.ConVars.potatopc = hg_potatopc
 
@@ -490,7 +471,7 @@ players : 1 humans, 0 bots (20 max)
 --//
 
 --\\ custom sens
-	local hg_zoomsensitivity = ConVarExists("hg_zoomsensitivity") and GetConVar("hg_zoomsensitivity") or CreateConVar("hg_zoomsensitivity", 1, FCVAR_ARCHIVE, "Multiply aiming zoom sensivity", 0, 3)
+	local hg_zoomsensitivity = ConVarExists("hg_zoomsensitivity") and GetConVar("hg_zoomsensitivity") or CreateConVar("hg_zoomsensitivity", 1, FCVAR_ARCHIVE, "aiming zoom sensitifity multiplier", 0, 3)
 
 	hook.Add("AdjustMouseSensitivity", "AdjustRunSensivityHUY", function(defaultSensitivity)
 		if not lply:Alive() then return end--kakoy sencivity NOOB
@@ -574,13 +555,6 @@ players : 1 humans, 0 bots (20 max)
 		--checkcd = CurTime() + 1
 		local entities = ents_FindByClass("prop_ragdoll")
 		table_Add(entities, player_GetAll())
-
-		local orgents = {}
-		for ent in pairs(hg.organism_ents) do
-			if !IsValid(ent) then hg.organism_ents[ent] = nil continue end
-
-			table.insert(entities, ent)
-		end
 
 		hg.seenents = {}
 		hg.seenents2 = {}
@@ -738,20 +712,14 @@ players : 1 humans, 0 bots (20 max)
 				ent.Blinking = cachedLerp(FrameTime() * 5,ent.Blinking or 0,1)
 			end
 
-			if ply.suiciding then
-				ent.Blinking = 1
-			end
-			
-			if ent:GetFlexIDByName("blink") then
+			if ent:IsRagdoll() and ent:GetFlexIDByName("blink") then
 				ent:SetFlexWeight(ent:GetFlexIDByName("blink"), ent.Blinking or 0)
-			end
-
-			if ent:GetFlexIDByName("wrinkler") then
-				ent:SetFlexWeight(ent:GetFlexIDByName("wrinkler"), ent.Blinking or 0)
-			end
-
-			if ent:GetFlexIDByName("half_closed") then
-				ent:SetFlexWeight(ent:GetFlexIDByName("half_closed"), ent.Blinking or 0)
+				if ent:GetFlexIDByName("wrinkler") then
+					ent:SetFlexWeight(ent:GetFlexIDByName("wrinkler"), ent.Blinking or 0)
+				end
+				if ent:GetFlexIDByName("half_closed") then
+					ent:SetFlexWeight(ent:GetFlexIDByName("half_closed"), ent.Blinking or 0)
+				end
 			end
 		end
 
@@ -904,7 +872,11 @@ players : 1 humans, 0 bots (20 max)
 		local function AddTinnitus(time, needSound)
 			lply = LocalPlayer()
 			lply.tinnitus = CurTime() + time * 4
-			lply:SetDSP(32)
+			lply:SetDSP(32) -- 36
+			if needSound then -- not used anyway :3
+				//lply:EmitSound("earringing_end.wav")
+				//zcitysnd/real_sonar/tinnitus1.mp3
+			end
 		end
 
 		local plymeta = FindMetaTable("Player")
@@ -919,116 +891,4 @@ players : 1 humans, 0 bots (20 max)
 			AddTinnitus(time,bool)
 		end)
 	end
---//
-
---\\ Remove CLIENT side hit particles
-	hook.Add("ScalePlayerDamage","remove_cl_hit_particles",function()
-		return !game.SinglePlayer() -- i hate singleplayer in gmod. WHY I SHOULD DO THIS STUPID IDIOTIC SHIT, i hate it.
-	end)
---//
-
---\\ Remove sfbreath effect
-	hook.Add("Think","RemoveSF2_breath",function()
-		hook.Remove("PostPlayerDraw", "StormFox2.Effect.Breath")
-		timer.Remove("StormFox2.Effect.BreathT")
-
-		hook.Remove("Think","RemoveSF2_breath")
-	end)
---//
-
---\\ Flash effect
-	hook.Add("Player_Death","fixEyeAngles",function(ply)
-		timer.Simple(0.1,function()
-			if IsValid(ply) then
-				local ang = ply:EyeAngles()
-				ang[3] = 0
-				ply:SetEyeAngles(ang)
-			end
-		end)
-	end)
-
-	hg.flashes = {}
-	local tab = {}
-
-	local blackout_mat = Material("sprites/mat_jack_hmcd_narrow")
-
-	function hg.AddFlash(eyepos, dot, pos, time, size)
-		time = time or 20
-		size = size or 1000--pixels
-		size = size / math.max(pos:Distance(eyepos) / 64,0.01) * (dot^2)
-		local taint = math.max(200 - size,0) / 200 * time * 0.9
-		local scr = pos:ToScreen()
-
-		table.insert(hg.flashes,{x = scr.x, y = scr.y, time = CurTime() + time - taint, lentime = time, size = size})
-	end
-
-	local flash
-	local mat = Material("sprites/orangeflare1_gmod")
-	local mat2 = Material("sprites/glow04_noz")
-
-	amtflashed = 0
-	amtflashed2 = 0
-	
-	hook.Add("Player_Death","huyhuyhuy",function(ply)
-		if ply == LocalPlayer() then
-			hg.flashes = {}
-			amtflashed = 0
-			amtflashed2 = 0
-		end
-	end)
-
-	hook.Add("PreCleanupMap", "noflashesforyouMreowe", function()
-		hg.flashes = {}
-		amtflashed = 0
-		amtflashed2 = 0
-	end)
-
-	hook.Add("Post Post Pre Post Processing","flasheseffect",function()
-		if !lply:Alive() then
-			if !next(hg.flashes) then
-				hg.flashes = {}
-			end
-
-			amtflashed = 0
-			amtflashed2 = 0
-		end
-		if (#hg.flashes <= 0) and (amtflashed2 <= 0) then return end
-		amtflashed = 0
-		for i = 1,#hg.flashes do
-			flash = hg.flashes[i]
-
-			if (flash.time or 0) < CurTime() then table.remove(hg.flashes[i]) continue end
-
-			local animpos = (flash.time - CurTime()) / flash.lentime
-			local size = flash.size
-
-			flash.animpos = animpos
-
-			amtflashed = amtflashed + animpos * size / 5000
-		end
-		
-		amtflashed = amtflashed + amtflashed2
-		amtflashed2 = math.min(math.Approach(amtflashed2, 0, FrameTime() / 20),2)
-		
-		if amtflashed < 0.8 then
-			tab["$pp_colour_brightness"] = 0 - math.max(amtflashed - 0.1,0)
-			DrawColorModify(tab)
-		end
-
-		//amtflashed = math.max(amtflashed - math.ease.InOutCubic(math.max(0, math.sin(CurTime() * 1) - 0.6) / 0.4),0)
-
-		for i = 1, #hg.flashes do
-			flash = hg.flashes[i]
-			
-			local animpos = flash.animpos
-			local size = flash.size
-
-			local huy = (1 - animpos) * -100
-			surface.SetMaterial(mat)
-			surface.SetDrawColor(255, 255, 255, (animpos * 255 + math.Rand(-10,10) * animpos) * (0.5 / #hg.flashes) * (amtflashed < 0.8 and 1.5 or 1))
-			surface.DrawTexturedRect(flash.x - size / 2 + huy, flash.y - size / 2 + huy, size, size)
-			surface.SetMaterial(mat2)
-			surface.DrawTexturedRect(flash.x - size / 2 + huy, flash.y - size / 2 + huy, size, size)
-		end
-	end)
 --//

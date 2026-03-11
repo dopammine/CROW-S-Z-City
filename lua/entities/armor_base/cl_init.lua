@@ -32,9 +32,11 @@ function ENT:OnRemove()
 end
 
 hook.Add("RagdollPerdiction","TransferMats",function(ragdoll, ply)
-	local armors = ragdoll.PredictedArmor
+	local armors = ply:GetNetVar("Armor",{})
 	for k,v in pairs(armors) do
+		--print(v)
 		ragdoll:SetNWString("ArmorMaterials" .. v, ply:GetNWString("ArmorMaterials" .. v))
-		ragdoll:SetNWInt("ArmorSkins" .. v, ply:GetNWInt("ArmorSkins" .. v))
+
+		--ply:SetNWString("ArmorMaterials" .. v, nil)
 	end
 end)

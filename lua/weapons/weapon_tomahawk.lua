@@ -1,4 +1,4 @@
-﻿if SERVER then AddCSLuaFile() end
+if SERVER then AddCSLuaFile() end
 SWEP.Base = "weapon_melee"
 SWEP.PrintName = "Tomahawk"
 SWEP.Instructions = "A single-handed striking tool designed to be used as a melee weapon by military personnel or as a hunting tool. Can break down doors.\n\nLMB to attack.\nRMB to block.\nRMB + LMB to throw."
@@ -29,7 +29,7 @@ SWEP.SuicidePunchAng = Angle(5, -15, 0)
 SWEP.HoldPos = Vector(-12,0,0)
 SWEP.HoldAng = Angle(0,0,0)
 
-SWEP.AttackTime = 0.26
+SWEP.AttackTime = 0.3
 SWEP.AnimTime1 = 1.2
 SWEP.WaitTime1 = 0.9
 SWEP.ViewPunch1 = Angle(1,1,0)
@@ -46,6 +46,7 @@ SWEP.basebone = 94
 
 SWEP.weaponPos = Vector(0,0,-2)
 SWEP.weaponAng = Angle(0,-90,90)
+SWEP.HitPauseAllowSharp = true
 
 SWEP.AnimList = {
     ["idle"] = "Idle",
@@ -100,8 +101,6 @@ function SWEP:CustomAttack2()
     ent.owner = ply
     ent.localshit = Vector(4,6,0)
     ent.damage = 25
-    ent.penetration = 5
-    ent.shouldntlodge = true
 
     local phys = ent:GetPhysicsObject()
     if IsValid(phys) then
@@ -135,12 +134,10 @@ SWEP.PenetrationSizePrimary = 2
 SWEP.PenetrationSizeSecondary = 3
 
 SWEP.StaminaPrimary = 20
-SWEP.StaminaSecondary = 60
+SWEP.StaminaSecondary = 20
 
 SWEP.AttackLen1 = 40
 SWEP.AttackLen2 = 30
-
-SWEP.AnimAlwaysBack = true
 
 SWEP.NoHolster = true
 

@@ -117,10 +117,6 @@ hook.Add( "Initialize", "LoadMapPoints", zb.CreateMapDir )
 --PrintTable(zb.Points.Example.Points)
 -- pointData = { pos = Vector(), ang = Angle() } // Таблица пойнта
 COMMANDS.pointnew = {function(ply,args)
-    if not args[1] then
-        ply:ChatPrint("Usage: !pointnew <pointGroup>")
-        return
-    end
     local ang = ply:EyeAngles()
     ang.x = 0
     local pointData = {
@@ -135,10 +131,6 @@ COMMANDS.pointnew = {function(ply,args)
 end,1,"Creates a new point on the map\nArgs - pointGroup"}
 
 COMMANDS.pointset = {function(ply,args)
-    if not args[1] or not args[2] then
-        ply:ChatPrint("Usage: !pointset <pointGroup> <pointNumber>")
-        return
-    end
 
     zb.SetMapPoint( args[1], args[2], args[3] )
 
@@ -147,10 +139,6 @@ COMMANDS.pointset = {function(ply,args)
 end,1,"Sets a point on the map\nArgs - pointGroup, pointNumber"}
 
 COMMANDS.pointremove = {function(ply,args)
-    if not args[1] then
-        ply:ChatPrint("Usage: !pointremove <pointGroup> <pointNumber|*>\nUse * to remove all points")
-        return
-    end
 
     zb.RemoveMapPoint( args[1], args[2], true, args[2] == "*" )
 
@@ -247,6 +235,9 @@ function zb.tdm_checkpoints()
     if #zb.GetMapPoints( "RIOT_TDM_RIOTERS" ) == 0 then
         zb.SaveMapPoints( "RIOT_TDM_RIOTERS", points )
     end
+    if #zb.GetMapPoints( "HMCD_SWO_AZOV" ) == 0 then
+        zb.SaveMapPoints( "HMCD_SWO_AZOV", points )
+    end
     if #zb.GetMapPoints( "HMCD_CRI_T" ) == 0 then
         zb.SaveMapPoints( "HMCD_CRI_T", points )
     end
@@ -269,6 +260,9 @@ function zb.tdm_checkpoints()
     end
     if #zb.GetMapPoints( "RIOT_TDM_LAW" ) == 0 then
         zb.SaveMapPoints( "RIOT_TDM_LAW", points )
+    end
+    if #zb.GetMapPoints( "HMCD_SWO_WAGNER" ) == 0 then
+        zb.SaveMapPoints( "HMCD_SWO_WAGNER", points )
     end
 
     --||

@@ -119,9 +119,6 @@ function SWEP:PrimarySpread()
 		local sprayAng = (spray * (self:IsResting() and 0.1 or 1) * 8 + angrand3 * self.addSprayMul) * (eyeang.z == 180 and -1 or 1)
 		sprayAng[3] = 0
 
-		sprayAng:RotateAroundAxis(angle_zero:Forward(), eyeang.roll)
-		sprayAng.roll = 0
-
 		owner:SetEyeAngles(eyeang + sprayAng * 3 * (organism.recoilmul or 1) * (owner.posture == 1 and not self:IsZoom() and 0.1 or 1) * 0.25)
 		
 		local rnd1, rnd2 = math.Rand(1,2), math.Rand(-1,1)

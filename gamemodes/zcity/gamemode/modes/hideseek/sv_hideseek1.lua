@@ -161,7 +161,7 @@ function MODE:GiveEquipment()
                     ply.noSound = true
 
                     ply:SetupTeam(ply:Team())
-                    ply:SetPlayerClass("terrorist")
+                    ply:SetPlayerClass("default")
 
                     zb.GiveRole(ply, "Seeker", Color(190,0,0))
 
@@ -211,6 +211,8 @@ function MODE:GiveEquipment()
                         giveWithReserve("weapon_m16a2")
                         giveWithReserve("weapon_m1911")
                         ply:Give("weapon_hg_type59_tpik")
+
+
                     else
                         giveWithReserve("weapon_ruger")
                         giveWithReserve("weapon_ab10")

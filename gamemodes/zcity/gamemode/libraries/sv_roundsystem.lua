@@ -8,8 +8,8 @@ function zb.AddFade()
 	net.Broadcast()
 end
 
-local forcemodeconvar = CreateConVar("zb_forcemode", "random", nil, "Set force mode (set to 'random' to disable)")
-forcemodeconvar:SetString("random")
+local forcemodeconvar = CreateConVar("zb_forcemode", "", FCVAR_ARCHIVE)
+
 function zb:GetMode(round)
 	if zb.modes[round] then return round end
 
@@ -133,7 +133,7 @@ function zb:EndRoundThink()
 			zb.END_TIME = (CurTime() + (CurrentRound().end_time or 5))
 			if zb.nextround == "coop" and GetGlobalVar("coop_first_round_timer", 0) == 0 then
 
-				zb.END_TIME = (CurTime() + (GetConVar("zb_dev") and 5 or 60))
+				zb.END_TIME = (CurTime() + 60)
 				SetGlobalVar("coop_first_round_timer", zb.END_TIME)
 			end
 		end
@@ -154,7 +154,6 @@ function zb:EndRoundThink()
 			zb.SHOULD_FADE = true
 
 			hook.Run("ZB_PreRoundStart")
-			hook.Run("TTTPrepareRound") -- stormfox2 random_round_weather
 
 			zb.CROUND = zb.nextround or "hmcd"
 			if CurrentRound().shouldfreeze then zb:Freeze() end
@@ -317,7 +316,7 @@ function zb.GetModesPlaytime()
 	local newtbl = {}
 	local count = 0
 
-	for i, name in ipairs(tbl) do
+	for i,name in ipairs(tbl) do
 		local amt = zb.ModesPlaytime[name] or 0
 		newtbl[name] = amt
 		count = count + amt
@@ -350,21 +349,27 @@ function zb.AddCurrentModePlayed()
 	zb.AddModePlaytime(name, 1)
 end
 
-function zb.GetChance(name, addtbl)
+zb.ModesChances = zb.ModesChances or {}
+
+function zb.GetChance(name, modes, amtplayed)
 	local mode = zb:GetMode(name)
 	local tbl = zb.modes[mode]
 
+	local frequency_played = modes and amtplayed and modes[name] and modes[name] / amtplayed
+
 	local newtbl = tbl.Types and tbl.Types[name] or tbl
 
-	return newtbl.ChanceFunction and newtbl:ChanceFunction(addtbl or {}) or zb.ModesChances[name] or newtbl.Chance or 0.1
+	return newtbl.ChanceFunction and newtbl:ChanceFunction() or newtbl.Chance or 0.1
 end
 
 function zb.GetModesChances()
 	local tbl = zb.GetAvailableModes()
 	local newtbl = {}
 
+	local modes, amtplayed = zb.GetModesPlaytime()
+
 	for i, name in pairs(tbl) do
-		newtbl[name] = zb.GetChance(name)
+		newtbl[name] = zb.GetChance(name, modes, amtplayed)
 	end
 
 	return newtbl
@@ -373,18 +378,16 @@ end
 function zb.WeightedChanceMode(modes_chances)
 	local weight = 0
 
-	local newchancestbl = {}
 	for name, chance in pairs(modes_chances) do
-		local newchance = zb.GetChance(name, {rounds = zb.RoundList}) or chance
-		newchancestbl[name] = newchance
-		weight = weight + newchance * 100
+		local played = modes_chances[name]
+		weight = weight + chance * 100
 	end
 
 	local random = math.random(weight)
 
 	local count = 0
 	for name, chance in RandomPairs(modes_chances) do
-		count = count + (newchancestbl[name] or chance) * 100
+		count = count + chance * 100
 
 		if count >= random then
 			return name
@@ -451,13 +454,12 @@ function zb.RerollChances()
 	local chances = zb.GetModesChances()
 
 	for i = 1, 20 do
-		local round = zb.WeightedChanceMode(chances)
-
-		zb.RoundList[i] = round
+		zb.RoundList[i] = zb.WeightedChanceMode(chances)
 	end
 
 	zb.nextround = table.remove(zb.RoundList, 1)
 end
+
 
 function zb.GetModesInfo()
 	local modesInfo = {}
@@ -566,6 +568,7 @@ function zb:RoundStart()
 	zb.START_TIME = nil
 
 	local mode, round = CurrentRound()
+	
 
 	VFIRE_DISABLED = (mode.name == "coop")
 
@@ -763,18 +766,15 @@ COMMANDS.setforcemode = {
 		if args[1] ~= "random" then
 			NextRound(args[1])
 		end
-	end, 0
+	end,
+	0
 }
 
-COMMANDS.endround = {
-	function(ply, args)
-		if not ply:IsAdmin() then
-			ply:ChatPrint("You don't have access")
-			return
-		end
+COMMANDS.endround = {function(ply, args)
+	if not ply:IsAdmin() then ply:ChatPrint("You don't have access") return end
 	 	zb:EndRound()
-	end, 0
-}
+	end,
+	0}
 
 if SERVER then
 	util.AddNetworkString("SendAvailableModes")

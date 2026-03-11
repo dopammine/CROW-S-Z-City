@@ -1,4 +1,4 @@
-﻿if SERVER then AddCSLuaFile() end
+if SERVER then AddCSLuaFile() end
 SWEP.Base = "weapon_melee"
 SWEP.PrintName = "Spear"
 SWEP.Instructions = "A spear is an effective weapon to attack at a distance.\n\nLMB to attack.\nRMB to block.\nRMB + LMB to throw."
@@ -113,7 +113,7 @@ if SERVER then
         ent.returndamage = 30
         ent.returnblood = 100
         ent.PenetrationSize = 15
-        ent.penetration = 10
+        ent.Penetration = 40
 
         local phys = ent:GetPhysicsObject()
 
@@ -177,7 +177,7 @@ hook.Add("radialOptions","spear",function()
     local organism = ply.organism or {}
 
     if not organism.otrub and ply:HasWeapon("weapon_hg_spear") and ply:HasWeapon("weapon_ducttape") and ply:HasWeapon("weapon_pocketknife") then
-        local tbl = {tape, "Tape a knife to a spear"}
+        local tbl = {tape, "Create modified spear"}
         hg.radialOptions[#hg.radialOptions + 1] = tbl
     end
 end)

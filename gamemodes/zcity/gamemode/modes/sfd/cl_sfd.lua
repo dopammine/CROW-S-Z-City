@@ -17,29 +17,11 @@ dmmusic = dmmusic or nil
 local roundend = false
 
 local snds = {
-	"https://vgmtreasurechest.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/iwhxpivf/01.%20A%20Grim%20Feeling.mp3",
-	"https://vgmtreasurechest.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/mtgdygkh/02.%20Alley%20.mp3",
-	"https://vgmtreasurechest.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/fflmfnap/03.%20Anarchy%20.mp3",
-	"https://vgmtreasurechest.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/korpbnkj/05.%20Balista.mp3",
-	"https://vgmtreasurechest.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/kskuvrwi/09.%20Cowboy%20Robot.mp3",
-	"https://vgmtreasurechest.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/pzdrcika/11.%20Downtown.mp3",
-	"https://vgmtreasurechest.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/ttnjhkbe/14.%20Funnyman.mp3",
-	"https://vgmtreasurechest.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/imlvujpu/17.%20Hazardous.mp3",
-	"https://vgmtreasurechest.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/digfibga/18.%20Heroes%20Battle.mp3",
-	"https://vgmtreasurechest.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/leltjoug/19.%20High%20Moon.mp3",
-	"https://vgmtreasurechest.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/vmvsazvg/20.%20Iron%20Fists.mp3",
-	"https://vgmtreasurechest.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/rwhvibkt/25.%20Military.mp3",
-	"https://vgmtreasurechest.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/ptymnflo/26.%20Rooftops.mp3",
-	"https://vgmtreasurechest.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/odapyyyv/27.%20Rust%20And%20Gore.mp3",
-	"https://vgmtreasurechest.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/icnhxrsl/28.%20Seek%20And%20Destroy.mp3",
-	"https://vgmtreasurechest.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/awhxnyct/29.%20SFD%20Classic.mp3",
-	"https://vgmtreasurechest.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/jrhivbwe/30.%20Shards.mp3",
-	"https://vgmtreasurechest.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/gucepmnf/31.%20Steamship%20Synths.mp3",
-	"https://vgmtreasurechest.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/mumzmlvt/32.%20Steamship.mp3",
-	"https://vgmtreasurechest.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/gakzpeyi/33.%20Steamy.mp3",
-	"https://vgmtreasurechest.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/rlfuhzdr/34.%20Submarine.mp3",
-	"https://vgmtreasurechest.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/pxtzqfeh/38.%20The%20Dragon.mp3",
-	"https://vgmtreasurechest.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/wkmgufqo/39.%20Zombie%20Nightmare.mp3",
+	"https://kappa.vgmsite.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/ujuwzquyre/01.%20A%20Grim%20Feeling.mp3",
+	"https://kappa.vgmsite.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/zgagxqybov/02.%20Alley%20.mp3",
+	"https://kappa.vgmsite.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/qsoislqepd/17.%20Hazardous.mp3",
+	"https://kappa.vgmsite.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/zqxkrixwbn/26.%20Rooftops.mp3",
+	"https://kappa.vgmsite.com/soundtracks/superfighters-deluxe-original-soundtrack-2018/kvlgywwwnt/13.%20Escape.mp3"
 }
 
 local function restartMusic()
@@ -86,6 +68,45 @@ local fighter = {
 local mat = Material("hmcd_dmzone")
 
 local mapsize = 7500
+local damageIndicators = {}
+local lastHealth
+
+local function drawDamageIndicators()
+	local ply = LocalPlayer()
+	if not IsValid(ply) or not ply:Alive() then
+		lastHealth = nil
+		return
+	end
+	local hp = ply:Health()
+	if not lastHealth then
+		lastHealth = hp
+	end
+	if hp < lastHealth then
+		local dmg = lastHealth - hp
+		if dmg > 0 then
+			damageIndicators[#damageIndicators + 1] = {
+				amount = dmg,
+				time = CurTime(),
+				x = ScrW() * 0.5 + math.random(-40, 40),
+				y = ScrH() * 0.5 + math.random(-30, 30)
+			}
+		end
+		lastHealth = hp
+	elseif hp > lastHealth then
+		lastHealth = hp
+	end
+	local now = CurTime()
+	for i = #damageIndicators, 1, -1 do
+		local item = damageIndicators[i]
+		local t = (now - item.time) / 1.2
+		if t >= 1 then
+			table.remove(damageIndicators, i)
+		else
+			local alpha = 255 * (1 - t)
+			draw.SimpleText("-" .. math.Round(item.amount), "HomigradFontLarge", item.x, item.y - t * 30, Color(255, 80, 80, alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+		end
+	end
+end
 
 function MODE:PostDrawTranslucentRenderables(bDepth, bSkybox, isDraw3DSkybox)
 	if(!bSkybox and !isDraw3DSkybox)then
@@ -106,6 +127,7 @@ function MODE:RenderScreenspaceEffects()
 end
 
 function MODE:HUDPaint()
+	drawDamageIndicators()
 	if zb.ROUND_START + 5 > CurTime() then
 		draw.SimpleText( string.FormattedTime(zb.ROUND_START + 5 - CurTime(), "%02i:%02i:%02i"	), "ZB_HomicideMedium", sw * 0.5, sh * 0.75, Color(255,55,55), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 	else

@@ -51,9 +51,9 @@ hg.AddOptionPanel( "hg_weaponshotblur_mul", "slider", {desc = "Multiplicates the
 -- hg.AddOptionPanel( "hg_bulletholes", "slider", {desc = "Amount of bullet hole effects (Rainbow Six Siege-like)",min = 0,max = 500,decimals = 0}, "optimization" )
 hg.AddOptionPanel( "hg_maxsmoketrails", "slider", {desc = "Max amount of smoke trail effects (lags after 10)",min = 0,max = 30,decimals = 0}, "optimization" )
 hg.AddOptionPanel( "hg_optimise_scopes", "slider", {desc = "Enable this if scoping makes your fps cry (1 - lowers quality of props around you, 2 - \"disables\" main render)",min = 0,max = 2,decimals = 0}, "optimization" )
-
-local red = Color(75,25,25)
-local redselected = Color(150,0,0)
+ 
+local red = Color(25,25,75)
+local redselected = Color(0,0,150)
 
 local blurMat = Material("pp/blurscreen")
 local Dynamic = 0
@@ -71,7 +71,7 @@ local function CreateOptionsMenu()
     //function MainFrame:Paint( w, h )
     //    draw.RoundedBox( 0, 2.5, 2.5, w-5, h-5, Color( 0, 0, 0, 140) )
     //    BlurBackground(MainFrame)
-    //    surface.SetDrawColor( 255, 0, 0, 128)
+    //    surface.SetDrawColor( 80, 180, 255, 128)
     //    surface.DrawOutlinedRect( 0, 0, w, h, 2.5 )
     //end
 
@@ -80,8 +80,8 @@ local function CreateOptionsMenu()
 	DScrollPanel:SetSize(sizeX - 20, sizeY - 60)
 	--function DScrollPanel:Paint( w, h )
 	--	BlurBackground(self)
---
-	--	surface.SetDrawColor( 255, 0, 0, 128)
+	--
+	--	surface.SetDrawColor( 80, 180, 255, 128)
     --    surface.DrawOutlinedRect( 0, 0, w, h, 2.5 )
 	--end
 

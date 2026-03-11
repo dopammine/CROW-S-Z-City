@@ -4,11 +4,10 @@ include("shared.lua")
 
 ENT.Model = "models/props_junk/cardboard_box004a.mdl"
 
-local clr = Color(10, 10, 10, 255)
 function ENT:Initialize()
 	self:SetModel(self.Model)
 	self:SetMaterial("models/shiny")
-	self:SetColor(clr)
+	self:SetColor(Color(10, 10, 10, 255))
 	self:PhysicsInit(SOLID_VPHYSICS)
 	self:PhysicsInitBox(Vector(-4, -4, -4), Vector(4, 4, 4))
 	self:SetMoveType(MOVETYPE_VPHYSICS)

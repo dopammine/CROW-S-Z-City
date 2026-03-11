@@ -1,14 +1,11 @@
-local game, PrecacheParticleSystem = game, PrecacheParticleSystem
-local AddParticles = game.AddParticles
-
 -- PewPaws!!!
-AddParticles("particles/muzzleflashes_test.pcf")
-AddParticles("particles/muzzleflashes_test_b.pcf")
-AddParticles("particles/pcfs_jack_muzzleflashes.pcf")
-AddParticles("particles/ar2_muzzle.pcf")
-AddParticles( "particles/nmrih_extinguisher.pcf" )
+game.AddParticles("particles/muzzleflashes_test.pcf")
+game.AddParticles("particles/muzzleflashes_test_b.pcf")
+game.AddParticles("particles/pcfs_jack_muzzleflashes.pcf")
+game.AddParticles("particles/ar2_muzzle.pcf")
+game.AddParticles( "particles/nmrih_extinguisher.pcf" )
 
-local toPrecache = {
+local huyprecahche = {
     "muzzleflash_SR25",
     "pcf_jack_mf_tpistol",
     "pcf_jack_mf_mshotgun",
@@ -34,25 +31,26 @@ local toPrecache = {
     "new_ar2_muzzle",
     "NMRIH_EXTINGUISHER"
 }
-
-for k, v in ipairs(toPrecache) do
+for k,v in ipairs(huyprecahche) do
     PrecacheParticleSystem(v)
 end
 
+
 -- CAAABOOOOMS!
-AddParticles("particles/pcfs_jack_explosions_large.pcf")
-AddParticles("particles/pcfs_jack_explosions_medium.pcf")
-AddParticles("particles/pcfs_jack_explosions_small.pcf")
-AddParticles("particles/pcfs_jack_nuclear_explosions.pcf")
-AddParticles("particles/pcfs_jack_moab.pcf")
-AddParticles("particles/gb5_large_explosion.pcf")
-AddParticles("particles/gb5_500lb.pcf")
-AddParticles("particles/gb5_100lb.pcf")
-AddParticles("particles/gb5_50lb.pcf")
-AddParticles("particles/pcfs_jack_muzzleflashes.pcf")
-AddParticles("particles/pcfs_jack_explosions_incendiary2.pcf")
-AddParticles("particles/lighter.pcf")
-AddParticles("particles/pfx_redux.pcf")
+
+game.AddParticles("particles/pcfs_jack_explosions_large.pcf")
+game.AddParticles("particles/pcfs_jack_explosions_medium.pcf")
+game.AddParticles("particles/pcfs_jack_explosions_small.pcf")
+game.AddParticles("particles/pcfs_jack_nuclear_explosions.pcf")
+game.AddParticles("particles/pcfs_jack_moab.pcf")
+game.AddParticles("particles/gb5_large_explosion.pcf")
+game.AddParticles("particles/gb5_500lb.pcf")
+game.AddParticles("particles/gb5_100lb.pcf")
+game.AddParticles("particles/gb5_50lb.pcf")
+game.AddParticles("particles/pcfs_jack_muzzleflashes.pcf")
+game.AddParticles("particles/pcfs_jack_explosions_incendiary2.pcf")
+game.AddParticles("particles/lighter.pcf")
+game.AddParticles("particles/pfx_redux.pcf")
 
 PrecacheParticleSystem("[2]sparkle1")
 PrecacheParticleSystem("Lighter_flame")
@@ -76,8 +74,9 @@ PrecacheParticleSystem("pcf_jack_airsplode_medium")
 PrecacheParticleSystem("pcf_jack_airsplode_large")
 
 -- Impacts
-AddParticles("particles/impact_fx.pcf")
-AddParticles("particles/water_impact.pcf")
+
+game.AddParticles("particles/impact_fx.pcf")
+game.AddParticles("particles/water_impact.pcf")
 
 PrecacheParticleSystem("impact_concrete")
 PrecacheParticleSystem("impact_metal")
@@ -87,7 +86,4 @@ PrecacheParticleSystem("impact_dirt")
 PrecacheParticleSystem("impact_wood")
 PrecacheParticleSystem("impact_glass")
 
---// Fix for homigrad content breaking impact decals (bruh)
-if CLIENT then
-	RunConsoleCommand("cl_new_impact_effects", "1")
-end
+if CLIENT then RunConsoleCommand("cl_new_impact_effects", "1") end

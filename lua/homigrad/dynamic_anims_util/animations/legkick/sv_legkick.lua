@@ -7,10 +7,6 @@ function PLAYER:LegAttack()
     if self.InLegKick and self.InLegKick > CurTime() then return end
     if self:GetNWBool("TauntStopMoving", false) then return end
     if hook.Run( "PlayerCanLegAttack", self ) == false then return end
-    local hands = self:GetWeapon("weapon_hands_sh")
-    if not IsValid(hands) then
-        self:Notify("Where is your hands swep???", 1, "WHERE YOUR HANDS AT??", 0)
-    return end
 
     local anim = "kick_pistol_base"
     anim = (self:KeyDown(IN_DUCK) or self:Crouching()) and "kick_pistol_base_crouch" or self:EyeAngles()[1] > 60 and "curbstomp_base" or self:EyeAngles()[1] > 35 and "kick_pistol_25_base" or self:EyeAngles()[1] > 20 and "kick_pistol_45_base" or anim
@@ -18,7 +14,7 @@ function PLAYER:LegAttack()
     self:EmitSound("player/clothes_generic_foley_0" .. math.random(1,5) .. ".wav",65)
 
     local org = self.organism
-    org.stamina.subadd = org.stamina.subadd + (anim == "curbstomp_base" and 12 or 20) / (org.superfighter and 2 or 1)
+    org.stamina.subadd = org.stamina.subadd + (anim == "curbstomp_base" and 12 or 20)
     local speedmul = (2 - (org.stamina[1] / org.stamina.max))
     local speed = 1.5 * speedmul
     local animstopAdjust = 0.3 * speedmul
@@ -138,8 +134,7 @@ function PLAYER:LegAttack()
                     local dmginfo = DamageInfo()
 
                     dmginfo:SetAttacker(self)
-                    local inflictor = self:GetWeapon("weapon_hands_sh")
-                    dmginfo:SetInflictor(inflictor)
+                    dmginfo:SetInflictor(self)
                     dmginfo:SetDamage(dmg)
                     dmginfo:SetDamageForce(normal * dmg)
                     dmginfo:SetDamageType((ent:GetClass() == "func_breakable_surf") and DMG_SLASH or DMG_CLUB)

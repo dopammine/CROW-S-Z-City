@@ -4,24 +4,36 @@ local EVENT = {}
 EVENT.Name = "scary_black_guy"
 EVENT.Chance = 0.2
 
+local walk_speed = 80
+local run_speed = 320
+
 local function GetNearBehindPos(pos, viewer, viewerAng)
     pos = pos + vector_up * 32
     viewerAng.pitch = 0
-    local return_pos = util.TraceHull({
-        start = pos,
-        endpos = pos - viewerAng:Forward() * 1300,
-        filter = viewer,
-        maxs = Vector(32,32,32),
-        mins = -Vector(32,32,32)
-    }).HitPos
-    return_pos = util.TraceLine({
-        start = return_pos,
-        endpos = return_pos - vector_up * 300
-    }).HitPos
-
-    local dist = return_pos:Distance(pos)
-    --viewer:ChatPrint(dist)
-    return ((dist < 850 and  dist > 5) and return_pos) or false
+    local min_dist = 700
+    local max_dist = 1500
+    for i = 1, 6 do
+        local ang = Angle(0, viewerAng.yaw + math.Rand(-120, 120), 0)
+        local dist = math.Rand(min_dist, max_dist)
+        local desired = pos - ang:Forward() * dist
+        local tr = util.TraceHull({
+            start = pos,
+            endpos = desired,
+            filter = viewer,
+            maxs = Vector(32,32,32),
+            mins = -Vector(32,32,32)
+        })
+        local return_pos = tr.HitPos
+        return_pos = util.TraceLine({
+            start = return_pos,
+            endpos = return_pos - vector_up * 300
+        }).HitPos
+        local real_dist = return_pos:Distance(pos)
+        if real_dist > min_dist and real_dist < max_dist then
+            return return_pos
+        end
+    end
+    return false
 end
 
 function EVENT:StartScare( ply )
@@ -40,6 +52,7 @@ function EVENT:StartScare( ply )
     self.Ent:SetWhiteListToSee(true)
     self.Ent:SetNetVar("CanSeeUserID",{[ply:UserID()] = true})
     self.Ent:ResetSequence(126)
+    self.Target = ply
     local EndIndex = self.Ent:EntIndex()
     timer.Simple(1,function()
         if IsValid(ply) and ply:Alive() then return end
@@ -54,16 +67,29 @@ end
 function EVENT:Think( ply )
     if !ply:Alive() then self:StopScare() return end
     if !IsValid(self.Ent) then self:StopScare() return end
-    if self.Started + 60 < CurTime() then self:StopScare() return end
-    --self.Ent:SetAngles((ply:EyePos() - self.Ent:GetPos()):Angle())
-    local pos = self.Ent:GetPos() + vector_up * 32
-    if IsLookingAt(ply, pos, 0.75) and hg.isVisible(pos,ply:EyePos(),{self.Ent, ply},MASK_VISIBLE) then
-        self.LookinTime = self.LookinTime or CurTime() + 1
+    if self.Started + 90 < CurTime() then self:StopScare() return end
+    local target = self.Target or ply
+    local entpos = self.Ent:GetPos()
+    local targetpos = target:GetPos()
+    local lookpos = entpos + vector_up * 32
+    if IsLookingAt(ply, lookpos, 0.75) and hg.isVisible(lookpos, ply:EyePos(), {self.Ent, ply}, MASK_VISIBLE) then
+        self.Seen = true
+        self.LookinTime = self.LookinTime or CurTime() + 0.2
         if self.LookinTime < CurTime() then
             self:Run(ply)
+            return
         end
     end
-    
+    if self.Seen then
+        self:Run(ply)
+        return
+    end
+    local dir = targetpos - entpos
+    if dir:LengthSqr() > 1 then
+        local step = math.min(walk_speed * FrameTime(), dir:Length())
+        self.Ent:SetPos(entpos + dir:GetNormalized() * step)
+    end
+    self.Ent:SetAngles((targetpos - self.Ent:GetPos()):Angle())
 end
 
 function EVENT:IsActive( ply )
@@ -73,15 +99,28 @@ end
 function EVENT:Run( ply )
     local plypos = ply:GetPos()
     local entpos = self.Ent:GetPos()
-    local vec = LerpVector(15*FrameTime(),entpos,ply:GetPos())
-    self.Ent:SetPos(vec)
+    local dir = plypos - entpos
+    if dir:LengthSqr() > 1 then
+        local step = math.min(run_speed * FrameTime(), dir:Length())
+        self.Ent:SetPos(entpos + dir:GetNormalized() * step)
+    end
+    self.Ent:SetAngles((plypos - self.Ent:GetPos()):Angle())
     if !self.ScareSoundSend then
         self.ScareSoundSend = true
         self.Ent:ResetSequence(13)
         ply:SendLua("surface.PlaySound(\"lurker_scream.wav\")")
     end
-    if vec:Distance(ply:GetPos()) < 50 then
+    if self.Ent:GetPos():Distance(ply:GetPos()) < 50 then
         ply:KillSilent()
+        timer.Simple(0, function()
+            if IsValid(ply.FakeRagdoll) then
+                ply.FakeRagdoll:Remove()
+            end
+            local rag = ply:GetRagdollEntity()
+            if IsValid(rag) then
+                rag:Remove()
+            end
+        end)
         timer.Simple(0.6,function()
             ply:SendLua("RunConsoleCommand(\"stopsound\")")
         end)--

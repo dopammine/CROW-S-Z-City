@@ -1,7 +1,7 @@
 if SERVER then AddCSLuaFile() end
 SWEP.Base = "weapon_tpik_base"
 SWEP.PrintName = "Duct Tape"
-SWEP.Instructions = "This is a roll of reinforced aluminum-colored waterproof polyethylene-coated vinyl-cloth adhesive tape. Use it to stick things together.\n\nHold LMB to stick something.\nYou can only put tape on a seam or close gap between two objects."
+SWEP.Instructions = "Reinforced duct tape, useful if you're a terrorist and want to take someone prisoner. It is also useful for creating barricades."
 SWEP.Category = "ZCity Other"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -288,9 +288,6 @@ function SWEP:PrimaryAttack()
 	local Owner = self:GetOwner()
 	if Owner:KeyDown(IN_SPEED) then return end
 	if not hg.CanUseLeftHand(Owner) or not hg.CanUseRightHand(Owner) then return end
-	if self:GetHolding() == 25 or self:GetHolding() == 95 then
-		self:EmitSound("player/clothes_generic_foley_0"..math.random(5)..".wav", 55, math.random(95, 105), 0.25)
-	end
 
 	if SERVER then
 		if not self.TapeAmount then self.TapeAmount = 100 end
@@ -351,7 +348,7 @@ function SWEP:PrimaryAttack()
 		end
 	end
 
-	--self:SetNextPrimaryFire(CurTime() + 1.5)
+	self:SetNextPrimaryFire(CurTime() + 1.5)
 end
 
 function SWEP:SecondaryAttack()

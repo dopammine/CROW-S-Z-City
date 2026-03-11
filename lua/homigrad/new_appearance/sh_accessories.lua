@@ -28,6 +28,30 @@ hg.Accessories = {
         name = "Bugeye Sunglasses"
     },
 
+     ["Rew"] = {
+        model = "models/zcity_community/rewrite_bandana.mdl",
+        bone = "ValveBiped.Bip01_Head1",
+        malepos = {Vector(-1.4,-0.5,-0.0), Angle(0,-79,-90), 1},
+        fempos = {Vector(-1.4,-0.5,-0.0), Angle(0,-79,-90), 1},
+        skin = 0,
+        placement = "face",
+        norender = true,
+        bPointShop = true,
+        price = 0,
+        name = "Rew Bandana"
+    },
+	
+   ["pluv mask"] = {
+        model = "models/props/pluvmask.mdl",
+        bone = "ValveBiped.Bip01_Head1",
+        malepos = {Vector(-6,-1.8,0),Angle(180,-80,-90), 1},
+        fempos = {Vector(-6,-1.8,0),Angle(180,-80,-90), 1},
+        skin = 0,
+        norender = true,
+        placement = "head",
+        name = "Pluv Mask"
+    },
+
     ["aviators"] = {
         model = "models/arctic_nvgs/aviators.mdl",
         bone = "ValveBiped.Bip01_Head1",
@@ -351,7 +375,6 @@ hg.Accessories = {
         name = "Bandana colorable"
     },
 
-	-- cs stuff
     ["arctic_balaclava"] = {
         model = "models/d/balaklava/arctic_reference.mdl",
         femmodel = "models/distac/feminine_mask.mdl",
@@ -377,20 +400,6 @@ hg.Accessories = {
         bonemerge = true,
         name = "Phoenix Balaclava"
     },
-   	--[[
-	["hood_balaclava"] = {
-        model = "models/balaclava_hood/balaclava_hood.mdl",
-        femmodel = "models/distac/feminine_mask.mdl",
-        bone = "ValveBiped.Bip01_Head1",
-        malepos = {Vector(-27,-5,0),Angle(180,100,90),1},
-		fempos = {Vector(-0.6,-0.6,0),Angle(180,100,90),0.95},
-        skin = 0,
-        norender = true,
-		placement = "head",
-		vpos = Vector(-45,-45,0),
-        name = "Hood Balaclava"
-    },
-	]]
     ["terrorist_band"] = {
         model = "models/distac/band_team.mdl",
         femmodel = "models/distac/band_team_f.mdl",
@@ -404,7 +413,6 @@ hg.Accessories = {
         flex = true,
         name = "Terrorist Armband"
     },
-
     -- scarfs
     ["white scarf"] = {
         model = "models/sal/acc/fix/scarf01.mdl",
@@ -1102,36 +1110,36 @@ hg.Accessories = {
         vpos = Vector(0,0,69),
         name = "MF Doom Mask"
     },
-    -- ["anon mask"] = {
-    --     model = "models/rawjesus/wear/anon.mdl",
-    --     femmodel = "models/rawjesus/wear/anon.mdl",
-    --     bone = "ValveBiped.Bip01_Head1",
-    --     malepos = {Vector(0,-0.8,0),Angle(180,100,90),1},
-    --     fempos = {Vector(-1.2,-0.8,0),Angle(180,100,90),1},
-    --     skin = 0,
-    --     placement = "face",
-    --     norender = true,
-    --     bonemerge = true,
-    --     bPointShop = true,
-    --     price = 6500,
-    --     vpos = Vector(0,0,0),
-    --     name = "Anonymous Mask"
-    -- },
-    -- ["hockey mask"] = {
-    --     model = "models/rawjesus/wear/jason.mdl",
-    --     femmodel = "models/rawjesus/wear/jason.mdl",
-    --     bone = "ValveBiped.Bip01_Head1",
-    --     malepos = {Vector(0.5,-0.8,0),Angle(180,100,90),1},
-    --     fempos = {Vector(-0.5,-0.8,0),Angle(180,100,90),1},
-    --     skin = 0,
-    --     placement = "face",
-    --     norender = true,
-    --     bonemerge = true,
-    --     bPointShop = true,
-    --     price = 7500,
-    --     vpos = Vector(0,0,0),
-    --     name = "Hockey Mask"
-    -- },
+    ["anon mask"] = {
+        model = "models/rawjesus/wear/anon.mdl",
+        femmodel = "models/rawjesus/wear/anon.mdl",
+        bone = "ValveBiped.Bip01_Head1",
+        malepos = {Vector(0,-0.8,0),Angle(180,100,90),1},
+        fempos = {Vector(-1.2,-0.8,0),Angle(180,100,90),1},
+        skin = 0,
+        placement = "face",
+        norender = true,
+        bonemerge = true,
+        bPointShop = true,
+        price = 6500,
+        vpos = Vector(0,0,0),
+        name = "Anonymous Mask"
+    },
+    ["hockey mask"] = {
+        model = "models/rawjesus/wear/jason.mdl",
+        femmodel = "models/rawjesus/wear/jason.mdl",
+        bone = "ValveBiped.Bip01_Head1",
+        malepos = {Vector(0.5,-0.8,0),Angle(180,100,90),1},
+        fempos = {Vector(-0.5,-0.8,0),Angle(180,100,90),1},
+        skin = 0,
+        placement = "face",
+        norender = true,
+        bonemerge = true,
+        bPointShop = true,
+        price = 7500,
+        vpos = Vector(0,0,0),
+        name = "Hockey Mask"
+    },
 
     ["hood"] = {
         model = "models/distac/kapishon2.mdl",

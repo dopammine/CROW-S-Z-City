@@ -325,8 +325,6 @@ function SWEP:SecondaryAttack()
 							Owner:PrintMessage(HUD_PRINTCENTER, "Door Sealed")
 							Owner:ViewPunch(vpang)
 							Owner:SetAnimation(PLAYER_ATTACK1)
-							self:SetNextSecondaryFire(CurTime() + 2.5)
-							self:SetNextPrimaryFire(CurTime() + 2.5)
 						else
 							Owner:PrintMessage(HUD_PRINTCENTER, "Need at least "..tostring((Owner.Profession and Owner.Profession == "builder") and 2 or 3).." nails to seal door.")
 						end
@@ -365,13 +363,12 @@ function SWEP:SecondaryAttack()
 						Owner:ChatPrint("Bond strength: " .. tostring(Strength))
 						Owner:ViewPunch(vpang)
 						self:PlayAnim("attack", 0.6, false, nil, false, true)
-						
-						self:SetNextSecondaryFire(CurTime() + 2.5)
-						self:SetNextPrimaryFire(CurTime() + 2.5)
-						self:SetLastBlocked(CurTime())
 					end
 				end
 			end
+
+			self:SetNextSecondaryFire(CurTime() + 2.5)
+			self:SetNextPrimaryFire(CurTime() + 2.5)
 		end
 	end
 end

@@ -4,14 +4,14 @@ local MODE = MODE
 MODE.GuiltDisabled = true
 MODE.PoliceTime = 9999
 
-function MODE:AfterBaseInheritance()
-	self.Types.standard2 = self.Types.standard
-	self.Types.soe2 = self.Types.soe
+function MODE.AfterBaseInheritance()
+	MODE.Types.standard2 = MODE.Types.standard
+	MODE.Types.soe2 = MODE.Types.soe
 
-	self.Types.wildwest = nil
-	self.Types.gunfreezone = nil
-	self.Types.standard = nil
-	self.Types.soe = nil
+	MODE.Types.wildwest = nil
+	MODE.Types.gunfreezone = nil
+	MODE.Types.standard = nil
+	MODE.Types.soe = nil
 end
 
 function MODE:CanLaunch()
@@ -500,6 +500,40 @@ function MODE:RoundThink()
 	self.CurrentVictim = IsValid(self.CurrentVictim) and self.CurrentVictim:Alive() and self.CurrentVictim or self:SelectTheBestVictim()
 
 	local ply = self.CurrentVictim
+
+	self.BlackGuyState = self.BlackGuyState or {}
+	self.BlackGuyCooldown = self.BlackGuyCooldown or {}
+	self.BlackGuyNextCheck = self.BlackGuyNextCheck or 0
+	if CurTime() >= self.BlackGuyNextCheck then
+		self.BlackGuyNextCheck = CurTime() + 1
+		for _, target in ipairs(players) do
+			if not IsValid(target) or not target:Alive() then
+				self.BlackGuyState[target] = nil
+				self.BlackGuyCooldown[target] = nil
+				continue
+			end
+			if self:SkipVictim(target) then
+				self.BlackGuyState[target] = nil
+				continue
+			end
+			if self.BlackGuyCooldown[target] and self.BlackGuyCooldown[target] > CurTime() then
+				self.BlackGuyState[target] = nil
+				continue
+			end
+			local in_dark = self:CheckInDarkness(target)
+			local alone = not self:CheckInAGroup(target)
+			if in_dark or alone then
+				self.BlackGuyState[target] = self.BlackGuyState[target] or CurTime()
+				if CurTime() - self.BlackGuyState[target] >= 40 then
+					self:StartEvent("scary_black_guy", target)
+					self.BlackGuyState[target] = nil
+					self.BlackGuyCooldown[target] = CurTime() + 120
+				end
+			else
+				self.BlackGuyState[target] = nil
+			end
+		end
+	end
 	
 	-- print(ply, CurTime(), MODE.saved.KillTime)
 

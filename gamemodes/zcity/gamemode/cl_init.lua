@@ -313,7 +313,7 @@ hook.Add("Player Disconnected","retrymenu",function(data)
 end)
 
 --local hg_coolvetica = ConVarExists("hg_coolvetica") and GetConVar("hg_coolvetica") or CreateClientConVar("hg_coolvetica", "0", true, false, "changes every text to coolvetica because its good", 0, 1)
-local hg_font = ConVarExists("hg_font") and GetConVar("hg_font") or CreateClientConVar("hg_font", "Bahnschrift", true, false, "Change UI text font")
+local hg_font = ConVarExists("hg_font") and GetConVar("hg_font") or CreateClientConVar("hg_font", "Bahnschrift", true, false, "change every text font to selected because ui customization is cool")
 local font = function() -- hg_coolvetica:GetBool() and "Coolvetica" or "Bahnschrift"
     local usefont = "Bahnschrift"
 
@@ -421,8 +421,8 @@ hook.Add("InitPostEntity", "furryhuy", function()
 end)
 
 local colGray = Color(122,122,122,255)
-local colBlue = Color(130,10,10)
-local colBlueUp = Color(160,30,30)
+local colBlue = Color(10,10,160)
+local colBlueUp = Color(40,40,160)
 local col = Color(255,255,255,255)
 
 local colSpect1 = Color(75,75,75,255)
@@ -464,7 +464,7 @@ local function OpenPlayerSoundSettings(selfa, ply)
 
 	function volumeSlider:Paint(w,h)
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 0, 0 ) )
-		draw.RoundedBox( 0, 0, 0, w*self:GetSlideX(), h, Color( 255, 0, 0 ) )
+		draw.RoundedBox( 0, 0, 0, w*self:GetSlideX(), h, Color( 80, 160, 255 ) )
 		draw.DrawText( ( math.Round( 100*self:GetSlideX(), 0 ) ).."%", "DermaDefault", w/2, h/4, color_white, TEXT_ALIGN_CENTER )
 	end
 	function volumeSlider.Knob.Paint(self) end
@@ -593,7 +593,7 @@ function GM:ScoreboardShow()
 	local ServerName = GetHostName() or "ZCity | Developer Server | #01"
 	local tick
 	scoreBoardMenu.PaintOver = function(self,w,h)
-		surface.SetDrawColor( 255, 0, 0, 128)
+		surface.SetDrawColor( 80, 160, 255, 128)
         surface.DrawOutlinedRect( 0, 0, w, h, 2.5 )
 
 		surface.SetFont( "ZB_InterfaceLarge" )
@@ -620,7 +620,7 @@ function GM:ScoreboardShow()
 		local lengthX, lengthY = surface.GetTextSize("Spectators:")
 		surface.SetTextPos(w * 0.75 - lengthX/2,ScreenScale(25))
 		surface.DrawText("Spectators:")
-		tick = math.Round(1 / engine.ServerFrameTime())
+		tick = math.Round(LerpFT(0.1,tick or 0, 1 / engine.ServerFrameTime()))
 		local txt = "SV Tick: " .. tick
 		local lengthX, lengthY = surface.GetTextSize(txt)
 		surface.SetTextPos(w * 0.5 - lengthX/2,ScreenScale(25))
@@ -642,7 +642,7 @@ function GM:ScoreboardShow()
 		end
 
 		SPECTATE.Paint = function(self,w,h)
-			surface.SetDrawColor( 255, 0, 0, 128)
+			surface.SetDrawColor( 80, 160, 255, 128)
 			surface.DrawOutlinedRect( 0, 0, w, h, 2.5 )
 			surface.SetFont( "ZB_InterfaceMedium" )
 			surface.SetTextColor(col.r,col.g,col.b,col.a)
@@ -667,7 +667,7 @@ function GM:ScoreboardShow()
 		end
 
 		PLAYING.Paint = function(self,w,h)
-			surface.SetDrawColor( 255, 0, 0, 128)
+			surface.SetDrawColor( 80, 160, 255, 128)
 			surface.DrawOutlinedRect( 0, 0, w, h, 2.5 )
 			surface.SetFont( "ZB_InterfaceMedium" )
 			surface.SetTextColor(col.r,col.g,col.b,col.a)
@@ -688,7 +688,7 @@ function GM:ScoreboardShow()
 		surface.SetDrawColor(0, 0, 0, 125)
 		surface.DrawRect(0, 0, w, h)
 
-		surface.SetDrawColor( 255, 0, 0, 128)
+		surface.SetDrawColor( 80, 160, 255, 128)
         surface.DrawOutlinedRect( 0, 0, w, h, 2.5 )
 	end
 
@@ -703,6 +703,11 @@ function GM:ScoreboardShow()
 		but:Dock(TOP)
 		but:DockMargin(8, 6, 8, -1)
 		but:SetText("")
+		local avatarSize = ScreenScaleH(18)
+		local avatar = vgui.Create("AvatarImage", but)
+		avatar:SetSize(avatarSize, avatarSize)
+		avatar:SetPos(6, (but:GetTall() - avatarSize) / 2)
+		avatar:SetPlayer(ply, 64)
 		
 		local soundButton = vgui.Create("DImageButton", but)
 		soundButton:Dock(RIGHT)
@@ -725,7 +730,7 @@ function GM:ScoreboardShow()
 			surface.SetFont("ZB_InterfaceMediumLarge")
 			surface.SetTextColor(col.r, col.g, col.b, col.a)
 			local lengthX, lengthY = surface.GetTextSize(ply:Name() or "He quited...")
-			surface.SetTextPos(15, h / 2 - lengthY / 2)
+			surface.SetTextPos(avatarSize + 12, h / 2 - lengthY / 2)
 			surface.DrawText(ply:Name() or "He quited...")
 	
 			surface.SetFont("ZB_InterfaceMediumLarge")
@@ -779,6 +784,11 @@ function GM:ScoreboardShow()
 		but:Dock(TOP)
 		but:DockMargin( 8, 6, 8, -1 )
 		but:SetText("")
+		local avatarSize = ScreenScaleH(18)
+		local avatar = vgui.Create("AvatarImage", but)
+		avatar:SetSize(avatarSize, avatarSize)
+		avatar:SetPos(6, (but:GetTall() - avatarSize) / 2)
+		avatar:SetPlayer(ply, 64)
 
 		local soundButton = vgui.Create("DImageButton", but)
 		soundButton:Dock(RIGHT)
@@ -801,7 +811,7 @@ function GM:ScoreboardShow()
 			surface.SetFont( "ZB_InterfaceMediumLarge" )
 			surface.SetTextColor(col.r,col.g,col.b,col.a)
 			local lengthX, lengthY = surface.GetTextSize( ply:Name() or "He quited..." )
-			surface.SetTextPos(15,h/2 - lengthY/2)
+			surface.SetTextPos(avatarSize + 12, h / 2 - lengthY / 2)
 			surface.DrawText(ply:Name() or "He quited...")
 
 			surface.SetFont( "ZB_InterfaceMediumLarge" )
@@ -847,8 +857,8 @@ function GM:ScoreboardHide()
 		scoreBoardMenu = nil
 	end
 end
-local AdminShowVoiceChat = CreateClientConVar("zb_admin_show_voicechat","0",false,false,"Show voicechat panels for admins",0,1)
-hook.Add("PlayerStartVoice", "showVoicePanels", function(ply)
+local AdminShowVoiceChat = CreateClientConVar("zb_admin_show_voicechat","0",false,false,"Shows voicechat panles",0,1)
+hook.Add("PlayerStartVoice", "asd", function(ply)
 	if !IsValid(ply) then return end
 	if LocalPlayer():IsAdmin() and AdminShowVoiceChat:GetBool() then return end
 
@@ -1013,7 +1023,7 @@ concommand.Add("zb_snake", function() -- вот как здесь!
   
     local function drawFood()
         if food then
-            surface.SetDrawColor(255, 0, 0, 255)
+            surface.SetDrawColor(80, 160, 255, 255)
             surface.DrawRect(food.x * gridSize, food.y * gridSize, gridSize - 1, gridSize - 1)
         end
     end

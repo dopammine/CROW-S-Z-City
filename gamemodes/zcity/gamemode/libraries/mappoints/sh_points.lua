@@ -13,6 +13,18 @@ zb.Points.RandomSpawns = zb.Points.RandomSpawns or {}
 zb.Points.RandomSpawns.Color = Color(122,122,0)
 zb.Points.RandomSpawns.Name = "RandomSpawns"
 
+zb.Points.HMCD_SWO_WAGNER = zb.Points.HMCD_SWO_WAGNER or {}
+zb.Points.HMCD_SWO_WAGNER.Color = Color(25,95,0)
+zb.Points.HMCD_SWO_WAGNER.Name = "HMCD_SWO_WAGNER"
+
+zb.Points.HMCD_SWO_AZOV = zb.Points.HMCD_SWO_AZOV or {}
+zb.Points.HMCD_SWO_AZOV.Color = Color(100,75,0)
+zb.Points.HMCD_SWO_AZOV.Name = "HMCD_SWO_AZOV"
+
+zb.Points.HMCD_SWO_CAPPOINT = zb.Points.HMCD_SWO_CAPPOINT or {}
+zb.Points.HMCD_SWO_CAPPOINT.Color = Color(100,75,0)
+zb.Points.HMCD_SWO_CAPPOINT.Name = "HMCD_SWO_CAPPOINT"
+
 if SERVER then
     util.AddNetworkString("zb_getallpoints")
     util.AddNetworkString("zb_getspecificpoints")
@@ -36,7 +48,7 @@ if CLIENT then
         zb.ClPoints[pointGroup] = net.ReadTable()
     end)
 
-    local showpointnames = CreateConVar( "zb_drawpoints_names", "1", FCVAR_PROTECTED, "Draw point names if zb_drawpoints enabled", 0, 1 )
+    local showpointnames = CreateConVar( "zb_drawpoints_names", "1", FCVAR_PROTECTED, "draw points", 0, 1 )
 
     function zb.DrawPoints()
         if not LocalPlayer():IsAdmin() then return end
@@ -82,7 +94,7 @@ if CLIENT then
         end
     end
 
-    local drawpoints = CreateConVar( "zb_drawpoints", "0", FCVAR_PROTECTED, "Draw map points if player is admin", 0, 1 )
+    local drawpoints = CreateConVar( "zb_drawpoints", "0", FCVAR_PROTECTED, "draw points", 0, 1 )
     cvars.AddChangeCallback("zb_drawpoints", function(convar_name, value_old, value_new)
         if tobool(value_new) then 
             hook.Add("PostDrawOpaqueRenderables", "RenderPoints", zb.DrawPoints)

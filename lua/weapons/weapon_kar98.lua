@@ -13,11 +13,11 @@ SWEP.WorldModel = "models/weapons/w_snip_awp.mdl"
 SWEP.WorldModelFake = "models/weapons/tfa_ins2/c_k98.mdl"
 SWEP.FakeScale = 0.9
 
-SWEP.FakePos = Vector(-7, 3.6, 10.1)
+SWEP.FakePos = Vector(-7, 3.6, 5.1)
 SWEP.FakeAng = Angle(0, 0, 0)
 
 SWEP.FakeAttachment = "1"
-SWEP.AttachmentPos = Vector(-1.5,0,0)
+SWEP.AttachmentPos = Vector(-8.5,0,0)
 SWEP.AttachmentAng = Angle(0,0,0)
 SWEP.FakeBodyGroups = "000000000"
 SWEP.BarrelLength = 40
@@ -35,7 +35,7 @@ SWEP.FakeVPShouldUseHand = false
 SWEP.WepSelectIcon2 = Material("vgui/wep_jack_hmcd_rifle")
 SWEP.IconOverride = "vgui/wep_jack_hmcd_rifle"
 
-SWEP.LocalMuzzlePos = Vector(36.739, -0.25, 8)
+SWEP.LocalMuzzlePos = Vector(36.739, -0.25, 4)
 SWEP.LocalMuzzleAng = Angle(0.4,-0.0,0)
 SWEP.WeaponEyeAngles = Angle(-0.7,0.1,0)
 
@@ -75,12 +75,12 @@ SWEP.AnimShootHandMul = 10
 SWEP.DeploySnd = {"homigrad/weapons/draw_hmg.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/hmg_holster.mp3", 55, 100, 110}
 SWEP.HoldType = "rpg"
-SWEP.ZoomPos = Vector(0, -0.25, 9.4)
+SWEP.ZoomPos = Vector(0, -0.25, 4.4)
 SWEP.RHandPos = Vector(0, 0, -1)
 SWEP.LHandPos = Vector(7, 0, -2)
 SWEP.Ergonomics = 0.9
 SWEP.Penetration = 7
-SWEP.WorldPos = Vector(2.2, -0.5, 5)
+SWEP.WorldPos = Vector(0.2, -0.5, 0)
 SWEP.WorldAng = Angle(0.7, -0.1, 0)
 SWEP.UseCustomWorldModel = true
 SWEP.attPos = Vector(0.4, -0.15, 0)

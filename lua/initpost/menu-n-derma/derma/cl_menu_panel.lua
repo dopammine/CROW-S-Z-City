@@ -114,8 +114,6 @@ local splasheh = {
     '"I THOUGHT YOU SAID PAIR OF SHOES!"',
     'HOP ON CROWS HOMIGRAD',
     'BLUE IS LOVE, BLUE IS LIFE',
-	"the cooler zcity",
-	"hello guys welcome to zcity 2025 october 1st leak zcity yeah hahahah a yeah haaha",
     '"WHATS 9 + 10?"',
     'JOHN HOMIGRAD CRUST',
     '800 TO 8',

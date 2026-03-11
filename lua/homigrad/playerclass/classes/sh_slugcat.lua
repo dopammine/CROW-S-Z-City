@@ -39,7 +39,6 @@ local colors = {
 }
 
 CLASS.NoGloves = true
-CLASS.CanEmitRNDSound = false
 function CLASS.FallDmgFunc(self, speed, tr)
     if speed > 1000 then
         hg.LightStunPlayer(self)

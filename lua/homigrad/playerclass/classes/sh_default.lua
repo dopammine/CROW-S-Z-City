@@ -11,8 +11,6 @@ function CLASS.On(self)
 end
 
 CLASS.CanUseDefaultPhrase = true
-CLASS.CanEmitRNDSound = true
-CLASS.CanUseGestures = true
 
 function CLASS.Guilt(self, Victim)
     if CLIENT then return end

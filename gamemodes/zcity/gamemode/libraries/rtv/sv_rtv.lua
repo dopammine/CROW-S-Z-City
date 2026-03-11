@@ -105,7 +105,7 @@ local function getmaps()
     for _, map in ipairs(maps) do
         map = map:sub(1, -5)
         local mapstr = map:Split("_")
-        if (allowedPrefix[mapstr[1]] or not string.find(map, "_")) and not blacklist[map] then
+        if allowedPrefix[mapstr[1]] and not blacklist[map] then
             table.insert(mappull, map)
         end
     end
@@ -139,6 +139,8 @@ end
 hook.Add("InitPostEntity", "zb_GetMaps", function()
     zb.votestarted = false
     getmaps()
+    zb.ClearRTVVotes()
+    zb.RTVAvailableAt = CurTime() + 300
 end)
 
 net.Receive("ZB_RockTheVote_vote", function(len, ply)
@@ -489,6 +491,11 @@ function zb.CheckRTVVotes(needPrint)
 end
 
 COMMANDS.rtv = {function(ply, args)
+    if zb.RTVAvailableAt and CurTime() < zb.RTVAvailableAt then
+        local remaining = math.ceil(zb.RTVAvailableAt - CurTime())
+        ply:ChatPrint("Patience you chud. RTV will be available in " .. remaining .. " seconds.")
+        return
+    end
     --print(zb.votestarted)
 	if zb.votestarted then
 		zb.RTVMenu(ply)
@@ -549,6 +556,7 @@ end, 0}
 hook.Add("ShutDown", "ResetRTVVotesOnMapChange", zb.ClearRTVVotes)
 hook.Add("PostGamemodeLoaded", "InitializeRTVSystem", function()
     zb.ClearRTVVotes()
+    zb.RTVAvailableAt = CurTime() + 240
 end)
 
 hook.Add("PlayerDisconnected", "CheckRTVAfterDisconnect", function(ply)

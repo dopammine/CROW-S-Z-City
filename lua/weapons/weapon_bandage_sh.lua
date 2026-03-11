@@ -38,7 +38,7 @@ SWEP.WorkWithFake = true
 SWEP.offsetVec = Vector(4, -3.5, 0)
 SWEP.offsetAng = Angle(90, 90, 0)
 
-local hg_healanims = CreateConVar("hg_healanims", 0, FCVAR_SERVER_CAN_EXECUTE + FCVAR_ARCHIVE, "Toggle heal/food animations", 0, 1)
+local hg_healanims = CreateConVar("hg_healanims", 0, FCVAR_SERVER_CAN_EXECUTE, "Toggle heal/food animations", 0, 1)
 
 modelshuy = modelshuy or {}
 
@@ -60,10 +60,6 @@ function SWEP:DrawWorldModel2(nodraw)
 	local owner = self:GetOwner()
 	owner = hg.GetCurrentCharacter(owner)
 	if not IsValid(WorldModel) then return end
-
-	for i = 1, #self:GetBodyGroups() do
-		WorldModel:SetBodygroup(i, self:GetBodygroup(i))
-	end
 
 	if self.ModelScale then
 		WorldModel:SetModelScale(self.ModelScale or 1)
@@ -398,22 +394,16 @@ local function PhysCallback(ent, data)
 	ent:EmitSound(Sound(ent.FallSnd))
 end
 
-local ents_Create, gamemod, clr_garbage = ents.Create, engine.ActiveGamemode(), Color(200, 200, 200)
-local gibRemoveTime = 60
+local ents_Create, gamemod, clr_garbage = ents.Create, engine.ActiveGamemode(), Color(170, 170, 170)
 function SWEP:SpawnGarbage(mdl_custom, skin_custom, snd_custom, clr_custom, bgs_custom)
 	if CLIENT then return end
 
 	local owner = self:GetOwner()
-	if not IsValid(owner) then return end
-
 	local boneid
-	if IsValid(owner) then
-		if owner:IsPlayer() then
-			local chr = hg.GetCurrentCharacter(owner)
-			boneid = chr:LookupBone(((owner.organism and owner.organism.rarmamputated) or (owner.zmanipstart ~= nil and owner.zmanipseq == "interact" and not owner.organism.larmamputated)) and "ValveBiped.Bip01_L_Hand" or "ValveBiped.Bip01_R_Hand")
-		else
-			boneid = owner:LookupBone("ValveBiped.Bip01_R_Hand") or 1
-		end
+	if owner:IsPlayer() then
+		boneid = owner:LookupBone(((owner.organism and owner.organism.rarmamputated) or (owner.zmanipstart ~= nil and owner.zmanipseq == "interact" and not owner.organism.larmamputated)) and "ValveBiped.Bip01_L_Hand" or "ValveBiped.Bip01_R_Hand")
+	else
+		boneid = owner:LookupBone("ValveBiped.Bip01_R_Hand") or 1
 	end
 
 	if not boneid then return end
@@ -454,9 +444,7 @@ function SWEP:SpawnGarbage(mdl_custom, skin_custom, snd_custom, clr_custom, bgs_
 	ent:AddCallback("PhysicsCollide", PhysCallback)
 
 	if zb.CROUND and zb.CROUND ~= "hmcd" or gamemod == "sandbox" then
-		ent:DrawShadow(false)
-		ent:SetModelScale(0.5, gibRemoveTime)
-		SafeRemoveEntityDelayed(ent, gibRemoveTime)
+		SafeRemoveEntityDelayed(ent, 30)
 	end
 end
 
@@ -635,8 +623,11 @@ if SERVER then
 	
 	function SWEP:PostHeal(ent, mode)
 		local org = ent.organism
+		if not zb then return end 
+		if not zb.modes then return end
+		local mode_hmcd = zb.modes["hmcd"]
 		
-		if(org and IsValid(org.owner))then
+		if(org and IsValid(org.owner) and mode_hmcd)then
 			local organism_owner = org.owner
 			
 			if(organism_owner.SubRole == "traitor_chemist")then
@@ -645,13 +636,13 @@ if SERVER then
 				end
 				
 				if((self.ConsumePoisoned_KCN or 0) > 0)then
-					local ply_kcn_accumulated = AddChemicalToPlayer(organism_owner, "KCN", 50 * (self.ConsumePoisoned_KCN or 0))
+					local ply_kcn_accumulated = mode_hmcd.AddChemicalToPlayer(organism_owner, "KCN", 50 * (self.ConsumePoisoned_KCN or 0))
 					
 					if(ply_kcn_accumulated > 100)then
 						self:PoisonKCNOrganism(org)
 					end
 					
-					NetworkChemicalResistanceOfPlayer(organism_owner)
+					mode_hmcd.NetworkChemicalResistanceOfPlayer(organism_owner)
 					
 					organism_owner.PassiveAbility_ChemicalAccumulation_NextNetworkTime = CurTime() + 1
 				end

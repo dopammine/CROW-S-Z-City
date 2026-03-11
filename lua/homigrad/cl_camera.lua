@@ -35,9 +35,10 @@ local sideMul = 5
 local eyeAngL = Angle(0, 0, 0)
 local IsValid = IsValid
 
-local hg_fov = ConVarExists("hg_fov") and GetConVar("hg_fov") or CreateClientConVar("hg_fov", "70", true, false, "Change first-person field of view", 75, 100)
-local hg_realismcam = ConVarExists("hg_realismcam") and GetConVar("hg_realismcam") or CreateClientConVar("hg_realismcam", "0", true, false, "Toggle realism first-person camera view", 0, 1)
-local hg_gopro = ConVarExists("hg_gopro") and GetConVar("hg_gopro") or CreateClientConVar("hg_gopro", "0", true, false, "Toggle GoPro-like first-person camera view", 0, 1)
+local hg_fov = ConVarExists("hg_fov") and GetConVar("hg_fov") or CreateClientConVar("hg_fov", "70", true, false, "changes fov to value", 75, 100)
+local hg_realismcam = ConVarExists("hg_realismcam") and GetConVar("hg_realismcam") or CreateClientConVar("hg_realismcam", "0", true, false, "realism camera", 0, 1)
+local hg_gopro = ConVarExists("hg_gopro") and GetConVar("hg_gopro") or CreateClientConVar("hg_gopro", "0", true, false, "gopro camera", 0, 1)
+local hg_cool_camera = ConVarExists("hg_cool_camera") and GetConVar("hg_cool_camera") or CreateClientConVar("hg_cool_camera", "0", true, false, "cool camera", 0, 1)
 
 local oldview = render.GetViewSetup()
 local breathing_amount = 0
@@ -88,6 +89,10 @@ local velocityAdd = Vector()
 local velocityAddVel = Vector()
 local walkLerped = 0
 local walkTime = 0
+local jumpTilt = 0
+local jumpPhase = 0
+local jumpStart = 0
+local lastOnGround = true
 
 local lerped_ang = Angle(0,0,0)
 function HGAddView(ply, origin, angles, velLen)
@@ -103,37 +108,30 @@ function HGAddView(ply, origin, angles, velLen)
 		local wep = ply:GetActiveWeapon()
 		local inSight = IsValid(wep) and wep.IsZoom and wep:IsZoom()
 
-		--breathing_amount = breathing_amount + math.max((math.Clamp(pulse, 0, 80) / 120 / 30 + velLen / 100 - (30 - o2) / 3000), 0)
-		local breathing_amount = math.sin((org.pulsethink or 0) + 0.8) * (math.max(((org.heartbeat or 0) / 120 - 1) * 0.05, 0) + math.Clamp((org.stamina and org.stamina[1] and (1 - math.min(1, org.stamina[1] / (org.stamina.max * 0.75))) or 1), 0, 0.5))
+		breathing_amount = breathing_amount + math.max((math.Clamp(pulse, 0, 80) / 120 / 30 + velLen / 100 - (30 - o2) / 3000), 0)
 		--walk_amount = walk_amount + velLen / 100
 
 		--[[camera_position_addition[1] = 0
 		camera_position_addition[2] = 0
 		camera_position_addition[3] = 0]]
 		
-		camera_position_addition[1] = 0
-		camera_position_addition[2] = 0
-		camera_position_addition[3] = (math.sin(breathing_amount + math.pi)) * 0.5
-
-		local anga2 = ply:GetBoneMatrix(ply:LookupBone("ValveBiped.Bip01_Spine")):GetAngles()---(-angles)
-		anga2:RotateAroundAxis(anga2:Right(), 90)
-		--anga2[1] = 0
-		camera_position_addition:Rotate(anga2)
-
-		origin:Add(camera_position_addition)
+		--camera_position_addition[1] = (math.cos(breathing_amount)) * math.Clamp((math.max(pulse / 80,1) - 1) / 2,0,0.5)
+		--camera_position_addition[2] = (math.cos(breathing_amount))* math.Clamp((math.max(pulse / 80,1) - 1) / 2,0,0.5)
+		//camera_position_addition[3] = (math.sin(breathing_amount)) * math.Clamp((math.max(pulse / 80,1) - 1) / 2,0,0.5) * 0.5 * (org.lungsfunction and 1 or 0) * math.max(2 - analgesia, 0) * 0.5
+		
+		--origin:Add(camera_position_addition)
 
 		local ang = AngleRand(-0.1, 0.1) * math.Rand(0, math.min(adrenaline, 1)) / 1
-		ang[1] = ang[1] + breathing_amount
+		ang[1] = ang[1] + (math.sin(breathing_amount)) * math.Clamp((math.max(pulse / 80,1) - 1) / 2,0,0.5) / 5 * (org.lungsfunction and 1 or 0) * math.max(2 - analgesia, 0) * 0.5
 		ang[3] = 0
 
-		lerped_ang = LerpFT(0.2, lerped_ang, ang * (inSight and 1 or 1) * math.max(org.recoilmul or 1, 0.1))
-		--local tmpmul = math.max(36.6 - temp, 0)
-		--ang[1] = math.Rand(-tmpmul, tmpmul) / 155
-		--ang[2] = math.Rand(-tmpmul, tmpmul) / 155
-		--ang[3] = math.Rand(-adrenaline, adrenaline) / 15
+		lerped_ang = LerpFT(0.2, lerped_ang, ang * (inSight and 1 or 1) * math.max(org.recoilmul or 1,0.1))
+		local tmpmul = math.max(36.6 - temp, 0)
+		ang[1] = math.Rand(-tmpmul, tmpmul) / 155
+		ang[2] = math.Rand(-tmpmul, tmpmul) / 155
+		ang[3] = math.Rand(-adrenaline, adrenaline) / 15
 		--angles:Add(ang)
-		//ViewPunch2(ang * -0.05)
-		--ply:SetEyeAngles(ply:EyeAngles() + lerped_ang * 0.1)
+		//ply:SetEyeAngles(ply:EyeAngles() + lerped_ang / 2)
 		//angles:Add(ang)
 		//ViewPunch2(lerped_ang * 0.1)
 
@@ -150,7 +148,8 @@ function HGAddView(ply, origin, angles, velLen)
 		
 		local walk = math.Clamp(walkLerped / 100, 0, 1)
 		
-		walkTime = walkTime + walk * FrameTime() * 2 * game.GetTimeScale() * (ply:OnGround() and 1 or 0)
+		local runMul = ply:IsSprinting() and 1.6 or 1
+		walkTime = walkTime + walk * FrameTime() * 2 * runMul * game.GetTimeScale() * (ply:OnGround() and 1 or 0)
 		
 		velocityAddVel = LerpFT(0.9, velocityAddVel * 0.9, -vel * 0.1)
 	
@@ -167,7 +166,45 @@ function HGAddView(ply, origin, angles, velLen)
 
 		//angles[1] = angles[1] + x * 1
 		//angles[2] = angles[2] + y * 1
-		ViewPunch4(Angle(y2, x2, x2 * 50) * 0.0005 * (ishgweapon(wep) and 1.5 or 1))
+		if hg_cool_camera:GetBool() then
+			local pain = org.avgpain or org.pain or 0
+			local isPain = pain > 25
+			local isCrouchWalk = ply:Crouching() and vellen > 10
+			local rollMul = (isPain or isCrouchWalk) and 2.2 or 1
+			local coolX = math.sin(huy * 1.6 * runMul) * walk * 1.4 + math.sin(huy * 0.8 * runMul + 0.5) * walk * 0.4
+			local coolY = math.abs(math.cos(huy * 1.6 * runMul)) * walk * 1.8 - walk * 0.6
+			local coolRoll = math.sin(huy * 1.6 * runMul + 1.1) * walk * 2.2 * rollMul
+			local onGround = ply:OnGround()
+			if lastOnGround and not onGround and vel[3] > 80 then
+				jumpPhase = 1
+				jumpStart = CurTime()
+			end
+			if jumpPhase == 1 then
+				local t = CurTime() - jumpStart
+				if t >= 2 then
+					jumpPhase = 2
+					jumpStart = CurTime()
+					t = 2
+				end
+				jumpTilt = math.Clamp(t / 2, 0, 1)
+			elseif jumpPhase == 2 then
+				local t = CurTime() - jumpStart
+				if t >= 2 then
+					jumpPhase = 0
+					jumpTilt = 0
+				else
+					jumpTilt = 1 - math.Clamp(t / 2, 0, 1)
+				end
+			else
+				jumpTilt = 0
+			end
+			angles[1] = angles[1] - jumpTilt * 6
+			lastOnGround = onGround
+			angles[3] = angles[3] + coolRoll * 0.40
+			ViewPunch4(Angle(coolY, coolX, coolRoll) * 0.0012 * (ishgweapon(wep) and 1.5 or 1))
+		else
+			ViewPunch4(Angle(y2, x2, x2 * 50) * 0.0005 * (ishgweapon(wep) and 1.5 or 1))
+		end
 
 		local music = hg.DynamicMusicV2.Player.GetTrack()
 
@@ -199,11 +236,6 @@ function HGAddView(ply, origin, angles, velLen)
 			ply.MovementInertiaAddView.p = 0
 		end
 	end
-
-	local ply_override, origin_override, angles_override = hook.Run("HGAddView", ply, origin, angles)
-	if origin_override ~= nil then
-		origin, angles = origin_override, angles_override
-	end
 	
 	return origin, angles
 end
@@ -223,8 +255,8 @@ local CalcView
 local oldVechicleAng = Angle(0,0,0)
 local viewOverride
 
-local hg_thirdperson = ConVarExists("hg_thirdperson") and GetConVar("hg_thirdperson") or CreateConVar("hg_thirdperson", 0, FCVAR_REPLICATED, "Toggle third-person camera view", 0, 1)
-local hg_legacycam = ConVarExists("hg_legacycam") and GetConVar("hg_legacycam") or CreateConVar("hg_legacycam", 0, FCVAR_REPLICATED, "Toggle legacy first-person camera view if hg_thirdperson is enabled", 0, 1)
+local hg_thirdperson = ConVarExists("hg_thirdperson") and GetConVar("hg_thirdperson") or CreateConVar("hg_thirdperson", 0, FCVAR_REPLICATED, "ragdoll combat", 0, 1)
+local hg_legacycam = ConVarExists("hg_legacycam") and GetConVar("hg_legacycam") or CreateConVar("hg_legacycam", 0, FCVAR_REPLICATED, "ragdoll combat", 0, 1)
 local lerpasad = 0
 
 hook.Remove("CalcView", "wac_air_calcview")
@@ -232,7 +264,7 @@ hook.Remove("CreateMove", "wac_cl_seatswitch_centerview")
 //PrintTable(wac)
 
 local lerpaim = 1
-local hg_leancam_mul = ConVarExists("hg_leancam_mul") and GetConVar("hg_leancam_mul") or CreateClientConVar("hg_leancam_mul", "7", true, false, "Multiply first-person camera view leaning angle", -10, 10)
+local hg_leancam_mul = ConVarExists("hg_leancam_mul") and GetConVar("hg_leancam_mul") or CreateClientConVar("hg_leancam_mul", "7", true, false, "changes lean cam mul", -10, 10)
 zooming = false
 lerpfovadd2 = 0
 
@@ -251,8 +283,8 @@ end)
 surface.CreateFont(
 	"BODYCAMFONT",
 	{
-		font = "Bahnschrift",
-		size = ScreenScale(16),
+		font = "Arial",
+		size = 42,
 		italic = true,
 		weight = 1500
 	}
@@ -263,7 +295,7 @@ hook.Add("HUDPaint", "HUDPaint_DrawABox", function() -- этот код стар
 	if lply:Alive() and hg_gopro:GetBool() then
 		local specPly = lply
 		if not specPly:IsValid() then return end
-		local Text = "GoPro #" .. math.Round(util.SharedRandom(specPly:SteamID(),1000,9999,1),0)
+		local Text = "GoPro #" .. math.Round(util.SharedRandom(specPly:GetName(),1000,9999,specPly:EntIndex()),0)
 		draw.DrawText(Text, "BODYCAMFONT", ScrW() * 0.905 + 2, ScrH() * 0.035 + 2, Color(0, 0, 0), TEXT_ALIGN_CENTER)
 		draw.DrawText(Text, "BODYCAMFONT", ScrW() * 0.905, ScrH() * 0.035, Color(255, 255, 255), TEXT_ALIGN_CENTER)
 		draw.RoundedBox(0, ScrW() * 0.85, ScrH() * 0.085, 50, 28, Color(0, 173, 255))
@@ -280,42 +312,36 @@ end)
 
 function SpecCam(ply, vec, ang, fov, znear, zfar)
 	if !ply:Alive() then return end
-	--local hand = ply:GetAttachment(ply:LookupAttachment("anim_attachment_rh"))
+	local hand = ply:GetAttachment(ply:LookupAttachment("anim_attachment_rh"))
 	local eye = ply:GetAttachment(ply:LookupAttachment("eyes"))
-	--local org = eye.Pos
+	local org = eye.Pos
 	local ang1 = eye.Ang + Angle(5, 2, 0)
-	local org1 = eye.Pos + eye.Ang:Up() * 6 + eye.Ang:Forward() * -3 + eye.Ang:Right() * 6.5
+	local org1 = eye.Pos + eye.Ang:Up() * 6 + eye.Ang:Forward() * -1 + eye.Ang:Right() * 6.5
 
 	local view = {
 		origin = org1,
 		angles = ang1,
 		fov = 110,
 		drawviewer = true,
-		znear = 0.7
+		znear = 0.1
 	}
 
 	return view
 end
-
-local hg_coolcamera = ConVarExists("hg_coolcamera") and GetConVar("hg_coolcamera") or CreateConVar("hg_coolcamera", 0, FCVAR_ARCHIVE + FCVAR_REPLICATED, "Cool camera movement", 0, 5)
-
+-- Сделайте чтобы локальный игрок рендерился всегда, у меня не вышло
 CalcView = function(ply, origin, angles, fov, znear, zfar)
+	local x, y = input.GetCursorPos()
+
+	if vgui.CursorVisible() or (x == 0 and y == 0) then
+		local ang = ply:EyeAngles()
+		ang[3] = 0
+		ply:SetEyeAngles(ang)
+	end
+
 	if g_VR and g_VR.active then return end
 	if GetViewEntity() ~= (ply or LocalPlayer()) then return end
-
-	local view = {
-		["origin"] = origin,
-		["angles"] = angles,
-		["fov"] = fov,
-		["znear"] = znear,
-		["zfar"] = zfar,
-		["drawviewer"] = false,
-	}
-
-	if drive.CalcView(ply, view) then return view end
-
 	local rlEnt = hg.GetCurrentCharacter(ply)
-	lerpfovadd = LerpFT(0.01, lerpfovadd, (ply:IsSprinting() and rlEnt == ply and rlEnt:GetVelocity():LengthSqr() > 1500 and 10 or 0) - ( ply.organism and (ply.organism and (((ply.organism.immobilization or 0) / 4) - (ply.organism.adrenaline or 0) * 5 - (ply.organism.noradrenaline or 0) * 15)) or 0) / 2 - (ply.suiciding and (ply:GetNetVar("suicide_time",CurTime()) < CurTime()) and (1 - math.max(ply:GetNetVar("suicide_time",CurTime()) + 8 - CurTime(),0) / 8) * 20 or 0))
+	lerpfovadd = LerpFT(0.001, lerpfovadd, (ply:IsSprinting() and rlEnt == ply and rlEnt:GetVelocity():LengthSqr() > 1500 and 10 or 0) - ( ply.organism and (ply.organism and (((ply.organism.immobilization or 0) / 4) - (ply.organism.adrenaline or 0) * 5)) or 0) / 2 - (ply.suiciding and (ply:GetNetVar("suicide_time",CurTime()) < CurTime()) and (1 - math.max(ply:GetNetVar("suicide_time",CurTime()) + 8 - CurTime(),0) / 8) * 20 or 0))
 	lerpfovadd2 = LerpFT(0.1, lerpfovadd2, zooming and -25 or 0)
 
 	fov = hg_fov:GetInt()
@@ -330,13 +356,8 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 		lean_lerp = 0
 	end
 
-	--angles.roll = (turned and 180 or 0) + lean_lerp * 10
-
-	local vpang = GetViewPunchAngles2() + GetViewPunchAngles3()
-	vpang[3] = 0
-
-
-
+	angles.roll = (turned and 180 or 0) + lean_lerp * 10
+	
 	if IsValid(follow) then
 		return hg.CalcViewFake(ply, origin, angles, fov, znear, zfar)
 	end
@@ -347,6 +368,7 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 	end
 
 	if not ply:Alive() and not follow then
+		
 		if lply:GetNWInt("viewmode",0) == 1 then
 			ply = lply:GetNWEntity("spect",NULL)
 			
@@ -438,6 +460,8 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 	hg.clamp(vel, limit)
 	angles = ply:InVehicle() and ply:GetAimVector():AngleEx(vehicle:GetUp()) or angles
 
+	angles:RotateAroundAxis(angles:Up(),-LookX)
+	angles:RotateAroundAxis(angles:Right(),-LookY)
 	--angles = angles + Angle(LookY,-LookX,0)
 	
 	hg.cam_things(ply,view,angles)
@@ -488,7 +512,7 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 	view.drawviewer = true--not hullcheck.Hit
 	view.origin = origin
 	view.angles = angles
-
+	
 	--local fixVal = math.min(math.max(angles[1] -30,0),40)/40
 	--fixLerp = LerpFT(.4,fixLerp, fixVal)
 	--local fixBlinkingModel = angles:Forward() * (-8 * fixLerp) + angles:Up()* (2 * fixLerp)
@@ -501,46 +525,30 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 	view.origin, view.angles = HGAddView(ply, view.origin, view.angles, velLen)
 	--end
 	
-	realangle = realangle or lply:EyeAngles()
-
-	if GetCoolCameraBool() then
-		view.angles = realangle + GetViewPunchAngles() * 0.2 + vpang
-		view.angles[3] = view.angles[3] - GetViewPunchAngles4()[3]
-	end
-
-	view.angles:RotateAroundAxis(view.angles:Up(),-LookX)
-	view.angles:RotateAroundAxis(view.angles:Right(),-LookY)
 	--[[if lply:InVehicle() then
 		local FPersPos =  lply:GetAttachment(lply:LookupAttachment( "eyes" ))
 		view.origin = FPersPos.Pos
 		view.angles = FPersPos.Ang
 		return view
 	end--]]
-	if hg_gopro:GetBool() then
-		local vpangs = GetAllViewPunchAngles()
-		local anglegopro = Angle(0, vpangs[1], -vpangs[2]) * 1--Angle(vpangs[2], -vpangs[1], vpangs[3])
-		anglegopro[2] = anglegopro[2] + math.sin(CurTime() * 2) * math.cos(CurTime() * 1) * 2
-		anglegopro[1] = anglegopro[1] + math.cos(CurTime() * 1) * math.sin(CurTime() * 1.25) * 3
-		
-		hg.bone.Set(ply, "head", vector_origin, anglegopro, "gopro")
-		return SpecCam(ply, origin, angles, fov, znear, zfa)
-	end
+	if hg_gopro:GetBool() then return SpecCam(ply, origin, angles, fov, znear, zfa) end
 
 	if result == view then
 		traceBuilder.start = origin
 		traceBuilder.endpos = view.origin
 		local trace = hg.hullCheck(ply:EyePos() - vector_up * 10,view.origin,ply)
 		view.origin = trace.HitPos
-		
+		local vpang = GetViewPunchAngles2() + GetViewPunchAngles3()
+		vpang[3] = 0
 		view.angles:Add(-vpang)
 		view.angles[3] = view.angles[3] + GetViewPunchAngles4()[3]
-		hook_Run("PostHGCalcView", ply, view)
 		return view
 	end
-
+	
 	view.origin = eyePos
 	view.angles = angles
-
+	local vpang = GetViewPunchAngles2() + GetViewPunchAngles3()
+	vpang[3] = 0
 	view.angles:Add(-vpang)
 	view.angles[3] = view.angles[3] + GetViewPunchAngles4()[3]
 
@@ -671,7 +679,7 @@ local fliprtmat = CreateMaterial(
     }
 )
 
-local invertCam = CreateClientConVar("hg_cheats","0",false,false,"Toggle uselezz cheats",0,1)
+local invertCam = CreateClientConVar("hg_cheats","0",false,false,"enable uselezz cheats",0,1)
 
 hook.Add("HG.InputMouseApply","ASdInvert",function(tbl)
 	if invertCam:GetBool() then
@@ -687,15 +695,15 @@ hook.Add( "CreateMove", "flipmove", function( cmd )
 	end
 end)
 
---local hg_norenderoverride = ConVarExists("hg_norenderoverride") and GetConVar("hg_norenderoverride") or CreateClientConVar("hg_norenderoverride", 0, true, false, "if you have lags you can try turning that on", 0, 1)
+local hg_norenderoverride = ConVarExists("hg_norenderoverride") and GetConVar("hg_norenderoverride") or CreateClientConVar("hg_norenderoverride", 0, true, false, "if you have lags you can try turning that on", 0, 1)
 local mapswithfog = { -- Надо от сервер сайда сделать...
-	--["gm_freespace_09_super_extended_night"] = 5500,
-	--["gm_white_forest_countryside"] = 6000,
-	--["gm_york_remaster"] = 9500,
-	--["gm_city_of_silence"] = 1500,
-	----["gm_construct"] = 8000,
-	--["gm_fork"] = 9500,
-	--["rp_zapolye_v2"] = 7500
+	["gm_freespace_09_super_extended_night"] = 5500,
+	["gm_white_forest_countryside"] = 6000,
+	["gm_york_remaster"] = 9500,
+	["gm_city_of_silence"] = 1500,
+	--["gm_construct"] = 8000,
+	["gm_fork"] = 9500,
+	["rp_zapolye_v2"] = 7500
 }
 --GlobalRenderOverideTickOFF = true
 local zfar = mapswithfog[game.GetMap()] or 0
@@ -758,13 +766,13 @@ local function renderscene(pos, angle, fov)
 end
 
 
---[[cvars.AddChangeCallback( "hg_norenderoverride", function(cvar, old, new)
+cvars.AddChangeCallback( "hg_norenderoverride", function(cvar, old, new)
 	if tonumber(new) == 0 then
 		hook.Add("RenderScene", "jopa", renderscene)
 	else
 		--hook.Remove("RenderScene", "jopa")
 	end
-end, "huynuck")]]
+end, "huynuck")
 
 hook.Add("RenderScene", "jopa", renderscene)
 
