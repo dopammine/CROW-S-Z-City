@@ -473,6 +473,106 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 		--dmgInfo:SetDamagePosition(ent:GetPos())
 	end
 
+	local victim = ent
+	local victimRagdolled = false
+	if ent:IsRagdoll() and hg and hg.RagdollOwner then
+		local owner = hg.RagdollOwner(ent)
+		if IsValid(owner) and owner:IsPlayer() then
+			victim = owner
+			victimRagdolled = true
+		end
+	elseif ent:IsPlayer() and IsValid(ent.FakeRagdoll) then
+		victimRagdolled = true
+	end
+
+	local attackerPly = IsValid(attacker) and attacker:IsPlayer() and attacker or nil
+	local attackerWep = attackerPly and attackerPly:GetActiveWeapon() or nil
+	local attackerWepClass = IsValid(attackerWep) and attackerWep:GetClass() or nil
+	local isHands = attackerWepClass == "weapon_hands_sh"
+
+	local fromBehind = false
+	if attackerPly and IsValid(victim) and victim:IsPlayer() then
+		local diff = attackerPly:GetPos() - victim:GetPos()
+		local dist = diff:Length()
+		if dist > 0 then
+			diff:Mul(1 / dist)
+			fromBehind = victim:GetForward():Dot(diff) < -0.35
+		end
+	end
+
+	if fromBehind and not victimRagdolled and not isHands then
+		dmgInfo:ScaleDamage(1.15)
+	end
+
+	if attackerPly and victimRagdolled and IsValid(ent) and ent:IsRagdoll() and isHands and dmgInfo:IsDamageType(DMG_CLUB) then
+		local tr = hg and hg.GetTraceDamage and hg.GetTraceDamage(ent, dmgInfo:GetDamagePosition(), dmgInfo:GetDamageForce()) or nil
+		local physBone = tr and tr.PhysicsBone or nil
+		local boneId = physBone and ent.TranslatePhysBoneToBone and ent:TranslatePhysBoneToBone(physBone) or nil
+		local boneName = boneId and ent.GetBoneName and ent:GetBoneName(boneId) or nil
+		local hitgroup = boneName and hg and hg.bonetohitgroup and hg.bonetohitgroup[boneName] or nil
+
+		if hitgroup == HITGROUP_HEAD then
+			dmgInfo:ScaleDamage(1.45)
+
+			victim._hg_headstomp_reset = victim._hg_headstomp_reset or 0
+			if victim._hg_headstomp_reset < CurTime() then
+				victim._hg_headstomp_need = math.random(6, 8)
+				victim._hg_headstomp_hits = 0
+			end
+
+			victim._hg_headstomp_reset = CurTime() + 10
+			victim._hg_headstomp_hits = (victim._hg_headstomp_hits or 0) + 1
+
+			if (victim._hg_headstomp_hits or 0) >= (victim._hg_headstomp_need or 7) and victim:Alive() then
+				if isfunction(Gib_Input) then
+					local headBone = ent.LookupBone and ent:LookupBone("ValveBiped.Bip01_Head1") or nil
+					if headBone then
+						Gib_Input(ent, headBone, dmgInfo:GetDamageForce())
+					end
+				end
+
+				if victim.organism then
+					victim.organism.headamputated = true
+					net.Start("organism_send")
+					local tbl = {}
+					tbl.headamputated = true
+					tbl.owner = victim
+					net.WriteTable(tbl)
+					net.WriteBool(true)
+					net.WriteBool(false)
+					net.WriteBool(false)
+					net.WriteBool(true)
+					net.Broadcast()
+				end
+
+				victim:Kill()
+			end
+		end
+	end
+
+	if not victimRagdolled and IsValid(victim) and victim:IsPlayer() and victim:Alive() and not isSfdRound(org) then
+		victim._hg_weakpoint_cd = victim._hg_weakpoint_cd or 0
+		if victim._hg_weakpoint_cd < CurTime() then
+			local tr = hg and hg.GetTraceDamage and hg.GetTraceDamage(ent, dmgInfo:GetDamagePosition(), dmgInfo:GetDamageForce()) or nil
+			local physBone = tr and tr.PhysicsBone or nil
+			local boneId = physBone and ent.TranslatePhysBoneToBone and ent:TranslatePhysBoneToBone(physBone) or nil
+			local boneName = boneId and ent.GetBoneName and ent:GetBoneName(boneId) or nil
+			local hitgroup = boneName and hg and hg.bonetohitgroup and hg.bonetohitgroup[boneName] or nil
+
+			local weak = false
+			if fromBehind and (hitgroup == HITGROUP_HEAD or hitgroup == HITGROUP_CHEST or hitgroup == HITGROUP_STOMACH) then
+				weak = true
+			elseif (hitgroup == HITGROUP_LEFTLEG or hitgroup == HITGROUP_RIGHTLEG) and boneName and (string.find(boneName, "_Calf", 1, true) or string.find(boneName, "_Foot", 1, true)) then
+				weak = true
+			end
+
+			if weak and dmgInfo:GetDamage() >= 10 then
+				victim._hg_weakpoint_cd = CurTime() + 2
+				hg.Fake(victim)
+			end
+		end
+	end
+
 	--[[if hgIsDoor(ent) and ent.LockedDoor and dmgInfo:IsDamageType(DMG_SLASH) then
 		ent.LockedDoor = ent.LockedDoor - dmgInfo:GetDamage()
 		if ent.LockedDoor <= 0 then
