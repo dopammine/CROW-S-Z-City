@@ -156,6 +156,10 @@ module[2] = function(owner, org, timeValue)
 	//local tempo = math.Clamp(5 - (org.temperature - 31), 0, 15)
 	
 	//org.shock = math.max(org.shock, tempo * 4)
-	
+
+	if org.dizzy_until and org.dizzy_until > CurTime() then
+		org.disorientation = max(org.disorientation or 0, 2.2)
+	end
+
 	org.disorientation = math.Approach(org.disorientation, 0, timeValue / 5)
 end
