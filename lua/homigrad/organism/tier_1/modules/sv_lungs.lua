@@ -165,8 +165,30 @@ local bit_band,util_PointContents = bit.band,util.PointContents
 local color_white, color_red, color_red2, color_red3 = Color(255, 255, 255), Color(255, 0, 0), Color(200, 55, 55), Color(255, 100, 100)
 module[2] = function(owner, org, timeValue)
 	local o2 = org.o2
+	local time = CurTime()
+
+	local chokingActive = false
+	if org.choking_until then
+		if org.choking_until > time then
+			chokingActive = true
+		else
+			org.choking_until = nil
+			org.choking = false
+		end
+	else
+		chokingActive = org.choking == true
+	end
+
+	if chokingActive then
+		org.choking_started_at = org.choking_started_at or time
+	else
+		org.choking_started_at = nil
+	end
+
+	local chokingEffective = chokingActive and (time - (org.choking_started_at or time)) >= 1
+
 	local losing_oxy
-	if org.choking then
+	if chokingEffective then
 		losing_oxy = timeValue * 2.6
 	else
 		losing_oxy = timeValue * 0.5 * math.Clamp(org.o2[1] / 30, 0.25, 1)
@@ -206,7 +228,7 @@ module[2] = function(owner, org, timeValue)
 	
 	local success = owner:IsBerserk() or (not org.heartstop and org.alive and not (org.brain >= 0.4 and math.random(10 - (org.brain * 10)) < 4) and org.lungsfunction)
 	if success and owner:IsPlayer() and inwater then success = false end
-	if success and org.choking then org.needfake = true success = false end
+	if success and chokingEffective then org.needfake = true success = false end
 	if success and org.vomitInThroat then success = false end
 	local pneumothorax = (org.lungsR[2] == 1 or org.lungsL[2] == 1) and org.needle == 0
 	
@@ -254,16 +276,16 @@ module[2] = function(owner, org, timeValue)
 	
 	org.choke_time = org.choke_time or 0
 	org.was_choking = org.was_choking or false
-	if org.choking then
+	if chokingEffective then
 		org.choke_time = org.choke_time + timeValue
 	else
 		if org.was_choking then
 			local over = math.max(0, org.choke_time - 10)
-			org.choke_recovery_unlock = CurTime() + 15 + over * 5
+			org.choke_recovery_unlock = time + 15 + over * 5
 		end
 		org.choke_time = 0
 	end
-	org.was_choking = org.choking
+	org.was_choking = chokingEffective
 	
 	if org.isPly and not org.otrub and o2.curregen < losing_oxy and org.analgesia <= 1.5 then
 		if mask_blevota then

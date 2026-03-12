@@ -450,6 +450,7 @@ function SWEP:SetHandPos(noset)
 				if boneName == "ValveBiped.Bip01_Head1" and IsValid(victimPly) and ply:KeyDown(IN_USE) and ply:KeyDown(IN_DUCK) then
 					if victimPly.organism then
 						victimPly.organism.choking = true
+						victimPly.organism.choking_until = CurTime() + 0.25
 					end
 					self:SetChokeVictim(victimPly)
 				else
@@ -1322,11 +1323,14 @@ function SWEP:Think()
 			if boneName == "ValveBiped.Bip01_Head1" and IsValid(victimPly) and owner:KeyDown(IN_USE) and owner:KeyDown(IN_DUCK) then
 				if victimPly.organism then
 					victimPly.organism.choking = true
+					victimPly.organism.choking_until = CurTime() + 0.25
 				end
 				self:SetChokeVictim(victimPly)
 			else
 				if IsValid(victimPly) and victimPly.organism then
 					victimPly.organism.choking = false
+					victimPly.organism.choking_until = nil
+					victimPly.organism.choking_started_at = nil
 				end
 				self:SetChokeVictim(NULL)
 			end
@@ -1334,6 +1338,8 @@ function SWEP:Think()
 			local currentVictim = self.GetChokeVictim and self:GetChokeVictim()
 			if IsValid(currentVictim) and currentVictim.organism then
 				currentVictim.organism.choking = false
+				currentVictim.organism.choking_until = nil
+				currentVictim.organism.choking_started_at = nil
 			end
 			self:SetChokeVictim(NULL)
 		end

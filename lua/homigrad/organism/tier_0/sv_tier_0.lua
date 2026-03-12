@@ -95,3 +95,97 @@ hook.Add("Fake", "organism", function(ply, ragdoll)
 	ragdoll.organism = ply.organism
 	--zb.net.list[ragdoll] = zb.net.list[ply]
 end)
+
+if SERVER then
+	local function hgDeathTwitchApply(ragdoll)
+		local count = ragdoll:GetPhysicsObjectCount()
+		if not count or count < 2 then return end
+
+		local limbs = math.random(1, 3)
+		for i = 1, limbs do
+			local phys = ragdoll:GetPhysicsObjectNum(math.random(1, count - 1))
+			if not IsValid(phys) then continue end
+
+			phys:Wake()
+
+			local mass = phys:GetMass()
+			phys:AddAngleVelocity(VectorRand() * math.Rand(40, 160))
+			phys:ApplyForceCenter(VectorRand() * math.Rand(12, 35) * mass)
+		end
+	end
+
+	local function hgDeathTwitchScheduleMove(ragdoll)
+		if not IsValid(ragdoll) then return end
+		local state = ragdoll.hg_death_twitch
+		if not state then return end
+
+		local time = CurTime()
+		if time >= state.totalEnd then
+			ragdoll.hg_death_twitch = nil
+			return
+		end
+
+		if not state.twitchEnd or time >= state.twitchEnd then return end
+
+		hgDeathTwitchApply(ragdoll)
+
+		timer.Simple(math.Rand(1, 6), function()
+			hgDeathTwitchScheduleMove(ragdoll)
+		end)
+	end
+
+	local function hgDeathTwitchStart(ragdoll)
+		local state = ragdoll.hg_death_twitch
+		if not state then return end
+
+		local time = CurTime()
+		local duration = math.Rand(3, 15)
+
+		state.twitchEnd = math.min(time + duration, state.totalEnd)
+		hgDeathTwitchScheduleMove(ragdoll)
+	end
+
+	hook.Add("RagdollDeath", "hg-death-twitch", function(ply, ragdoll)
+		if not IsValid(ragdoll) then return end
+		if ragdoll:GetClass() ~= "prop_ragdoll" then return end
+
+		local time = CurTime()
+		ragdoll.hg_death_twitch = {
+			totalEnd = time + 60
+		}
+
+		local timerName = "HG_DeathTwitch_" .. ragdoll:EntIndex()
+		timer.Remove(timerName)
+
+		timer.Create(timerName, 6, 0, function()
+			if not IsValid(ragdoll) then
+				timer.Remove(timerName)
+				return
+			end
+
+			local state = ragdoll.hg_death_twitch
+			if not state then
+				timer.Remove(timerName)
+				return
+			end
+
+			local t = CurTime()
+			if t >= state.totalEnd then
+				ragdoll.hg_death_twitch = nil
+				timer.Remove(timerName)
+				return
+			end
+
+			if state.twitchEnd and t < state.twitchEnd then return end
+
+			local chance = math.Rand(0.2, 0.4)
+			if math.Rand(0, 1) <= chance then
+				hgDeathTwitchStart(ragdoll)
+			end
+		end)
+
+		ragdoll:CallOnRemove("hg-death-twitch", function()
+			timer.Remove(timerName)
+		end)
+	end)
+end
