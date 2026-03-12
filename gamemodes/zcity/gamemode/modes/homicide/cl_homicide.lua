@@ -10,14 +10,28 @@ end
 local killEffectEndTime = 0
 local killEffectDuration = 1
 local killEffectColor = 1
+local manhuntEffectEndTime = 0
+local manhuntEffectDuration = 6
+local manhuntEffectColor = 1
+local HMCD_FX_MUL = 1.5
 
 function TriggerKillEffect()
 	killEffectEndTime = CurTime() + killEffectDuration
 end
 
+local function TriggerManhuntEffect(duration)
+	manhuntEffectDuration = duration or 6
+	manhuntEffectEndTime = CurTime() + manhuntEffectDuration
+end
+
 net.Receive("HMCD_TriggerKillEffect", function()
 	killEffectColor = net.ReadUInt(2)
 	TriggerKillEffect()
+end)
+
+net.Receive("HG_TriggerManhuntEffect", function()
+	manhuntEffectColor = net.ReadUInt(2)
+	TriggerManhuntEffect(net.ReadFloat())
 end)
 
 hook.Add("HUDPaint", "HMCD_KillEffect", function()
@@ -33,7 +47,7 @@ hook.Add("HUDPaint", "HMCD_KillEffect", function()
 		r, g, b = 120, 0, 0
 	end
 
-	surface.SetDrawColor(r, g, b, 55 * w)
+	surface.SetDrawColor(r, g, b, math.min(255, 55 * w * HMCD_FX_MUL))
 	surface.DrawRect(0, 0, sw, sh)
 
 	local lines = math.floor(10 + 30 * w)
@@ -42,16 +56,71 @@ hook.Add("HUDPaint", "HMCD_KillEffect", function()
 		local h = math.random(1, 2)
 		local x = math.random(0, sw - 10)
 		local ww = math.random(20, math.min(260, sw - x))
-		surface.SetDrawColor(255, 255, 255, math.random(8, 28) * w)
+		surface.SetDrawColor(255, 255, 255, math.min(255, math.random(8, 28) * w * HMCD_FX_MUL))
 		surface.DrawRect(x, y, ww, h)
 	end
 
 	local pixels = math.floor(120 + 320 * w)
 	for i = 1, pixels do
 		local bright = math.random(0, 255)
-		surface.SetDrawColor(bright, bright, bright, 10 * w)
+		surface.SetDrawColor(bright, bright, bright, math.min(255, 10 * w * HMCD_FX_MUL))
 		surface.DrawRect(math.random(0, sw), math.random(0, sh), 1, 1)
 	end
+end)
+
+hook.Add("HUDPaint", "HG_ManhuntEffect", function()
+	if manhuntEffectEndTime <= CurTime() then return end
+
+	local w = math.Clamp((manhuntEffectEndTime - CurTime()) / manhuntEffectDuration, 0, 1)
+	local sw, sh = ScrW(), ScrH()
+
+	local r, g, b = 255, 255, 255
+	if manhuntEffectColor == 1 then
+		r, g, b = 180, 30, 30
+	elseif manhuntEffectColor == 2 then
+		r, g, b = 120, 0, 0
+	end
+
+	surface.SetDrawColor(r, g, b, math.min(255, 65 * w * HMCD_FX_MUL))
+	surface.DrawRect(0, 0, sw, sh)
+
+	local lines = math.floor(10 + 30 * w)
+	for i = 1, lines do
+		local y = math.random(0, sh - 2)
+		local h = math.random(1, 2)
+		local x = math.random(0, sw - 10)
+		local ww = math.random(20, math.min(260, sw - x))
+		surface.SetDrawColor(255, 255, 255, math.min(255, math.random(10, 34) * w * HMCD_FX_MUL))
+		surface.DrawRect(x, y, ww, h)
+	end
+
+	local pixels = math.floor(120 + 320 * w)
+	for i = 1, pixels do
+		local bright = math.random(0, 255)
+		surface.SetDrawColor(bright, bright, bright, math.min(255, 12 * w * HMCD_FX_MUL))
+		surface.DrawRect(math.random(0, sw), math.random(0, sh), 1, 1)
+	end
+end)
+
+hook.Add("RenderScreenspaceEffects", "HG_ManhuntEffect", function()
+	if manhuntEffectEndTime <= CurTime() then return end
+	local w = math.Clamp((manhuntEffectEndTime - CurTime()) / manhuntEffectDuration, 0, 1)
+
+	DrawMotionBlur(0.08 * w * HMCD_FX_MUL, 0.9 * w * HMCD_FX_MUL, 0.01)
+	DrawToyTown(2.5 * w * HMCD_FX_MUL, 1.5 * ScrH())
+	DrawSharpen(1.5 * w * HMCD_FX_MUL, 1)
+
+	DrawColorModify({
+		["$pp_colour_addr"] = 0,
+		["$pp_colour_addg"] = 0,
+		["$pp_colour_addb"] = 0,
+		["$pp_colour_brightness"] = -0.6 * w,
+		["$pp_colour_contrast"] = 1,
+		["$pp_colour_colour"] = 1,
+		["$pp_colour_mulr"] = 0,
+		["$pp_colour_mulg"] = 0,
+		["$pp_colour_mulb"] = 0,
+	})
 end)
 
 MODE.TypeSounds = {
