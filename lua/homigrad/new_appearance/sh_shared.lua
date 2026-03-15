@@ -112,6 +112,8 @@ hg.Appearance.Clothes[1] = {
     casual = "models/humans/male/group01/casual",
     sweater_xmas = "models/humans/male/group01/sweater",
 	worker = "models/humans/male/group01/worker",
+    crowzcity = "models/humans/male/group01/crowszcity",
+    salatis = "models/humans/male/group01/salatis",
 }
 
 hg.Appearance.Clothes[2] = {
@@ -135,6 +137,8 @@ hg.Appearance.ClothesDesc = {
     casual = {desc = "from orignial Jack's Homicide gamemode.\nForever."},
     sweater_xmas = {desc = "by Wontairr from steam workshop\nRMB to open link", link = "https://steamcommunity.com/sharedfiles/filedetails/?id=3621630161"},
 	worker = {desc = "by Chervo93 from steam workshop\nRMB to open link", link = "https://steamcommunity.com/sharedfiles/filedetails/?id=3540506879"},
+    crowzcity = {desc = "wow this shirt sucks"},
+    salatis = {desc = "the big S in the source engine"},
 }
 -- Facemaps
 hg.Appearance.FacemapsSlots = hg.Appearance.FacemapsSlots or {
