@@ -599,7 +599,13 @@ if SERVER then
 	end
 
 	local function hgIsSupporter(ply)
-		local group = ply:GetUserGroup()
+		local group
+		if ULib and ULib.ucl and ULib.ucl.getUserGroup then
+			group = ULib.ucl.getUserGroup(ply)
+		end
+		if not group then
+			group = ply:GetUserGroup()
+		end
 		return group and string.lower(group) == "supporter"
 	end
 
@@ -620,16 +626,35 @@ if SERVER then
 		end
 	end
 
-	hook.Add("PlayerSpawn", "hg_supporter_beer", function(ply)
-		timer.Simple(0.2, function()
+	local function hgStartSupporterBeerTimer(ply)
+		if not IsValid(ply) then return end
+		local id = ply:SteamID64() or ply:EntIndex()
+		local timerName = "hg_supporter_beer_" .. id
+		if timer.Exists(timerName) then timer.Remove(timerName) end
+		timer.Create(timerName, 0.5, 10, function()
+			if not IsValid(ply) then timer.Remove(timerName) return end
 			hgGiveSupporterBeer(ply)
+			if ply:HasWeapon("weapon_hg_beer") then
+				timer.Remove(timerName)
+			end
 		end)
+	end
+
+	hook.Add("PlayerSpawn", "hg_supporter_beer", function(ply)
+		hgStartSupporterBeerTimer(ply)
 	end)
 
 	hook.Add("PlayerLoadout", "hg_supporter_beer_loadout", function(ply)
-		timer.Simple(0, function()
-			hgGiveSupporterBeer(ply)
-		end)
+		hgStartSupporterBeerTimer(ply)
+	end)
+
+	hook.Add("Player Spawn", "hg_supporter_beer_custom", function(ply)
+		hgStartSupporterBeerTimer(ply)
+	end)
+
+	hook.Add("player_spawn", "hg_supporter_beer_event", function(data)
+		local ply = Player(data.userid)
+		hgStartSupporterBeerTimer(ply)
 	end)
 end
 
