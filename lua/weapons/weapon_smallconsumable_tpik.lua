@@ -140,6 +140,7 @@ if SERVER then
 		local owner = self:GetOwner()
 		local entOwner = IsValid(owner.FakeRagdoll) and owner.FakeRagdoll or owner
 		ent:EmitSound( self.WaterModel[self.WorldModel] and "snd_jack_hmcd_drink"..math.random(3)..".wav" or "snd_jack_hmcd_eat"..math.random(4)..".wav", 60, math.random(95, 105))
+		hook.Run("HG_OnFoodEaten", owner, self.WaterModel[self.WorldModel] or false)
 		org.satiety = org.satiety + 10/5
 		owner:SelectWeapon("weapon_hands_sh")
 		self:Remove()

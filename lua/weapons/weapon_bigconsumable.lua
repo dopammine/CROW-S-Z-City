@@ -173,6 +173,7 @@ if SERVER then
 		owner:ViewPunch(ang_eat)
 		
 		ent:EmitSound( self.WaterModel[self.WorldModel] and "snd_jack_hmcd_drink"..math.random(3)..".wav" or "snd_jack_hmcd_eat"..math.random(4)..".wav", 60, math.random(95, 105))
+		hook.Run("HG_OnFoodEaten", owner, self.WaterModel[self.WorldModel] or false)
 		self.CDEating = CurTime() + 0.5
 		self.Eating = self.Eating + 1
 

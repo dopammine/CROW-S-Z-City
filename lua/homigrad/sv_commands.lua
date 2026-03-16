@@ -208,11 +208,15 @@ if SERVER then
 
     concommand.Add("hg_dance", function(ply)
         if not IsValid(ply) then return end
-        local duration = SoundDuration("bbq.wav")
-        if not duration or duration <= 0 then
-            duration = 3
-        end
+        local duration = 20
         ply:SetNWFloat("hg_dance_until", CurTime() + duration)
-        ply:EmitSound("bbq.wav", 100, 100, 1, CHAN_AUTO)
+        ply:SetNWBool("TauntStopMoving", true)
+        ply:EmitSound("actmod/ab/remyboys.wav", 100, 100, 1, CHAN_AUTO)
+        timer.Simple(duration, function()
+            if IsValid(ply) then
+                ply:SetNWBool("TauntStopMoving", false)
+                ply:StopSound("actmod/ab/remyboys.wav")
+            end
+        end)
     end)
 end

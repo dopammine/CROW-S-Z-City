@@ -101,13 +101,17 @@ if SERVER then
 			if now < ply.HG_AF_NextDanceCheck then continue end
 			ply.HG_AF_NextDanceCheck = now + math.Rand(10, 20)
 			if math.random() <= 0.2 then
-				local duration = SoundDuration("bbq.wav")
-				if not duration or duration <= 0 then
-					duration = 3
-				end
+				local duration = 20
 				ply:SetNWFloat("hg_dance_until", now + duration)
-				ply:EmitSound("bbq.wav", 100, 100, 1, CHAN_AUTO)
-				ply.HG_AF_DanceCooldown = now + 50
+				ply:SetNWBool("TauntStopMoving", true)
+				ply:EmitSound("actmod/ab/remyboys.wav", 100, 100, 1, CHAN_AUTO)
+				ply.HG_AF_DanceCooldown = now + duration + 20
+				timer.Simple(duration, function()
+					if IsValid(ply) then
+						ply:SetNWBool("TauntStopMoving", false)
+						ply:StopSound("actmod/ab/remyboys.wav")
+					end
+				end)
 			end
 		end
 	end)
@@ -431,6 +435,7 @@ end)
 hook.Add("Bones", "homigrad-walk-torso", function(ply, dtime)
 	if not IsValid(ply) or not ply:IsPlayer() or not ply:Alive() then return end
 	if ply:GetNWFloat("hg_dance_until", 0) > CurTime() then
+		if ply:LookupSequence("amod_oneyplaysdance") > 0 then return end
 		local t = CurTime()
 		local speed = 5.5
 		local armSpeed = 8.5
@@ -460,6 +465,20 @@ hook.Add("Bones", "homigrad-walk-torso", function(ply, dtime)
 		hg.bone.Set(ply, "ValveBiped.Bip01_L_Foot", vector_origin, Angle(knee * 0.2, 0, -hipSide * 0.2), "dance", 0.08, dtime)
 		hg.bone.Set(ply, "ValveBiped.Bip01_R_Foot", vector_origin, Angle(-knee * 0.2, 0, hipSide * 0.2), "dance", 0.08, dtime)
 		return
+	end
+	if ply.organism and (ply.organism.llegamputated or ply.organism.rlegamputated) then
+		local torso = Angle(10, -55, 0)
+		local head = Angle(-10, 0, 0)
+		local l_upperarm = Angle(20, 0, 70)
+		local r_upperarm = Angle(0, 55, 0)
+
+		hg.bone.Set(ply, "spine", vector_origin, torso, "walk", 0.08, dtime)
+		hg.bone.Set(ply, "l_upperarm", vector_origin, l_upperarm, "walk", 0.08, dtime)
+		hg.bone.Set(ply, "r_upperarm", vector_origin, r_upperarm, "walk", 0.08, dtime)
+		hg.bone.Set(ply, "spine1", vector_origin, torso, "walk", 0.08, dtime)
+		hg.bone.Set(ply, "spine2", vector_origin, torso, "walk", 0.08, dtime)
+		hg.bone.Set(ply, "pelvis", vector_origin, Angle(10, 0, 0), "walk", 0.08, dtime)
+		hg.bone.Set(ply, "head", vector_origin, head, "walk", 0.08, dtime)
 	end
 	if aprilFoolsEnabled() then
 		if not ply:OnGround() then

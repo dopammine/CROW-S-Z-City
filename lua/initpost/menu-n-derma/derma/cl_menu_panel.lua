@@ -242,6 +242,25 @@ function PANEL:Init()
     zteam:SetText("Contributors: CROW, chillin' fella, \nGrandpa, Greg, Kliv")
     zteam:SetContentAlignment(4)
     zteam:SizeToContents()
+
+    local endVote = vgui.Create("DLabel", self)
+    endVote:SetText("Vote End Round")
+    endVote:SetMouseInputEnabled(true)
+    endVote:SetFont("ZCity_Tiny")
+    endVote:SetTextColor(Color(225,225,225))
+    endVote:SizeToContents()
+    endVote.RColor = Color(225,225,225)
+    endVote.WColor = Color(225,225,225,255)
+    function endVote:DoClick()
+        net.Start("hg_vote_endround")
+        net.SendToServer()
+    end
+    function endVote:Think()
+        self:SizeToContents()
+        self:SetPos(ScrW() - self:GetWide() - ScreenScale(16), ScrH() - self:GetTall() - ScreenScaleH(16))
+        self.HoverLerp = LerpFT(0.2, self.HoverLerp or 0, self:IsHovered() and 1 or 0)
+        self:SetTextColor(self.RColor:Lerp(self.WColor:Lerp(red_select, self.HoverLerp), self.HoverLerp))
+    end
 end
 
 function PANEL:First( ply )
@@ -268,7 +287,11 @@ function PANEL:AddSelect( pParent, strTitle, tbl )
     local id = #self.Buttons + 1
     self.Buttons[id] = vgui.Create( "DLabel", pParent )
     local btn = self.Buttons[id]
-    btn:SetText( strTitle )
+    if GetGlobalBool("hg_aprilfools", false) and hg and hg.AprilFoolsArabify then
+        btn:SetText( hg.AprilFoolsArabify(strTitle) )
+    else
+        btn:SetText( strTitle )
+    end
     btn:SetMouseInputEnabled( true )
     btn:SizeToContents()
     btn:SetFont( "ZCity_Small" )

@@ -422,10 +422,6 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		owner.BerserkKills = nil
 	end
 
-	if org.llegamputated or org.rlegamputated then
-		org.needfake = true
-	end
-
 	if org.rarmamputated and org.larmamputated and owner:IsPlayer() then
 		local hands = owner:GetWeapon("weapon_hands_sh")
 		if owner:GetActiveWeapon() != hands then
