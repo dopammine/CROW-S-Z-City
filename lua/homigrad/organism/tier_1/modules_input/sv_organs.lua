@@ -147,7 +147,14 @@ local arteryMessages ={
 local function hitArtery(artery, org, dmg, dmgInfo, boneindex, dir, hit)
 	if isCrush(dmgInfo) then return 1 end
 	if dmgInfo:IsDamageType(DMG_BLAST) then return 1 end
-	if dmgInfo:IsDamageType(DMG_SLASH) and (math.random(5) != 1) and dmg < 2 then return end
+	-- Neck-focused: make carotid arterial bleed guaranteed for any slash (stab or cut)
+	if artery == "arteria" then
+		-- 100% for slash or stab to neck; fall through to apply bleed
+	else
+		if dmgInfo:IsDamageType(DMG_SLASH) and (math.random(5) ~= 1) and dmg < 2 then
+			return 0
+		end
+	end
 	org.painadd = org.painadd + dmg * 1
 	if org[artery] == 1 then return 0 end
 	if org[string.Replace(artery, "artery", "").."amputated"] then return end
@@ -170,6 +177,20 @@ local function hitArtery(artery, org, dmg, dmgInfo, boneindex, dir, hit)
 	table.insert(org.arterialwounds, {arterySize[artery], localPos, localAng, boneindex, CurTime(), dir2 * 100, artery})
 	owner:SetNetVar("arterialwounds", org.arterialwounds)
 	--if IsValid(owner:GetNWEntity("RagdollDeath")) then owner:GetNWEntity("RagdollDeath"):SetNetVar("wounds",org.arterialwounds) end
+	-- Neck stab: immediate forced ragdoll (no choking timer; organism handles outcomes)
+	if artery == "arteria" and dmgInfo:IsDamageType(DMG_SLASH) and dmg >= 15 and IsValid(owner) and owner:IsPlayer() then
+		if not IsValid(owner.FakeRagdoll) then
+			hg.StunPlayer(owner, 2)
+		end
+	end
+	if IsValid(owner) and owner:IsPlayer() then
+		timer.Simple(0.1, function()
+			if not IsValid(owner) then return end
+			if math.random(2) == 1 and not IsValid(owner.FakeRagdoll) then
+				hg.StunPlayer(owner, 2)
+			end
+		end)
+	end
 	return 0
 end
 
@@ -213,17 +234,7 @@ input_list.lungsR = function(org, bone, dmg, dmgInfo)
 	return 0//isCrush(dmgInfo) and 1 or prot
 end
 
-input_list.trachea = function(org, bone, dmg, dmgInfo)
-	do return 0 end
-	local oldDmg = org.trachea
-
-	if dmgInfo:IsDamageType(DMG_BLAST) then dmg = dmg / 5 end
-
-	local result = damageOrgan(org, dmg * 2, dmgInfo, "trachea")
-
-	hg.AddHarmToAttacker(dmgInfo, (org.trachea - oldDmg) * 8, "Trachea damage harm")
-
-	//org.internalBleed = org.internalBleed + dmg * 2
-
-	return result
+input_list.trachea = function(org, bone, dmg, dmgInfo, boneindex, dir, hit)
+	-- Make trachea hits also trigger carotid artery effects
+	return hitArtery("arteria", org, dmg, dmgInfo, "ValveBiped.Bip01_Neck1", dir or (IsValid(org.owner) and org.owner:GetAimVector()) or Vector(0,0,1), hit ~= nil and hit or true)
 end
