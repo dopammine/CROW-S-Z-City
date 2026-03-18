@@ -177,7 +177,10 @@ end
 util.AddNetworkString( "tdm_open_buymenu" )
 function MODE:ShowSpare1(ply ) -- OpenMenu
 	if not ply:Alive() then return end
+	local mode = CurrentRound()
+	local buyUntil = mode and mode.BuyUntil or ((zb.ROUND_START or CurTime()) + ((mode and mode.BuyTime) or 40))
 	net.Start( "tdm_open_buymenu" )
+	net.WriteFloat(buyUntil)
 	net.Send( ply )
 end
 
@@ -186,7 +189,9 @@ util.AddNetworkString( "tdm_buyitem" )
 local AttachmentPrice = 50
 net.Receive("tdm_buyitem",function(len,ply)
 	if !CurrentRound().buymenu then return end
-	if ((zb.ROUND_START or 0) + 40 < CurTime()) then ply:ChatPrint("Time's up!") return end
+	local mode = CurrentRound()
+	local buyUntil = mode and mode.BuyUntil or ((zb.ROUND_START or 0) + ((mode and mode.BuyTime) or 40))
+	if buyUntil < CurTime() then ply:ChatPrint("Time's up!") return end
 	local tItem = net.ReadTable()
 	if not istable(tItem) then return end
 	local category = tItem[1]
