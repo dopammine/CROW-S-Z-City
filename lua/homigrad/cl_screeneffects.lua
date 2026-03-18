@@ -290,7 +290,7 @@ end
 local function isDeadBodyAllowed(ply, owner)
 	if not IsValid(ply) then return false end
 	if ply.isTraitor then return false end
-	local mode = CurrentRound and CurrentRound() or nil
+	local mode = CurrentRound()
 	local modeName = mode and (mode.Type or mode.name) or nil
 	if modeName and pvpModes[modeName] then
 		if not teamPvpModes[modeName] then return false end
@@ -320,7 +320,7 @@ local deadBodyHoldSeconds = 1.2
 hook.Add("Post Post Processing", "TunnelwaveDeadOrSuicide", function()
 	if not IsValid(lply) or not lply:Alive() then return end
 	local deadOwner = getDeadBodyOwner(lply)
-	local mode = CurrentRound and CurrentRound() or nil
+	local mode = CurrentRound()
 	local modeName = mode and (mode.Type or mode.name) or nil
 	if lply.isTraitor or (modeName and pvpModes[modeName] and not teamPvpModes[modeName]) then
 		deadBodyHoldUntil = 0
@@ -820,167 +820,4 @@ hook.Add("HUDPaint", "hg-aprilfools-fatman", function()
 	surface.SetDrawColor(255, 255, 255, 255)
 	surface.DrawTexturedRect(x, y, targetW, targetH)
 	render.SetLightingMode(0)
-end)
-
-local indihome = {
-	nextCheck = 0,
-	activeUntil = 0,
-	startedAt = 0,
-	duration = 0,
-	fadeTime = 1.5,
-	slideTime = 1,
-	cooldownUntil = 0,
-	cooldownTime = 120,
-	sound = nil,
-	clicker = false,
-	guy = CreateMaterial("hg_indi_guy", "UnlitGeneric", {
-		["$basetexture"] = "custom/indianguy",
-		["$vertexcolor"] = "1",
-		["$vertexalpha"] = "1"
-	}),
-	home1 = CreateMaterial("hg_indi_home1", "UnlitGeneric", {
-		["$basetexture"] = "custom/indihome1",
-		["$vertexcolor"] = "1",
-		["$vertexalpha"] = "1"
-	}),
-	home2 = CreateMaterial("hg_indi_home2", "UnlitGeneric", {
-		["$basetexture"] = "custom/indihome2",
-		["$vertexcolor"] = "1",
-		["$vertexalpha"] = "1"
-	}),
-	skipShown = false,
-	skipFade = 0
-}
-
-hook.Add("Think", "hg-aprilfools-indi", function()
-	if not GetGlobalBool("hg_aprilfools", false) then return end
-	local now = CurTime()
-	if now < indihome.nextCheck then return end
-	indihome.nextCheck = now + 6
-	if indihome.startedAt > 0 and now >= indihome.activeUntil then
-		indihome.startedAt = 0
-		if indihome.sound then
-			indihome.sound:Stop()
-		end
-	end
-	if now < indihome.activeUntil or now < indihome.cooldownUntil then return end
-	if math.random() <= 0.2 then
-		local duration = SoundDuration("indihome.wav")
-		if not duration or duration <= 0 then
-			duration = 18
-		end
-		indihome.duration = duration
-		indihome.startedAt = now
-		indihome.activeUntil = now + duration + indihome.fadeTime
-		indihome.cooldownUntil = now + indihome.cooldownTime
-		indihome.skipShown = false
-		indihome.skipFade = 0
-		if indihome.sound then
-			indihome.sound:Stop()
-		end
-		indihome.sound = CreateSound(LocalPlayer(), "indihome.wav")
-		if indihome.sound then
-			indihome.sound:Play()
-		end
-	end
-end)
-
-hook.Add("HUDPaint", "hg-aprilfools-indi", function()
-	local now = CurTime()
-	if now >= indihome.activeUntil or indihome.startedAt <= 0 then return end
-	local elapsed = now - indihome.startedAt
-	local fade = 1
-	if elapsed > indihome.duration then
-		fade = 1 - math.Clamp((elapsed - indihome.duration) / indihome.fadeTime, 0, 1)
-	end
-	local alpha = math.Clamp(255 * fade, 0, 255)
-	local scrW, scrH = ScrW(), ScrH()
-
-	local homeMat
-	if elapsed >= 15 then
-		homeMat = indihome.home2
-	elseif elapsed >= 1 then
-		homeMat = indihome.home1
-	end
-
-	if homeMat then
-		render.SetLightingMode(1)
-		surface.SetMaterial(homeMat)
-		surface.SetDrawColor(255, 255, 255, alpha)
-		surface.DrawTexturedRect(0, 0, scrW, scrH)
-		render.SetLightingMode(0)
-	end
-
-	local skipDelay = 2
-	local skipReady = elapsed >= skipDelay
-	indihome.skipFade = Lerp(FrameTime() * 6, indihome.skipFade or 0, skipReady and 1 or 0)
-
-	if indihome.skipFade > 0.01 then
-		local btnW, btnH = ScreenScale(50), ScreenScaleH(18)
-		local btnX = scrW - btnW - ScreenScale(10)
-		local btnY = scrH - btnH - ScreenScaleH(10)
-
-		local mx, my = gui.MousePos()
-		local hovered = mx > 0 and my > 0 and mx >= btnX and mx <= btnX + btnW and my >= btnY and my <= btnY + btnH
-		local a = math.Clamp(255 * indihome.skipFade, 0, 255)
-
-		surface.SetDrawColor(25, 25, 25, 220 * indihome.skipFade)
-		surface.DrawRect(btnX, btnY, btnW, btnH)
-		surface.SetDrawColor(255, 255, 255, 40 * indihome.skipFade)
-		surface.DrawOutlinedRect(btnX, btnY, btnW, btnH)
-		if hovered then
-			surface.SetDrawColor(255, 255, 255, 25 * indihome.skipFade)
-			surface.DrawRect(btnX, btnY, btnW, btnH)
-		end
-		local drawText = (hg and hg.arabicRaw and hg.arabicRaw.draw_SimpleText) or draw.SimpleText
-		drawText("Skip Ad", "ZCity_Tiny", btnX + btnW * 0.5, btnY + btnH * 0.5, Color(255, 255, 255, a), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-
-		if hovered and input.IsMouseDown(MOUSE_LEFT) then
-			indihome.activeUntil = now
-			indihome.startedAt = 0
-			if indihome.sound then
-				indihome.sound:Stop()
-			end
-			gui.EnableScreenClicker(false)
-			indihome.clicker = false
-		end
-	end
-
-	if elapsed < 1 then
-		local guyH = scrH * 0.55
-		local guyW = guyH * 0.75
-		local slideT = math.Clamp(elapsed / indihome.slideTime, 0, 1)
-		local eased = 1 - (1 - slideT) * (1 - slideT) * (1 - slideT)
-		local startX = scrW + guyW
-		local targetX = scrW - guyW * 0.9
-		local x = Lerp(eased, startX, targetX)
-		local y = (scrH - guyH) * 0.5
-		render.SetLightingMode(1)
-		surface.SetMaterial(indihome.guy)
-		surface.SetDrawColor(255, 255, 255, alpha)
-		surface.DrawTexturedRect(x, y, guyW, guyH)
-		render.SetLightingMode(0)
-	end
-end)
-
-hook.Add("Think", "hg-aprilfools-indi-skipcursor", function()
-	local now = CurTime()
-	if now >= indihome.activeUntil or indihome.startedAt <= 0 then
-		if indihome.clicker then
-			gui.EnableScreenClicker(false)
-			indihome.clicker = false
-		end
-		return
-	end
-	if now - indihome.startedAt >= 2 then
-		if not indihome.clicker then
-			gui.EnableScreenClicker(true)
-			indihome.clicker = true
-		end
-	else
-		if indihome.clicker then
-			gui.EnableScreenClicker(false)
-			indihome.clicker = false
-		end
-	end
 end)
