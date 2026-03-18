@@ -7,6 +7,8 @@ local function screen_scale_2(num)
 end
 --//
 
+local visual_cvar = CLIENT and CreateClientConVar("hg_visualspmo", "1", true, false, "", 0, 1)
+
 local killEffectEndTime = 0
 local killEffectDuration = 1
 local killEffectColor = 1
@@ -35,6 +37,7 @@ net.Receive("HG_TriggerManhuntEffect", function()
 end)
 
 hook.Add("HUDPaint", "HMCD_KillEffect", function()
+	if visual_cvar and visual_cvar:GetBool() then return end
 	if killEffectEndTime <= CurTime() then return end
 
 	local w = math.Clamp((killEffectEndTime - CurTime()) / killEffectDuration, 0, 1)
@@ -69,6 +72,7 @@ hook.Add("HUDPaint", "HMCD_KillEffect", function()
 end)
 
 hook.Add("HUDPaint", "HG_ManhuntEffect", function()
+	if visual_cvar and visual_cvar:GetBool() then return end
 	if manhuntEffectEndTime <= CurTime() then return end
 
 	local w = math.Clamp((manhuntEffectEndTime - CurTime()) / manhuntEffectDuration, 0, 1)
@@ -103,6 +107,7 @@ hook.Add("HUDPaint", "HG_ManhuntEffect", function()
 end)
 
 hook.Add("RenderScreenspaceEffects", "HG_ManhuntEffect", function()
+	if visual_cvar and visual_cvar:GetBool() then return end
 	if manhuntEffectEndTime <= CurTime() then return end
 	local w = math.Clamp((manhuntEffectEndTime - CurTime()) / manhuntEffectDuration, 0, 1)
 
@@ -406,7 +411,8 @@ function MODE:RenderScreenspaceEffects()
 		surface.DrawRect(-1, -1, ScrW() + 1, ScrH() + 1 )
 	end
 
-	if killEffectEndTime > CurTime() then
+	-- respect hg_visualspmo: 1 disables homicide manhunt/kill visuals, 0 enables
+	if (not visual_cvar or not visual_cvar:GetBool()) and killEffectEndTime > CurTime() then
 		local w = math.Clamp((killEffectEndTime - CurTime()) / killEffectDuration, 0, 1)
 		DrawMotionBlur(0.08 * w, 0.9 * w, 0.01)
 		DrawToyTown(2.5 * w, 1.5 * ScrH())
