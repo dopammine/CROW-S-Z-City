@@ -69,7 +69,7 @@ You are equipped with various weapons, poisons and explosives, grenades and your
 			hg.AddAttachmentForce(ply, p22, "supressor4")
 			ply:Give("weapon_sogknife")	
 			ply:Give("weapon_hg_rgd_tpik")
-			ply:Give("weapon_walkie_talkie")
+			-- ply:Give("weapon_walkie_talkie")
 			ply:Give("weapon_adrenaline")
 			ply:Give("weapon_hg_smokenade_tpik")
 			ply:Give("weapon_traitor_ied")
@@ -119,7 +119,7 @@ For people who like to play chess.]],
 			ply:GiveAmmo(taser:GetMaxClip1() * 2, taser:GetPrimaryAmmoType(), true)
 			ply:Give("weapon_sogknife")
 			-- ply:Give("weapon_hg_rgd_tpik")
-			ply:Give("weapon_walkie_talkie")
+			-- ply:Give("weapon_walkie_talkie")
 			ply:Give("weapon_adrenaline")
 			ply:Give("weapon_hg_smokenade_tpik")
 			
@@ -173,7 +173,7 @@ For people who like to play checkers.]],
 		SpawnFunction = function(ply)
 			ply:Give("weapon_sogknife")	
 			ply:Give("weapon_adrenaline")
-			ply:Give("weapon_walkie_talkie")
+			-- ply:Give("weapon_walkie_talkie")
 			-- ply:Give("weapon_hg_smokenade_tpik")
 			-- ply:Give("weapon_hg_shuriken")
 			
@@ -231,7 +231,6 @@ For those who prefer to kill from the shadows.]],
 			ply:Give("weapon_sogknife")
 			ply:Give("weapon_traitor_poison1")
 			ply:Give("weapon_traitor_suit")
-			ply:Give("weapon_walkie_talkie")
 			ply:Give("weapon_adrenaline")
 			ply:Give("weapon_handcuffs")
 			ply:Give("weapon_hg_smokenade_tpik")
@@ -260,7 +259,7 @@ For those who prefer to kill from the shadows.]],
 			 ply:Give("weapon_hg_pipebomb_tpik")
 			 ply:Give("weapon_hg_molotov_tpik")
 			 ply:Give("weapon_traitor_ied")
-			 ply:Give("weapon_walkie_talkie")
+			 --ply:Give("weapon_walkie_talkie")
 			
 			 ply.organism.stamina.max = 260
 			 local inv = ply:GetNetVar("Inventory", {})
