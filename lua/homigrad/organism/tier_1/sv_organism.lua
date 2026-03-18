@@ -422,6 +422,10 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		owner.BerserkKills = nil
 	end
 
+	if org.llegamputated or org.rlegamputated then
+		org.needfake = true
+	end
+
 	if org.rarmamputated and org.larmamputated and owner:IsPlayer() then
 		local hands = owner:GetWeapon("weapon_hands_sh")
 		if owner:GetActiveWeapon() != hands then
@@ -464,9 +468,10 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	local just_woke_up = not org.needotrub and org.otrub and (org.uncon_timer or 0) > 6
 	if isPly and just_went_uncon then hook.Run("HG_OnOtrub", owner); hook.Run("PlayerDropWeapon", owner) end
 	if isPly and just_woke_up then hook.Run("HG_OnWakeOtrub", owner) end
+	if isPly and just_woke_up then org.posturing = false end
 
-	org.canmove = (org.spine2 < hg.organism.fake_spine2 and org.spine3 < hg.organism.fake_spine3) and not org.otrub
-	org.canmovehead = (org.spine3 < hg.organism.fake_spine3) and not org.otrub
+	org.canmove = ((org.spine2 or 0) < (hg.organism.fake_spine2 or 0.5) and (org.spine3 or 0) < (hg.organism.fake_spine3 or 0.5)) and not org.otrub
+	org.canmovehead = ((org.spine3 or 0) < (hg.organism.fake_spine3 or 0.5)) and not org.otrub
 	
 	if not (org.canmove and org.canmovehead and (org.stun - CurTime()) < 0) then org.needfake = true end
 	if (org.blood < 2700) then org.needfake = true end
@@ -475,20 +480,19 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 
 	if org.posturing then //-- the decerebrate one
 		local ent = hg.GetCurrentCharacter(org.owner)
-
 		local rleg = ent:GetPhysicsObjectNum(ent:TranslateBoneToPhysBone(ent:LookupBone("ValveBiped.Bip01_R_Foot")))
 		local lleg = ent:GetPhysicsObjectNum(ent:TranslateBoneToPhysBone(ent:LookupBone("ValveBiped.Bip01_L_Foot")))
 		local rarm = ent:GetPhysicsObjectNum(ent:TranslateBoneToPhysBone(ent:LookupBone("ValveBiped.Bip01_R_Hand")))
 		local larm = ent:GetPhysicsObjectNum(ent:TranslateBoneToPhysBone(ent:LookupBone("ValveBiped.Bip01_L_Hand")))
-
 		local down = -ent:GetBoneMatrix(ent:LookupBone("ValveBiped.Bip01_Spine")):GetAngles():Forward()
-		if IsValid(rleg) and IsValid(rarm) and IsValid(larm) and IsValid(lleg)then
+		if IsValid(rleg) and IsValid(rarm) and IsValid(larm) and IsValid(lleg) then
 			rleg:ApplyForceCenter(down * 500)
 			lleg:ApplyForceCenter(down * 500)
 			rarm:ApplyForceCenter(down * 500)
 			larm:ApplyForceCenter(down * 500)
 		end
 	end
+	-- no decorticate enforcement in live ragdoll; handled post-mortem in sv_brainfuck
 
 	if org.brain < 0.4 then
 		local naturalHeal = org.thiamine > 0 and timeValue / 480 or timeValue / 1800
@@ -740,7 +744,7 @@ local function fixlimb(org, key, fixer)
 		org.painadd = org.painadd + 5 * math.random(1, 3)
 		org.fearadd = org.fearadd + 0.1
 
-		org.owner:EmitSound("physics/flesh/flesh_impact_hard6.wav", 65)
+		hg.EmitRagdollImpact(org.owner, 65)
 
 		if fixer == org.owner and (fixer.tries or 0) > 3 and math.random(3) == 1 then
 			fixer:Notify(finally_fixed[math.random(#finally_fixed)], 1, "dislocations_unlucky", 1, nil, Color(255, 255, 255, 255))
@@ -753,7 +757,7 @@ local function fixlimb(org, key, fixer)
 
 		org.fearadd = org.fearadd + 0.3
 
-		org.owner:EmitSound("physics/body/body_medium_impact_soft"..math.random(7)..".wav", 65)
+		hg.EmitRagdollImpact(org.owner, 65)
 		
 		if fixer.Profession != "doctor" and math.random(5) == 1 then
 			local dmgInfo = DamageInfo()
