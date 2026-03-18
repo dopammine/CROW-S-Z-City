@@ -1,10 +1,10 @@
 local MODE = MODE
-local vgui_color_main = Color(0, 80, 150, 255)
+local vgui_color_main = Color(150, 80, 0, 255)
 local vgui_color_warning = Color(150, 0, 0, 255)
 local vgui_color_bg = Color(50, 50, 50, 255)
 local vgui_color_ready = Color(0, 150, 50, 255)
 local vgui_color_notready = Color(0, 50, 0, 255)
-local vgui_color_text_main = Color(0, 50, 150, 255)
+local vgui_color_text_main = Color(150, 50, 0, 255)
 local vgui_color_text_shadow = Color(0, 0, 0, 255)
 
 local mat_gradientdown = Material("vgui/gradient_down")
@@ -318,7 +318,7 @@ hook.Add("HUDPaint", "DrawTraitorPanel", function()
     surface.DrawOutlinedRect(x, y, traitor_panel.width, height, 2)
     
 
-    local title = is_main and "MAIN TRAITOR" or "ASSISTANT"
+    local title = is_main and "MAIN TRAITOR" or "TRAITOR'S ASSISTANT"
     draw.SimpleText(title, "TraitorPanelTitle", x + traitor_panel.width/2, y + 15, 
                     traitor_panel.colors.title, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
     
@@ -354,12 +354,15 @@ hook.Add("HUDPaint", "DrawTraitorPanel", function()
         end
         
         local assist_y = y + 150     
-        local has_assistants = true
+        local has_assistants = false
         MODE.TraitorsLocal = MODE.TraitorsLocal or {}
-
+        
+        if #MODE.TraitorsLocal > (ply.MainTraitor and 1 or 0) then
+            has_assistants = true
+        end
         
         if has_assistants then
-            draw.SimpleText("Traitor Team:", "TraitorPanelText", x + traitor_panel.width/2, assist_y, 
+            draw.SimpleText("Your Assistants:", "TraitorPanelText", x + traitor_panel.width/2, assist_y, 
                             Color(220, 220, 220), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
             
             assist_y = assist_y + 25   
@@ -476,7 +479,7 @@ end)
 
 
 hook.Add("Think", "UpdateTraitorAssistants", function()
-	if not LocalPlayer().isTraitor then return end
+	if not LocalPlayer().isTraitor or not LocalPlayer().MainTraitor then return end
 
 	if not traitor_panel.next_assistant_check or traitor_panel.next_assistant_check < CurTime() then
 		traitor_panel.next_assistant_check = CurTime() + 0.5
@@ -499,7 +502,7 @@ end)
 
 
 hook.Add("Think", "RequestTraitorStatus", function()
-	if not LocalPlayer().isTraitor then return end
+	if not LocalPlayer().isTraitor or not LocalPlayer().MainTraitor then return end
 	
 	if not traitor_panel.next_status_request or traitor_panel.next_status_request < CurTime() then
 		traitor_panel.next_status_request = CurTime() + 2
