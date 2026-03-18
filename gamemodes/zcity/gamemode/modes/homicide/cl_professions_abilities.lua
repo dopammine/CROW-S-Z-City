@@ -160,6 +160,10 @@ local function createWoodenSpear()
 	RunConsoleCommand("hg_create_wooden_spear")
 end
 
+local function createShiv()
+	RunConsoleCommand("hg_create_shiv")
+end
+
 hook.Add("radialOptions", "EngineerCraft", function()
     local ply = LocalPlayer()
     local organism = ply.organism or {}
@@ -194,8 +198,13 @@ hook.Add("radialOptions", "EngineerCraft", function()
 		local have_bandage = ply:HasWeapon("weapon_bandage_sh") or ply:HasWeapon("weapon_bigbandage_sh")
 		local have_bottle = ply:HasWeapon("weapon_hg_bottle")
 		
+		local craft_barrels = {
+			["models/props_c17/oildrum001.mdl"] = true,
+			["models/props_c17/oildrum001_explosive.mdl"] = true
+		}
+
 		for i, ent in ipairs(ents.FindInSphere(ply:GetPos(), 64)) do
-			if hg.gas_models[ent:GetModel()] and !ent:GetNWBool("EmptyBarrel", false) then
+			if craft_barrels[ent:GetModel()] and !ent:GetNWBool("EmptyBarrel", false) then
 				have_barrel_nearby = true
 				break
 			end
@@ -214,4 +223,110 @@ hook.Add("radialOptions", "EngineerCraft", function()
         	hg.radialOptions[#hg.radialOptions + 1] = tbl
 		end
     end
+end)
+
+hook.Add("radialOptions", "ShivCraft", function()
+	local ply = LocalPlayer()
+	local organism = ply.organism or {}
+	if not (ply:Alive() and not organism.otrub) then return end
+	if ply.Profession ~= "engineer" then return end
+	local tr = hg.eyeTrace(ply, 64)
+	local ent = tr and tr.Entity
+	local wep = ply:GetActiveWeapon()
+	local have_tape_equipped = IsValid(wep) and wep:GetClass() == "weapon_ducttape"
+	local craft_barrels = {
+		["models/props_c17/oildrum001.mdl"] = true,
+		["models/props_c17/oildrum001_explosive.mdl"] = true
+	}
+	if IsValid(ent) and craft_barrels[ent:GetModel()] and not ent:GetNWBool("EmptyBarrel", false) and have_tape_equipped then
+		local tbl = {createShiv, "Create shiv"}
+		hg.radialOptions[#hg.radialOptions + 1] = tbl
+	end
+end)
+
+local qte_active = false
+local qte_progress = 0
+local qte_expected = nil
+local qte_deadline = 0
+local qte_attempted = false
+local qte_last_result = nil
+local qte_craft = ""
+
+net.Receive("HMCD_CraftQTE_Start", function()
+	qte_active = true
+	qte_progress = 0
+	qte_expected = nil
+	qte_deadline = 0
+	qte_attempted = false
+	qte_last_result = nil
+	qte_craft = net.ReadString()
+end)
+
+net.Receive("HMCD_CraftQTE_Prompt", function()
+	qte_expected = net.ReadString()
+	qte_deadline = net.ReadFloat()
+	qte_attempted = false
+end)
+
+net.Receive("HMCD_CraftQTE_Update", function()
+	qte_progress = net.ReadFloat()
+	local ok = net.ReadBool()
+	qte_last_result = ok
+end)
+
+net.Receive("HMCD_CraftQTE_Complete", function()
+	qte_active = false
+	qte_expected = nil
+	qte_progress = 0
+	qte_deadline = 0
+	qte_attempted = false
+	qte_last_result = nil
+	qte_craft = ""
+end)
+
+net.Receive("HMCD_CraftQTE_Cancel", function()
+	qte_active = false
+	qte_expected = nil
+	qte_progress = 0
+	qte_deadline = 0
+	qte_attempted = false
+	qte_last_result = nil
+	qte_craft = ""
+end)
+
+hook.Add("Think", "HMCD_CraftQTE_Input", function()
+	if not qte_active then return end
+	if not qte_expected or qte_attempted then return end
+	if input.IsKeyDown(KEY_W) then
+		net.Start("HMCD_CraftQTE_Attempt") net.WriteString("W") net.SendToServer()
+		qte_attempted = true
+	elseif input.IsKeyDown(KEY_A) then
+		net.Start("HMCD_CraftQTE_Attempt") net.WriteString("A") net.SendToServer()
+		qte_attempted = true
+	elseif input.IsKeyDown(KEY_S) then
+		net.Start("HMCD_CraftQTE_Attempt") net.WriteString("S") net.SendToServer()
+		qte_attempted = true
+	elseif input.IsKeyDown(KEY_D) then
+		net.Start("HMCD_CraftQTE_Attempt") net.WriteString("D") net.SendToServer()
+		qte_attempted = true
+	end
+end)
+
+hook.Add("HUDPaint", "HMCD_CraftQTE_HUD", function()
+	if not qte_active then return end
+	local sw, sh = ScrW(), ScrH()
+	local bar_w, bar_h = math.floor(sw * 0.3), 18
+	local x = math.floor((sw - bar_w) / 2)
+	local y = sh - 120
+	surface.SetDrawColor(0, 0, 0, 160)
+	surface.DrawRect(x, y, bar_w, bar_h)
+	local pw = math.floor(bar_w * math.Clamp(qte_progress, 0, 1))
+	local col = qte_last_result == nil and Color(0, 150, 255) or (qte_last_result and Color(0, 200, 90) or Color(200, 60, 60))
+	surface.SetDrawColor(col.r, col.g, col.b, 200)
+	surface.DrawRect(x, y, pw, bar_h)
+	draw.SimpleText("Crafting: " .. (qte_craft or ""), "Trebuchet24", sw * 0.5, y - 22, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	if qte_expected then
+		local tleft = math.max(qte_deadline - CurTime(), 0)
+		draw.SimpleText("Press: " .. qte_expected .. string.format("  %.1fs", tleft), "Trebuchet24", sw * 0.5, y + bar_h + 18, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	end
 end)
