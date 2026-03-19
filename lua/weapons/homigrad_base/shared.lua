@@ -1832,15 +1832,13 @@ function SWEP:GetAdditionalValues()
 	
 	if not huypitch then
 		local torso = ply:LookupBone("ValveBiped.Bip01_Spine1")
-		local tmat = ent:GetBoneMatrix(torso)
-		
-		if tmat then
-			local ang2 = tmat:GetAngles():Forward()
-			local dot = math.min((ang2:Dot(ply:GetAimVector()) + 0.5) * 4, 0)
-			//dot = dot < -0.5 and dot + 0.5 or 0
-			//dot = dot * 3
-
-			self.AdditionalPos2[1] = self.AdditionalPos2[1] + dot * -4
+		if torso then
+			local tmat = ent:GetBoneMatrix(torso)
+			if tmat then
+				local ang2 = tmat:GetAngles():Forward()
+				local dot = math.min((ang2:Dot(ply:GetAimVector()) + 0.5) * 4, 0)
+				self.AdditionalPos2[1] = self.AdditionalPos2[1] + dot * -4
+			end
 		end
 	end
 

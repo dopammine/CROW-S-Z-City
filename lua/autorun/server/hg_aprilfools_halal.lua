@@ -86,20 +86,28 @@ local function triggerNotHalal(ply)
 
 	local function spawnBombAt(pos)
 		local bomb = ents.Create("gb_bomb_sc100")
-		if not IsValid(bomb) then return end
-		bomb:SetPos(pos + Vector(0, 0, 5000))
-		bomb:SetAngles(Angle(90, 0, 0))
-		bomb:Spawn()
-		bomb:Activate()
-		timer.Simple(barrageDelay, function()
-			if not IsValid(bomb) then return end
-			local phys = bomb:GetPhysicsObject()
-			if IsValid(phys) then
-				phys:EnableMotion(true)
-				phys:Wake()
-				phys:SetVelocity(Vector(0, 0, -2000))
-			end
-		end)
+		if IsValid(bomb) then
+			bomb:SetPos(pos + Vector(0, 0, 5000))
+			bomb:SetAngles(Angle(90, 0, 0))
+			bomb:Spawn()
+			bomb:Activate()
+			timer.Simple(barrageDelay, function()
+				if not IsValid(bomb) then return end
+				local phys = bomb:GetPhysicsObject()
+				if IsValid(phys) then
+					phys:EnableMotion(true)
+					phys:Wake()
+					phys:SetVelocity(Vector(0, 0, -2000))
+				end
+			end)
+		else
+			local exp = ents.Create("env_explosion")
+			if not IsValid(exp) then return end
+			exp:SetPos(pos)
+			exp:SetKeyValue("iMagnitude", "120")
+			exp:Spawn()
+			exp:Fire("Explode")
+		end
 	end
 
 	local id = ply:SteamID64() or ply:EntIndex()

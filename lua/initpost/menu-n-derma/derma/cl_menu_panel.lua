@@ -242,7 +242,7 @@ function PANEL:Init()
     zteam:SetText("Contributors: CROW, chillin' fella, \nGrandpa, Greg, Kliv")
     zteam:SetContentAlignment(4)
     zteam:SizeToContents()
-
+    
     local endVote = vgui.Create("DLabel", self)
     endVote:SetText("Vote End Round")
     endVote:SetMouseInputEnabled(true)
@@ -259,7 +259,7 @@ function PANEL:Init()
         self:SizeToContents()
         self:SetPos(ScrW() - self:GetWide() - ScreenScale(16), ScrH() - self:GetTall() - ScreenScaleH(16))
         self.HoverLerp = LerpFT(0.2, self.HoverLerp or 0, self:IsHovered() and 1 or 0)
-        self:SetTextColor(self.RColor:Lerp(self.WColor:Lerp(red_select, self.HoverLerp), self.HoverLerp))
+        self:SetTextColor(self.RColor:Lerp(red_select, self.HoverLerp))
     end
 end
 

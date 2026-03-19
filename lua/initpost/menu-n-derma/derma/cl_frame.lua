@@ -1,12 +1,22 @@
---
-
-----
 local PANEL = {}
---[[
-hg.VGUI.SecondaryColor = Color(155,0,0,240)
-hg.VGUI.BackgroundColor = Color(25,25,35,220)]]
+hg = hg or {}
 local color_blacky = Color(25,25,30,220)
 local color_reddy = Color(0,0,155,240)
+local blurMat = Material("pp/blurscreen")
+
+if not hg.DrawBlur then
+    function hg.DrawBlur(panel, amount)
+        local x, y = panel:LocalToScreen(0, 0)
+        local w, h = panel:GetWide(), panel:GetTall()
+        surface.SetMaterial(blurMat)
+        surface.SetDrawColor(255, 255, 255)
+        for i = 1, 3 do
+            blurMat:SetFloat("$blur", (i / 3) * (amount or 2))
+            render.UpdateScreenEffectTexture()
+            surface.DrawTexturedRect(x, y, w, h)
+        end
+    end
+end
 
 function PANEL:Init()
     self.Itensens = {}
@@ -67,13 +77,12 @@ function PANEL:Close()
     self.Closing = true
     self:MoveTo(self:GetX(), ScrH() / 2 + self:GetTall(), 5, 0, 0.3, function()
     end)
-    self:AlphaTo( 0, 0.2, 0, function() 
-        if self.OnClose then self:OnClose() end 
-        self:Remove() 
+    self:AlphaTo( 0, 0.2, 0, function()
+        if self.OnClose then self:OnClose() end
+        self:Remove()
     end)
     self:SetKeyboardInputEnabled(false)
     self:SetMouseInputEnabled(false)
 end
 
 vgui.Register( "ZFrame", PANEL, "DFrame")
-

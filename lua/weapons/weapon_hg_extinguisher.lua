@@ -1,4 +1,4 @@
-if SERVER then AddCSLuaFile() end
+﻿if SERVER then AddCSLuaFile() end
 SWEP.Base = "weapon_melee"
 SWEP.PrintName = "Fire Extinguisher"
 SWEP.Instructions = "This is a hand-held cylindrical pressure vessel containing an agent that can be discharged to extinguish a fire.\n\nLMB to attack.\nR to change mode.\nRMB to block."
@@ -39,9 +39,6 @@ SWEP.basebone = 93
 
 SWEP.weaponPos = Vector(0,2,0.3)
 SWEP.weaponAng = Angle(0,0,0)
-SWEP.HitPauseDelay = 0.52
-SWEP.HitPauseDuration = 0.2
-SWEP.HitReverseDuration = 0.4
 
 SWEP.DamageType = DMG_CLUB
 SWEP.DamagePrimary = 38

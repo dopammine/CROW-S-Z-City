@@ -1,4 +1,4 @@
-﻿AddCSLuaFile()
+AddCSLuaFile()
 --
 local surface_hardness = {
 	[MAT_METAL] = 1,

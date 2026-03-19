@@ -876,6 +876,7 @@ local modes = {
 }
 
 local setmode = ConVarExists("homicide_setmode") and GetConVar("homicide_setmode") or CreateConVar( "homicide_setmode", "random", FCVAR_NONE, "sets hmcd mode" )
+local assistant_chance = ConVarExists("hmcd_assistant_chance") and GetConVar("hmcd_assistant_chance") or CreateConVar("hmcd_assistant_chance", "35", FCVAR_NONE, "percent chance to add a traitor assistant", 0, 100)
 
 util.AddNetworkString("HMCD_RoundStart")
 
@@ -923,7 +924,7 @@ function MODE:Intermission()
 	if(MODE.ShouldStartRoleRound())then
 		traitors_needed = math.ceil(player_count / 9)
 		
-		if(player_count > 8 and math.random(1, 8) == 1)then
+		if player_count > 8 and math.random(100) <= assistant_chance:GetInt() then
 			traitors_needed = traitors_needed + 1
 		end
 	end
@@ -1880,7 +1881,9 @@ function MODE.SpawnPlayers(spawn_with_subroles)
 				end
             else
                 if(current_ply.isTraitor)then
-                    MODE.Types[MODE.Type].TraitorLoot(current_ply)
+                    if current_ply.MainTraitor then
+                        MODE.Types[MODE.Type].TraitorLoot(current_ply)
+                    end
                 end
 
                 if(current_ply.isGunner)then
@@ -1888,14 +1891,31 @@ function MODE.SpawnPlayers(spawn_with_subroles)
                 end
             end
             
+            if current_ply.isTraitor and current_ply.MainTraitor then
+                if not current_ply:HasWeapon("weapon_zc_fiberwire_standalone") then
+                    current_ply:Give("weapon_zc_fiberwire_standalone")
+                end
+            end
+
+            -- Give walkie-talkies to all traitors and sync frequency
+            if current_ply.isTraitor then
+                local walkie = current_ply:Give("weapon_walkie_talkie")
+                if IsValid(walkie) and walkie.Frequencies then
+                    if not MODE.TraitorFrequency then
+                        MODE.TraitorFrequency = math.random(1, #walkie.Frequencies)
+                    end
+                    walkie.Frequency = MODE.TraitorFrequency
+                end
+            end
+
             if(MODE.Type == "soe")then
                 if(current_ply.isTraitor)then
-                    local walkie_talkie = current_ply:Give("weapon_walkie_talkie")
-					if walkie_talkie.Frequencies then
-						MODE.TraitorFrequency = MODE.TraitorFrequency or math.random(1, #walkie_talkie.Frequencies)
-						walkie_talkie.Frequency = MODE.TraitorFrequency
-						current_ply:ChatPrint("Walkie-Talkie Frequency = " .. walkie_talkie.Frequencies[MODE.TraitorFrequency])
-					end
+                    -- Assistants in SOE get a buck200 knife
+                    if not current_ply.MainTraitor then
+                        if not current_ply:HasWeapon("weapon_buck200knife") then
+                            current_ply:Give("weapon_buck200knife")
+                        end
+                    end
                 end
             end
 

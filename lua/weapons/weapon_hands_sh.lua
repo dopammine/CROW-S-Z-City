@@ -1139,6 +1139,7 @@ end
 function SWEP:SetCarrying(ent, bone, pos, dist)
 	local owner = self:GetOwner()
 	if not IsValid(owner) then return end
+	if owner.PlayerClassName == "headcrabzombie" then return end
 
 	if IsValid(ent) or game.GetWorld() == ent then
 		self.CarryEnt = ent
